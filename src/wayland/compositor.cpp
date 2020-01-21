@@ -1,0 +1,39 @@
+#include "compositor.hpp"
+#include "surface.hpp"
+#include "log.hpp"
+
+namespace Awning::Wayland::Compositor
+{
+	const struct wl_compositor_interface interface = {
+		.create_surface = Interface::Create_Surface,
+		.create_region = Interface::Create_Region
+	};
+
+	Data data;
+
+	namespace Interface
+	{
+		void Create_Region(struct wl_client* client, struct wl_resource* resource, uint32_t id) 
+		{
+			Log::Function::Called("Wayland::Compositor::Interface");
+		}
+
+		void Create_Surface(struct wl_client* client, struct wl_resource* resource, uint32_t id) 
+		{
+			Log::Function::Called("Wayland::Compositor::Interface");
+			Surface::Create(client, wl_resource_get_version(resource), id);
+		}
+	}
+
+	void Bind(struct wl_client* wl_client, void* data, uint32_t version, uint32_t id) 
+	{
+		Log::Function::Called("Wayland::Compositor");
+
+		struct wl_resource* resource = wl_resource_create(wl_client, &wl_compositor_interface, version, id);
+		if (resource == nullptr) {
+			wl_client_post_no_memory(wl_client);
+			return;
+		}
+		wl_resource_set_implementation(resource, &interface, data, nullptr);
+	}
+}
