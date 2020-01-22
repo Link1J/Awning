@@ -10,9 +10,11 @@ namespace Awning::XDG::TopLevel
 	{
 		struct Instance 
 		{
+			wl_resource* surface;
 			wl_resource* parent;
 			std::string title;
 			std::string appid;
+			double xPosition, yPosition;
 		};
 
 		std::unordered_map<wl_resource*, Instance> toplevels;
@@ -39,6 +41,6 @@ namespace Awning::XDG::TopLevel
 		void Set_Minimized(struct wl_client* client, struct wl_resource* resource);
 	}
 
-	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id);
+	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* surface);
 	void Destroy(struct wl_resource* resource);
 }

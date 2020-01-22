@@ -1,18 +1,9 @@
-#include "toplevel.hpp"
-#include "surface.hpp"
+#include "positioner.hpp"
 #include "log.hpp"
-
-#include "wayland/surface.hpp"
-
-#include "wm/drawable.hpp"
-
-#include <unordered_map>
-
-extern std::unordered_map<wl_resource*, Awning::WM::Drawable::Data> drawables;
 
 namespace Awning::XDG::TopLevel
 {
-	const struct xdg_toplevel_interface interface = {
+	const struct xdg_positioner_interface interface = {
 		.destroy          = Interface::Destroy,
 		.set_parent       = Interface::Set_Parent,
 		.set_title        = Interface::Set_Title,
@@ -104,11 +95,11 @@ namespace Awning::XDG::TopLevel
 		}
 	}
 
-	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* surface) 
+	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id) 
 	{
 		Log::Function::Called("XDG::TopLevel");
 
-		struct wl_resource* resource = wl_resource_create(wl_client, &xdg_toplevel_interface, version, id);
+		struct wl_resource* resource = wl_resource_create(wl_client, &xdg_positioner_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
 			return;
@@ -116,24 +107,12 @@ namespace Awning::XDG::TopLevel
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
 		data.toplevels[resource] = Data::Instance();
-		data.toplevels[resource].surface = surface;
-		data.toplevels[resource].xPosition = 0;
-		data.toplevels[resource].yPosition = 0;
-
-		auto surface_wl = Surface::data.surfaces[surface].surface_wl;
-
-		drawables[resource].xPosition  = &                  data.toplevels[resource  ].xPosition ;
-		drawables[resource].yPosition  = &                  data.toplevels[resource  ].yPosition ;
-		drawables[resource].xDimension = &Wayland::Surface::data.surfaces [surface_wl].xDimension;
-		drawables[resource].yDimension = &Wayland::Surface::data.surfaces [surface_wl].yDimension;
-		drawables[resource].data       = &Wayland::Surface::data.surfaces [surface_wl].data      ;
 	}
 
 	void Destroy(struct wl_resource* resource)
 	{
 		Log::Function::Called("XDG::TopLevel");
 
-		drawables.erase(resource);
 		data.toplevels.erase(resource);
 	}
 }

@@ -3,9 +3,11 @@
 #include "popup.hpp"
 #include "log.hpp"
 
-#include <unordered_set>
+#include "wm/drawable.hpp"
 
-extern std::unordered_set<wl_resource*> openWindows;
+#include <unordered_map>
+
+extern std::unordered_map<wl_resource*, Awning::WM::Drawable::Data> drawables;
 
 namespace Awning::XDG::Surface
 {
@@ -29,7 +31,7 @@ namespace Awning::XDG::Surface
 		void Get_Toplevel(struct wl_client* client, struct wl_resource* resource, uint32_t id)
 		{
 			Log::Function::Called("XDG::Surface::Interface");
-			TopLevel::Create(client, 1, id);
+			TopLevel::Create(client, 1, id, resource);
 		}
 
 		void Get_Popup(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* parent, struct wl_resource* positioner)
@@ -68,7 +70,7 @@ namespace Awning::XDG::Surface
 	{
 		Log::Function::Called("XDG::Surface");
 
-		openWindows.erase(resource);
+		//openWindows.erase(resource);
 		data.surfaces.erase(resource);
 	}
 }
