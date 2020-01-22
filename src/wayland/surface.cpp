@@ -104,6 +104,7 @@ namespace Awning::Wayland::Surface
 			return;
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
+		
 		data.surfaces[resource] = Data::Instance();
 	}
 
@@ -111,7 +112,6 @@ namespace Awning::Wayland::Surface
 	{
 		Log::Function::Called("Wayland::Surface");
 
-		openWindows.erase(resource);
 		data.surfaces.erase(resource);
 	}
 }

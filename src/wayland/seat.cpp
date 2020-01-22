@@ -1,18 +1,22 @@
 #include "seat.hpp"
+#include "shell_surface.hpp"
+#include "surface.hpp"
 #include "log.hpp"
 
 #include <chrono>
+
+uint32_t NextSerialNum();
 
 namespace Awning::Wayland::Pointer
 {
 	const struct wl_pointer_interface interface = {
 		.set_cursor = [](struct wl_client *client, struct wl_resource *resource, uint32_t serial, struct wl_resource *surface, int32_t hotspot_x, int32_t hotspot_y) 
 		{
-			Log::Function::Called("Wayland::Pointer.interface");
+			Log::Function::Called("Wayland::Pointer.interface.set_cursor");
 		},
 		.release    = [](struct wl_client *client, struct wl_resource *resource) 
 		{
-			Log::Function::Called("Wayland::Pointer.interface");
+			Log::Function::Called("Wayland::Pointer.interface.release");
 		},
 	};
 
@@ -35,7 +39,54 @@ namespace Awning::Wayland::Pointer
 		data.resource = resource;
 	}
 
-	void Moved(int x, int y)
+	void Moved(double x, double y)
+	{
+		//Log::Function::Called("Wayland::Pointer");
+
+		if (!data.resource)
+			return;
+
+		wl_resource* active = nullptr;
+		for (auto& [resource, shell] : Shell_Surface::data.shells)
+		{
+			auto& window = Surface::data.surfaces[shell.surface];
+
+			if (shell.xPosition <= x) 
+				if (shell.yPosition <= y)
+					if (shell.xPosition + window.xDimension > x)
+						if (shell.yPosition + window.yDimension > y)
+			{
+				active = resource;
+				break;
+			}
+		}
+
+		if (active == nullptr)
+			return;
+
+		auto& shell = Shell_Surface::data.shells[active];
+		auto& surface = Surface::data.surfaces[shell.surface];
+
+		x = (x - shell.xPosition) / surface.xDimension;
+		y = (y - shell.yPosition) / surface.yDimension;
+
+		int xPoint = wl_fixed_from_double(x);
+		int yPoint = wl_fixed_from_double(y);
+
+		if (active != data.pre_shell)
+		{
+			wl_pointer_send_enter(data.resource, NextSerialNum(), shell.surface, xPoint, yPoint);
+			data.pre_shell = active;
+		}
+		else
+		{
+			auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+			wl_pointer_send_motion(data.resource, time, xPoint, yPoint);
+		}
+		//wl_pointer_send_frame(data.resource);
+	}
+
+	void Button(uint32_t button, bool released)
 	{
 		//Log::Function::Called("Wayland::Pointer");
 
@@ -43,7 +94,7 @@ namespace Awning::Wayland::Pointer
 			return;
 
 		auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-		wl_pointer_send_motion(data.resource, time, wl_fixed_from_int(x), wl_fixed_from_int(y));
+		wl_pointer_send_button(data.resource, NextSerialNum(), time, button, released);
 	}
 }
 
