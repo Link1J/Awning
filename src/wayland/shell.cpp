@@ -28,6 +28,7 @@ namespace Awning::Wayland::Shell
 			wl_client_post_no_memory(wl_client);
 			return;
 		}
+		
 		wl_resource_set_implementation(resource, &interface, data, nullptr);
 	}
 }

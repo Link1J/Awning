@@ -7,12 +7,14 @@ namespace Awning::Wayland::Pointer
 	struct Data 
 	{
 		wl_resource* resource;
+		wl_resource* pre_shell;
 	};
 
 	extern const struct wl_pointer_interface interface;
 	extern Data data;
 
-	void Moved(int x, int y);
+	void Moved(double x, double y);
+	void Button(uint32_t button, bool released);
 }
 
 namespace Awning::Wayland::Seat

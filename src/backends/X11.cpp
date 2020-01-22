@@ -3,6 +3,7 @@
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrender.h>
+#include <linux/input.h>
 
 #include "wayland/seat.hpp"
 
@@ -114,7 +115,23 @@ void X11::Poll()
 		}
 		else if (event.type == MotionNotify)
 		{
-			Awning::Wayland::Pointer::Moved(event.xmotion.x, event.xmotion.y);			
+			Awning::Wayland::Pointer::Moved(event.xbutton.x, event.xbutton.y);			
+		}
+		else if (event.type == ButtonPress)
+		{
+			uint32_t button = BTN_EXTRA;
+			if (event.xbutton.button == Button1) button = BTN_LEFT;
+			if (event.xbutton.button == Button2) button = BTN_MIDDLE;
+			if (event.xbutton.button == Button3) button = BTN_RIGHT;
+			Awning::Wayland::Pointer::Button(button, false);
+		}
+		else if (event.type == ButtonRelease)
+		{
+			uint32_t button = BTN_EXTRA;
+			if (event.xbutton.button == Button1) button = BTN_LEFT;
+			if (event.xbutton.button == Button2) button = BTN_MIDDLE;
+			if (event.xbutton.button == Button3) button = BTN_RIGHT;
+			Awning::Wayland::Pointer::Button(button, true);
 		}
 	}
 
