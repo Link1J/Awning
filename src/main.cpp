@@ -10,11 +10,14 @@
 #include "wayland/output.hpp"
 #include "wayland/shell.hpp"
 #include "wayland/surface.hpp"
+#include "wayland/shell_surface.hpp"
 
 #include "xdg/wm_base.hpp"
 
+#include "wm/drawable.hpp"
+
 #include <iostream>
-#include <unordered_set>
+#include <unordered_map>
 
 void ProtocolLogger(void* user_data, wl_protocol_logger_type direction, const wl_protocol_logger_message* message);
 
@@ -37,7 +40,15 @@ namespace Awning
 	Server::Data server;
 };
 
-std::unordered_set<wl_resource*> openWindows;
+std::unordered_map<wl_resource*, Awning::WM::Drawable::Data> drawables;
+
+uint32_t lastSerialNum = 1;
+
+uint32_t NextSerialNum()
+{
+	lastSerialNum++;
+	return lastSerialNum;
+}
 
 int main()
 {
@@ -73,7 +84,7 @@ int main()
 		using namespace Awning;
 		using namespace Awning::XDG;
 
-		//WM_Base::data.global = wl_global_create(server.display, &xdg_wm_base_interface, 1, nullptr, WM_Base::Bind);
+		WM_Base::data.global = wl_global_create(server.display, &xdg_wm_base_interface, 1, nullptr, WM_Base::Bind);
 	}
 	
 	while (1)
@@ -85,23 +96,21 @@ int main()
 
 		auto data = X11::Data();
 
-		for (auto& resource : openWindows)
+		for (auto& [resource, drawable] : drawables)
 		{
-			auto& window = Awning::Wayland::Surface::data.surfaces[resource];
-
-			for (int x = 0; x < window.xDimension; x++)
-				for (int y = 0; y < window.yDimension; y++)
+			for (int x = 0; x < *drawable.xDimension; x++)
+				for (int y = 0; y < *drawable.yDimension; y++)
 				{
 					if (x >= X11::Width() || y >= X11::Height())
 						continue;
 
-					int windowOffset = (x + y * window.xDimension) * 4;
-					int framebOffset = (x + y * X11::Width()     ) * 4;
+					int windowOffset = (x + y * (*drawable.xDimension)) * 4;
+					int framebOffset = ((*drawable.xPosition + x) + (*drawable.yPosition + y) * X11::Width()) * 4;
 
-					data[framebOffset + 0] = window.data[windowOffset + 2];
-					data[framebOffset + 1] = window.data[windowOffset + 1];
-					data[framebOffset + 2] = window.data[windowOffset + 0];
-					data[framebOffset + 3] = window.data[windowOffset + 3];
+					data[framebOffset + 0] = (*drawable.data)[windowOffset + 2];
+					data[framebOffset + 1] = (*drawable.data)[windowOffset + 1];
+					data[framebOffset + 2] = (*drawable.data)[windowOffset + 0];
+					data[framebOffset + 3] = (*drawable.data)[windowOffset + 3];
 				}
 		}
 	}

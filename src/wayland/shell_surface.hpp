@@ -9,9 +9,11 @@ namespace Awning::Wayland::Shell_Surface
 	{
 		struct Instance 
 		{
+			wl_resource* surface;
+			double xPosition, yPosition;
 		};
 
-		std::unordered_map<wl_resource*, Instance> surfaces;
+		std::unordered_map<wl_resource*, Instance> shells;
 	};
 
 	extern const struct wl_shell_surface_interface interface;
@@ -32,4 +34,5 @@ namespace Awning::Wayland::Shell_Surface
 	}
 	
 	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id, struct wl_resource* surface);
+	void Destroy(struct wl_resource* resource);
 }

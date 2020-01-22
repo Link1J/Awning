@@ -1,9 +1,12 @@
 #include "shell_surface.hpp"
+#include "surface.hpp"
 #include "log.hpp"
 
-#include <unordered_set>
+#include "wm/drawable.hpp"
 
-extern std::unordered_set<wl_resource*> openWindows;
+#include <unordered_map>
+
+extern std::unordered_map<wl_resource*, Awning::WM::Drawable::Data> drawables;
 
 namespace Awning::Wayland::Shell_Surface
 {
@@ -84,8 +87,26 @@ namespace Awning::Wayland::Shell_Surface
 			wl_client_post_no_memory(wl_client);
 			return;
 		}
-		wl_resource_set_implementation(resource, &interface, nullptr, nullptr);
-		
-		openWindows.insert(surface);
+		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
+
+		data.shells[resource] = Data::Instance();
+
+		data.shells[resource].surface = surface;
+		data.shells[resource].xPosition = 0;
+		data.shells[resource].yPosition = 0;
+
+		drawables[resource].xPosition  = &         data.shells  [resource].xPosition ;
+		drawables[resource].yPosition  = &         data.shells  [resource].yPosition ;
+		drawables[resource].xDimension = &Surface::data.surfaces[surface ].xDimension;
+		drawables[resource].yDimension = &Surface::data.surfaces[surface ].yDimension;
+		drawables[resource].data       = &Surface::data.surfaces[surface ].data      ;
+	}
+
+	void Destroy(struct wl_resource* resource)
+	{
+		Log::Function::Called("Wayland::Shell_Surface");
+
+		drawables.erase(resource);
+		data.shells.erase(resource);
 	}
 }
