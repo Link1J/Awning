@@ -82,8 +82,10 @@ int main()
 	{
 		using namespace Awning;
 		using namespace Awning::XDG;
+		using namespace Awning::ZXDG;
 
-		WM_Base::data.global = wl_global_create(server.display, &xdg_wm_base_interface, 1, nullptr, WM_Base::Bind);
+		WM_Base           ::data.global = wl_global_create(server.display, &xdg_wm_base_interface               , 1, nullptr, WM_Base           ::Bind);
+		Decoration_Manager::data.global = wl_global_create(server.display, &zxdg_decoration_manager_v1_interface, 1, nullptr, Decoration_Manager::Bind);
 	}
 	
 	while (1)
@@ -97,19 +99,43 @@ int main()
 
 		for (auto& [resource, drawable] : Awning::WM::Drawable::drawables)
 		{
-			for (int x = 0; x < *drawable.xDimension; x++)
-				for (int y = 0; y < *drawable.yDimension; y++)
+			if (!drawable.data)
+				continue;
+			if (!*drawable.data)
+				continue;
+
+			for (int x = -3; x < *drawable.xDimension + 3; x++)
+				for (int y = -3; y < *drawable.yDimension + 3; y++)
 				{
-					if (x >= X11::Width() || y >= X11::Height())
+					if ((*drawable.xPosition + x) <  0            )
+						continue;
+					if ((*drawable.yPosition + y) <  0            )
+						continue;
+					if ((*drawable.xPosition + x) >= X11::Width ())
+						continue;
+					if ((*drawable.yPosition + y) >= X11::Height())
 						continue;
 
 					int windowOffset = (x + y * (*drawable.xDimension)) * 4;
 					int framebOffset = ((*drawable.xPosition + x) + (*drawable.yPosition + y) * X11::Width()) * 4;
 
-					data[framebOffset + 0] = (*drawable.data)[windowOffset + 2];
-					data[framebOffset + 1] = (*drawable.data)[windowOffset + 1];
-					data[framebOffset + 2] = (*drawable.data)[windowOffset + 0];
-					data[framebOffset + 3] = (*drawable.data)[windowOffset + 3];
+					if (x > *drawable.xDimension || y > *drawable.xDimension || x < 0 || y < 0)
+					{
+						if (drawable.needsFrame)
+						{
+							data[framebOffset + 0] = 1;
+							data[framebOffset + 1] = 1;
+							data[framebOffset + 2] = 1;
+							data[framebOffset + 3] = 1;
+						}
+					}
+					else
+					{
+						data[framebOffset + 0] = (*drawable.data)[windowOffset + 2];
+						data[framebOffset + 1] = (*drawable.data)[windowOffset + 1];
+						data[framebOffset + 2] = (*drawable.data)[windowOffset + 0];
+						data[framebOffset + 3] = (*drawable.data)[windowOffset + 3];
+					}
 				}
 		}
 

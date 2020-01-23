@@ -66,7 +66,6 @@ namespace Awning::XDG::Surface
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
-		data.surfaces[resource] = Data::Instance();
 		data.surfaces[resource].surface_wl = surface;
 	}
 
