@@ -5,10 +5,6 @@
 
 #include "wm/drawable.hpp"
 
-#include <unordered_map>
-
-extern std::unordered_map<wl_resource*, Awning::WM::Drawable::Data> drawables;
-
 namespace Awning::Wayland::Shell_Surface
 {
 	const struct wl_shell_surface_interface interface = {
@@ -92,16 +88,16 @@ namespace Awning::Wayland::Shell_Surface
 
 		data.shells[resource] = Data::Instance();
 
-		data.shells[resource].surface   = surface  ;
-		data.shells[resource].client    = wl_client;
+		data.shells[resource].surface   = surface;
 		data.shells[resource].xPosition = 0;
 		data.shells[resource].yPosition = 0;
 
-		drawables[resource].xPosition  = &         data.shells  [resource].xPosition ;
-		drawables[resource].yPosition  = &         data.shells  [resource].yPosition ;
-		drawables[resource].xDimension = &Surface::data.surfaces[surface ].xDimension;
-		drawables[resource].yDimension = &Surface::data.surfaces[surface ].yDimension;
-		drawables[resource].data       = &Surface::data.surfaces[surface ].data      ;
+		WM::Drawable::drawables[resource].xPosition  = &         data.shells  [resource].xPosition ;
+		WM::Drawable::drawables[resource].yPosition  = &         data.shells  [resource].yPosition ;
+		WM::Drawable::drawables[resource].xDimension = &Surface::data.surfaces[surface ].xDimension;
+		WM::Drawable::drawables[resource].yDimension = &Surface::data.surfaces[surface ].yDimension;
+		WM::Drawable::drawables[resource].data       = &Surface::data.surfaces[surface ].data      ;
+		WM::Drawable::drawables[resource].surface    =                                   surface   ;
 	}
 
 	void Destroy(struct wl_resource* resource)
@@ -111,7 +107,7 @@ namespace Awning::Wayland::Shell_Surface
 		if (Pointer::data.pre_shell == resource)
 			Pointer::data.pre_shell = nullptr;
 
-		drawables.erase(resource);
+		Awning::WM::Drawable::drawables.erase(resource);
 		data.shells.erase(resource);
 	}
 }

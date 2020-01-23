@@ -3,7 +3,10 @@
 #include "surface.hpp"
 #include "log.hpp"
 
+#include "wm/drawable.hpp"
+
 #include <chrono>
+#include <iostream>
 
 uint32_t NextSerialNum();
 
@@ -12,11 +15,11 @@ namespace Awning::Wayland::Pointer
 	const struct wl_pointer_interface interface = {
 		.set_cursor = [](struct wl_client *client, struct wl_resource *resource, uint32_t serial, struct wl_resource *surface, int32_t hotspot_x, int32_t hotspot_y) 
 		{
-			Log::Function::Called("Wayland::Pointer.interface.set_cursor");
+			Log::Function::Called("Wayland::Pointer::interface.set_cursor");
 		},
 		.release    = [](struct wl_client *client, struct wl_resource *resource) 
 		{
-			Log::Function::Called("Wayland::Pointer.interface.release");
+			Log::Function::Called("Wayland::Pointer::interface.release");
 		},
 	};
 
@@ -41,14 +44,12 @@ namespace Awning::Wayland::Pointer
 		//Log::Function::Called("Wayland::Pointer");
 
 		wl_resource* active = nullptr;
-		for (auto& [resource, shell] : Shell_Surface::data.shells)
+		for (auto& [resource, window] : WM::Drawable::drawables)
 		{
-			auto& window = Surface::data.surfaces[shell.surface];
-
-			if (shell.xPosition <= x) 
-				if (shell.yPosition <= y)
-					if (shell.xPosition + window.xDimension > x)
-						if (shell.yPosition + window.yDimension > y)
+			if (*window.xPosition <= x) 
+				if (*window.yPosition <= y)
+					if (*window.xPosition + *window.xDimension > x)
+						if (*window.yPosition + *window.yDimension > y)
 			{
 				active = resource;
 				break;
@@ -57,11 +58,10 @@ namespace Awning::Wayland::Pointer
 
 		if (active)
 		{
-			auto& shell = Shell_Surface::data.shells[active];
-			auto& surface = Surface::data.surfaces[shell.surface];
+			auto& shell = WM::Drawable::drawables[active];
 
-			x = (x - shell.xPosition);
-			y = (y - shell.yPosition);
+			x = (x - *shell.xPosition);
+			y = (y - *shell.yPosition);
 		}
 
 		int xPoint = wl_fixed_from_double(x);
@@ -71,16 +71,19 @@ namespace Awning::Wayland::Pointer
 		{
 			if (data.pre_shell != nullptr)
 			{
-				auto& pre_shell = Shell_Surface::data.shells[data.pre_shell];
-				auto resource = data.pointers[pre_shell.client].resource;
+				auto& pre_shell = WM::Drawable::drawables[data.pre_shell];
+				auto& surface = Surface::data.surfaces[pre_shell.surface];
+				auto resource = data.pointers[surface.client].resource;
 				wl_pointer_send_leave(resource, NextSerialNum(), pre_shell.surface);
 			}
 			
 			if (active != nullptr)
 			{
-				auto& shell = Shell_Surface::data.shells[active];
-				auto resource = data.pointers[shell.client].resource;
+				auto& shell = WM::Drawable::drawables[active];
+				auto& surface = Surface::data.surfaces[shell.surface];
+				auto resource = data.pointers[surface.client].resource;
 				wl_pointer_send_enter(resource, NextSerialNum(), shell.surface, xPoint, yPoint);
+				wl_pointer_send_frame(resource);
 			}
 			
 			data.pre_shell = active;
@@ -88,11 +91,12 @@ namespace Awning::Wayland::Pointer
 		else if (active != nullptr)
 		{
 			auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000;
-			auto& shell = Shell_Surface::data.shells[active];
-			auto resource = data.pointers[shell.client].resource;
+			auto& shell = WM::Drawable::drawables[active];
+			auto& surface = Surface::data.surfaces[shell.surface];
+			auto resource = data.pointers[surface.client].resource;
 			wl_pointer_send_motion(resource, time, xPoint, yPoint);
+			wl_pointer_send_frame(resource);
 		}
-		//wl_pointer_send_frame(data.resource);
 	}
 
 	void Button(uint32_t button, bool released)
@@ -101,8 +105,9 @@ namespace Awning::Wayland::Pointer
 
 		if (data.pre_shell != nullptr)
 		{
-			auto& shell = Shell_Surface::data.shells[data.pre_shell];
-			auto resource = data.pointers[shell.client].resource;
+			auto& shell = WM::Drawable::drawables[data.pre_shell];
+			auto& surface = Surface::data.surfaces[shell.surface];
+			auto resource = data.pointers[surface.client].resource;
 
 			auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000;
 			wl_pointer_send_button(resource, NextSerialNum(), time, button, released);

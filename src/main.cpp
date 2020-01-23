@@ -13,6 +13,7 @@
 #include "wayland/shell_surface.hpp"
 
 #include "xdg/wm_base.hpp"
+#include "xdg/decoration.hpp"
 
 #include "wm/drawable.hpp"
 
@@ -39,8 +40,6 @@ namespace Awning
 	}	
 	Server::Data server;
 };
-
-std::unordered_map<wl_resource*, Awning::WM::Drawable::Data> drawables;
 
 uint32_t lastSerialNum = 1;
 
@@ -96,7 +95,7 @@ int main()
 
 		auto data = X11::Data();
 
-		for (auto& [resource, drawable] : drawables)
+		for (auto& [resource, drawable] : Awning::WM::Drawable::drawables)
 		{
 			for (int x = 0; x < *drawable.xDimension; x++)
 				for (int y = 0; y < *drawable.yDimension; y++)
@@ -113,6 +112,8 @@ int main()
 					data[framebOffset + 3] = (*drawable.data)[windowOffset + 3];
 				}
 		}
+
+		Awning::Wayland::Surface::HandleFrameCallbacks();
 	}
 
 	wl_display_destroy(Awning::server.display);

@@ -13,6 +13,7 @@ namespace Awning::Wayland::Surface
 			bool damaged = false;
 			char* data = nullptr;
 			wl_resource* buffer;
+			wl_client* client;
 		};
 
 		std::unordered_map<wl_resource*, Instance> surfaces;
@@ -37,4 +38,5 @@ namespace Awning::Wayland::Surface
 
 	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id);
 	void Destroy(struct wl_resource* resource);
+	void HandleFrameCallbacks();
 }

@@ -2,8 +2,7 @@
 #include "log.hpp"
 
 #include <unordered_set>
-
-extern std::unordered_set<wl_resource*> openWindows;
+#include <chrono>
 
 namespace Awning::Wayland::Surface
 {
@@ -21,6 +20,8 @@ namespace Awning::Wayland::Surface
 	};
 
 	Data data;
+
+	std::unordered_set<wl_resource*> frameCallbacks;
 
 	namespace Interface
 	{
@@ -44,6 +45,16 @@ namespace Awning::Wayland::Surface
 		void Frame(struct wl_client* client, struct wl_resource* resource, uint32_t callback)
 		{
 			Log::Function::Called("Wayland::Surface::Interface");
+
+			struct wl_resource* resource_cb = wl_resource_create(client, &wl_callback_interface, 1, callback);
+			if (resource_cb == nullptr) {
+				wl_client_post_no_memory(client);
+				return;
+			}
+			wl_resource_set_implementation(resource_cb, nullptr, nullptr, [](struct wl_resource* resource){
+				Log::Function::Called("Wayland::Surface::Interface::Frame.callback");
+				frameCallbacks.erase(resource);
+			});
 		}
 
 		void Set_Opaque_Region(struct wl_client* client, struct wl_resource* resource, struct wl_resource* region)
@@ -105,7 +116,7 @@ namespace Awning::Wayland::Surface
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 		
-		data.surfaces[resource] = Data::Instance();
+		data.surfaces[resource].client = wl_client;
 	}
 
 	void Destroy(struct wl_resource* resource)
@@ -113,5 +124,16 @@ namespace Awning::Wayland::Surface
 		Log::Function::Called("Wayland::Surface");
 
 		data.surfaces.erase(resource);
+	}
+
+	void HandleFrameCallbacks()
+	{
+		for (auto i: frameCallbacks)
+		{
+			auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000;
+			wl_callback_send_done(i, time);
+			wl_resource_destroy(i);
+		}
+		frameCallbacks.clear();
 	}
 }

@@ -6,9 +6,7 @@
 
 #include "wm/drawable.hpp"
 
-#include <unordered_map>
-
-extern std::unordered_map<wl_resource*, Awning::WM::Drawable::Data> drawables;
+#include <iostream>
 
 namespace Awning::XDG::TopLevel
 {
@@ -123,18 +121,19 @@ namespace Awning::XDG::TopLevel
 
 		auto surface_wl = Surface::data.surfaces[surface].surface_wl;
 
-		drawables[resource].xPosition  = &         Surface::data.surfaces[resource  ].xPosition ;
-		drawables[resource].yPosition  = &         Surface::data.surfaces[resource  ].yPosition ;
-		drawables[resource].xDimension = &Wayland::Surface::data.surfaces[surface_wl].xDimension;
-		drawables[resource].yDimension = &Wayland::Surface::data.surfaces[surface_wl].yDimension;
-		drawables[resource].data       = &Wayland::Surface::data.surfaces[surface_wl].data      ;
+		WM::Drawable::drawables[resource].xPosition  = &         Surface::data.surfaces[resource  ].xPosition ;
+		WM::Drawable::drawables[resource].yPosition  = &         Surface::data.surfaces[resource  ].yPosition ;
+		WM::Drawable::drawables[resource].xDimension = &Wayland::Surface::data.surfaces[surface_wl].xDimension;
+		WM::Drawable::drawables[resource].yDimension = &Wayland::Surface::data.surfaces[surface_wl].yDimension;
+		WM::Drawable::drawables[resource].data       = &Wayland::Surface::data.surfaces[surface_wl].data      ;
+		WM::Drawable::drawables[resource].surface    =                                              surface_wl;
 	}
 
 	void Destroy(struct wl_resource* resource)
 	{
 		Log::Function::Called("XDG::TopLevel");
 
-		drawables.erase(resource);
+		WM::Drawable::drawables.erase(resource);
 		data.toplevels.erase(resource);
 	}
 }
