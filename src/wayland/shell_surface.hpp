@@ -9,6 +9,7 @@ namespace Awning::Wayland::Shell_Surface
 	{
 		struct Instance 
 		{
+			wl_client* client;
 			wl_resource* surface;
 			double xPosition, yPosition;
 		};

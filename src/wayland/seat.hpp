@@ -2,11 +2,18 @@
 
 #include <wayland-server.h>
 
+#include <unordered_map>
+
 namespace Awning::Wayland::Pointer
 {
 	struct Data 
 	{
-		wl_resource* resource;
+		struct Interface 
+		{
+			wl_resource* resource;
+		};
+
+		std::unordered_map<wl_client*,Interface> pointers;
 		wl_resource* pre_shell;
 	};
 
@@ -14,7 +21,7 @@ namespace Awning::Wayland::Pointer
 	extern Data data;
 
 	void Moved(double x, double y);
-	void Button(uint32_t button, bool released);
+	void Button(uint32_t button, bool pressed);
 }
 
 namespace Awning::Wayland::Seat

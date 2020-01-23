@@ -117,16 +117,17 @@ namespace Awning::XDG::TopLevel
 
 		data.toplevels[resource] = Data::Instance();
 		data.toplevels[resource].surface = surface;
-		data.toplevels[resource].xPosition = 0;
-		data.toplevels[resource].yPosition = 0;
+
+		Surface::data.surfaces[resource].xPosition = 0;
+		Surface::data.surfaces[resource].yPosition = 0;
 
 		auto surface_wl = Surface::data.surfaces[surface].surface_wl;
 
-		drawables[resource].xPosition  = &                  data.toplevels[resource  ].xPosition ;
-		drawables[resource].yPosition  = &                  data.toplevels[resource  ].yPosition ;
-		drawables[resource].xDimension = &Wayland::Surface::data.surfaces [surface_wl].xDimension;
-		drawables[resource].yDimension = &Wayland::Surface::data.surfaces [surface_wl].yDimension;
-		drawables[resource].data       = &Wayland::Surface::data.surfaces [surface_wl].data      ;
+		drawables[resource].xPosition  = &         Surface::data.surfaces[resource  ].xPosition ;
+		drawables[resource].yPosition  = &         Surface::data.surfaces[resource  ].yPosition ;
+		drawables[resource].xDimension = &Wayland::Surface::data.surfaces[surface_wl].xDimension;
+		drawables[resource].yDimension = &Wayland::Surface::data.surfaces[surface_wl].yDimension;
+		drawables[resource].data       = &Wayland::Surface::data.surfaces[surface_wl].data      ;
 	}
 
 	void Destroy(struct wl_resource* resource)

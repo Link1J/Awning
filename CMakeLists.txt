@@ -15,6 +15,7 @@ set(SOURCES
     src/wayland/shell_surface.cpp
     src/wayland/shell.cpp
     src/wayland/surface.cpp
+    src/wayland/region.cpp
 
     src/xdg/wm_base.cpp
     src/xdg/surface.cpp

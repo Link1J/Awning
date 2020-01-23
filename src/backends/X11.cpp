@@ -7,6 +7,8 @@
 
 #include "wayland/seat.hpp"
 
+#include "log.hpp"
+
 #include <cstdio>
 #include <stdlib.h>
 
@@ -76,7 +78,7 @@ void X11::Start()
 	GLint gl_attribs[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
 	auto vi = glXChooseVisual(display, 0, doubleBufferAttributes);
 	attribs.colormap = XCreateColormap(display, root, vi->visual, AllocNone);
-	attribs.event_mask = StructureNotifyMask|ExposureMask|ButtonPressMask|KeyPressMask|PointerMotionMask;
+	attribs.event_mask = StructureNotifyMask|ExposureMask|ButtonPressMask|KeyPressMask|PointerMotionMask|ButtonReleaseMask;
 	
 	window = XCreateWindow(display, root, 30, 30, width , height, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &attribs);
 	XStoreName(display, window, "Awning (X11 Backend)");
@@ -123,7 +125,7 @@ void X11::Poll()
 			if (event.xbutton.button == Button1) button = BTN_LEFT;
 			if (event.xbutton.button == Button2) button = BTN_MIDDLE;
 			if (event.xbutton.button == Button3) button = BTN_RIGHT;
-			Awning::Wayland::Pointer::Button(button, false);
+			Awning::Wayland::Pointer::Button(button, true);
 		}
 		else if (event.type == ButtonRelease)
 		{
@@ -131,7 +133,7 @@ void X11::Poll()
 			if (event.xbutton.button == Button1) button = BTN_LEFT;
 			if (event.xbutton.button == Button2) button = BTN_MIDDLE;
 			if (event.xbutton.button == Button3) button = BTN_RIGHT;
-			Awning::Wayland::Pointer::Button(button, true);
+			Awning::Wayland::Pointer::Button(button, false);
 		}
 	}
 

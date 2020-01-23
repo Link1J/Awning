@@ -14,7 +14,6 @@ namespace Awning::XDG::TopLevel
 			wl_resource* parent;
 			std::string title;
 			std::string appid;
-			double xPosition, yPosition;
 		};
 
 		std::unordered_map<wl_resource*, Instance> toplevels;

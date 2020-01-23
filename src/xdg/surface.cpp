@@ -43,6 +43,10 @@ namespace Awning::XDG::Surface
 		void Set_Window_Geometry(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
 		{
 			Log::Function::Called("XDG::Surface::Interface");
+			data.surfaces[resource].xPosition  = x     ;
+			data.surfaces[resource].yPosition  = y     ;
+			data.surfaces[resource].xDimension = width ;
+			data.surfaces[resource].yDimension = height;
 		}
 
 		void Ack_Configure(struct wl_client* client, struct wl_resource* resource, uint32_t serial)

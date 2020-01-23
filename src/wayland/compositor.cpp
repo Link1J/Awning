@@ -1,5 +1,6 @@
 #include "compositor.hpp"
 #include "surface.hpp"
+#include "region.hpp"
 #include "log.hpp"
 
 namespace Awning::Wayland::Compositor
@@ -16,6 +17,7 @@ namespace Awning::Wayland::Compositor
 		void Create_Region(struct wl_client* client, struct wl_resource* resource, uint32_t id) 
 		{
 			Log::Function::Called("Wayland::Compositor::Interface");
+			Region::Create(client, wl_resource_get_version(resource), id);
 		}
 
 		void Create_Surface(struct wl_client* client, struct wl_resource* resource, uint32_t id) 

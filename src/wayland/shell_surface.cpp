@@ -1,5 +1,6 @@
 #include "shell_surface.hpp"
 #include "surface.hpp"
+#include "seat.hpp"
 #include "log.hpp"
 
 #include "wm/drawable.hpp"
@@ -91,7 +92,8 @@ namespace Awning::Wayland::Shell_Surface
 
 		data.shells[resource] = Data::Instance();
 
-		data.shells[resource].surface = surface;
+		data.shells[resource].surface   = surface  ;
+		data.shells[resource].client    = wl_client;
 		data.shells[resource].xPosition = 0;
 		data.shells[resource].yPosition = 0;
 
@@ -105,6 +107,9 @@ namespace Awning::Wayland::Shell_Surface
 	void Destroy(struct wl_resource* resource)
 	{
 		Log::Function::Called("Wayland::Shell_Surface");
+
+		if (Pointer::data.pre_shell == resource)
+			Pointer::data.pre_shell = nullptr;
 
 		drawables.erase(resource);
 		data.shells.erase(resource);

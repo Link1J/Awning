@@ -73,7 +73,7 @@ int main()
 		using namespace Awning::Wayland;
 
 		Compositor::data.global = wl_global_create(server.display, &wl_compositor_interface, 1, nullptr, Compositor::Bind);
-		Seat      ::data.global = wl_global_create(server.display, &wl_seat_interface      , 1, nullptr, Seat      ::Bind);
+		Seat      ::data.global = wl_global_create(server.display, &wl_seat_interface      , 4, nullptr, Seat      ::Bind);
 		Output    ::data.global = wl_global_create(server.display, &wl_output_interface    , 3, nullptr, Output    ::Bind);
 		Shell     ::data.global = wl_global_create(server.display, &wl_shell_interface     , 1, nullptr, Shell     ::Bind);
 
