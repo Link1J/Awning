@@ -9,6 +9,8 @@
 
 extern std::unordered_map<wl_resource*, Awning::WM::Drawable::Data> drawables;
 
+uint32_t NextSerialNum();
+
 namespace Awning::XDG::Surface
 {
 	const struct xdg_surface_interface interface = {
