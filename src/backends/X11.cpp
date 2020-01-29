@@ -47,8 +47,8 @@ namespace X11
 		glEnable(GL_TEXTURE_2D);
 		glGenTextures(1, &texture);
 		glBindTexture(GL_TEXTURE_2D, texture);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
@@ -58,6 +58,7 @@ namespace X11
 	void ReleaseBackingTexture()
 	{
 		glDeleteTextures(1, &texture);
+		delete buffer;
 	}
 }
 
@@ -92,7 +93,7 @@ void X11::Start()
 	fprintf(stdout, "GL Renderer   : %s\n", glGetString(GL_RENDERER));
 
 	CreateBackingTexture();
-	glClearColor(0, 0, 0, 1);
+	glClearColor(1, 1, 1, 1);
 }
 
 void X11::Poll()
@@ -146,6 +147,22 @@ void X11::Poll()
 
 	glClear(GL_COLOR_BUFFER_BIT);
 	glViewport(0, 0, width, height);
+
+	for (int x = 0; x < width; x++)
+	{
+		for (int y = 0; y < height; y++)
+		{
+			int framebOffset = (x + y * width) * 4;
+			buffer[framebOffset + 0] = 0;
+			buffer[framebOffset + 1] = 0;
+			buffer[framebOffset + 2] = 0;
+			buffer[framebOffset + 3] = 0;
+		}
+	}
+}
+
+void X11::Draw()
+{
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0, 1.0); glVertex3f(-1.0f, -1.0f, 0.0f);
@@ -154,16 +171,6 @@ void X11::Poll()
 		glTexCoord2f(1.0, 1.0); glVertex3f( 1.0f, -1.0f, 0.0f);
 	glEnd();
 	glXSwapBuffers(display, window);
-
-	for (int x = 0; x < width; x++)
-		for (int y = 0; y < height; y++)
-		{
-			int framebOffset = (x + y * width) * 4;
-			buffer[framebOffset + 0] = 0;
-			buffer[framebOffset + 1] = 0;
-			buffer[framebOffset + 2] = 0;
-			buffer[framebOffset + 3] = 1;
-		}
 }
 
 char* X11::Data()

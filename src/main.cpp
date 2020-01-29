@@ -104,8 +104,8 @@ int main()
 			if (!*drawable.data)
 				continue;
 
-			for (int x = -3; x < *drawable.xDimension + 3; x++)
-				for (int y = -3; y < *drawable.yDimension + 3; y++)
+			for (int x = -5; x < *drawable.xDimension + 5; x++)
+				for (int y = -5; y < *drawable.yDimension + 5; y++)
 				{
 					if ((*drawable.xPosition + x) <  0            )
 						continue;
@@ -119,27 +119,28 @@ int main()
 					int windowOffset = (x + y * (*drawable.xDimension)) * 4;
 					int framebOffset = ((*drawable.xPosition + x) + (*drawable.yPosition + y) * X11::Width()) * 4;
 
-					if (x > *drawable.xDimension || y > *drawable.xDimension || x < 0 || y < 0)
-					{
-						if (drawable.needsFrame)
-						{
-							data[framebOffset + 0] = 1;
-							data[framebOffset + 1] = 1;
-							data[framebOffset + 2] = 1;
-							data[framebOffset + 3] = 1;
-						}
-					}
-					else
+					if (x < *drawable.xDimension && y < *drawable.yDimension && x >= 0 && y >= 0)
 					{
 						data[framebOffset + 0] = (*drawable.data)[windowOffset + 2];
 						data[framebOffset + 1] = (*drawable.data)[windowOffset + 1];
 						data[framebOffset + 2] = (*drawable.data)[windowOffset + 0];
 						data[framebOffset + 3] = (*drawable.data)[windowOffset + 3];
 					}
+					else
+					{
+						if (drawable.needsFrame)
+						{
+							data[framebOffset + 0] = 0xFF;
+							data[framebOffset + 1] = 0xFF;
+							data[framebOffset + 2] = 0xFF;
+							data[framebOffset + 3] = 0xFF;
+						}
+					}
 				}
 		}
 
 		Awning::Wayland::Surface::HandleFrameCallbacks();
+		X11::Draw();
 	}
 
 	wl_display_destroy(Awning::server.display);
