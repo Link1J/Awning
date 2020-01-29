@@ -3,9 +3,11 @@
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrender.h>
+#include <X11/extensions/Xfixes.h>
 #include <linux/input.h>
 
-#include "wayland/seat.hpp"
+#include "wayland/pointer.hpp"
+#include "wayland/keyboard.hpp"
 
 #include "log.hpp"
 
@@ -135,6 +137,14 @@ void X11::Poll()
 			if (event.xbutton.button == Button2) button = BTN_MIDDLE;
 			if (event.xbutton.button == Button3) button = BTN_RIGHT;
 			Awning::Wayland::Pointer::Button(button, false);
+		}
+		else if (event.type == KeyPress)
+		{
+			Awning::Wayland::Keyboard::Button(event.xkey.keycode, true);
+		}
+		else if (event.type == KeyRelease)
+		{
+			Awning::Wayland::Keyboard::Button(event.xkey.keycode, false);
 		}
 	}
 

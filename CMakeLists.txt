@@ -16,6 +16,8 @@ set(SOURCES
     src/wayland/shell.cpp
     src/wayland/surface.cpp
     src/wayland/region.cpp
+    src/wayland/pointer.cpp
+    src/wayland/keyboard.cpp
 
     src/xdg/wm_base.cpp
     src/xdg/surface.cpp
@@ -76,5 +78,6 @@ target_link_libraries(Awning PRIVATE
     Wayland::Server
     X11::X11
     X11::Xext
+    X11::Xfixes
     OpenGL::GL
 )

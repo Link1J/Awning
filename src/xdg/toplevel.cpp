@@ -3,7 +3,7 @@
 #include "log.hpp"
 
 #include "wayland/surface.hpp"
-#include "wayland/seat.hpp"
+#include "wayland/pointer.hpp"
 
 #include "wm/drawable.hpp"
 

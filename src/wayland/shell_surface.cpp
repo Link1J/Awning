@@ -1,6 +1,6 @@
 #include "shell_surface.hpp"
 #include "surface.hpp"
-#include "seat.hpp"
+#include "pointer.hpp"
 #include "log.hpp"
 
 #include "wm/drawable.hpp"

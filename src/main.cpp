@@ -104,8 +104,8 @@ int main()
 			if (!*drawable.data)
 				continue;
 
-			for (int x = -5; x < *drawable.xDimension + 5; x++)
-				for (int y = -5; y < *drawable.yDimension + 5; y++)
+			for (int x = -1; x < *drawable.xDimension + 1; x++)
+				for (int y = -10; y < *drawable.yDimension + 1; y++)
 				{
 					if ((*drawable.xPosition + x) <  0            )
 						continue;
