@@ -29,6 +29,8 @@ namespace Awning::ZXDG::Toplevel_Decoration
 		void Unset_Mode(struct wl_client* client, struct wl_resource *resource)
 		{
 			Log::Function::Called("ZXDG::Toplevel_Decoration::Interface");
+			auto toplevel = data.decorations[resource].toplevel;
+			WM::Drawable::drawables[toplevel].needsFrame = true;
 		}
 	}
 

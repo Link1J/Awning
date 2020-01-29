@@ -61,8 +61,17 @@ namespace Awning::XDG::TopLevel
 		{
 			Log::Function::Called("XDG::TopLevel::Interface");
 
+			auto& topleve = data.toplevels[resource];
+			auto& surface = XDG::Surface::data.surfaces[topleve.surface];
 			auto& pointer = Wayland::Pointer::data.pointers[client];
-			auto& surface = Surface::data.surfaces[data.toplevels[resource].surface];
+
+			//printf("%d %d\n", surface.xPosition, surface.yPosition);
+			//printf("%d %d\n", surface.xDimension, surface.yDimension);
+			//printf("%d %d\n", pointer.xPos, pointer.yPos);
+			//printf("%d %d\n", pointer.xLPos, pointer.yLPos);
+			printf("%d %d\n", pointer.xPos - pointer.xLPos, pointer.yPos - pointer.yLPos);
+
+			Wayland::Pointer::MoveMode();
 		}
 
 		void Resize(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, uint32_t edges)
@@ -120,15 +129,15 @@ namespace Awning::XDG::TopLevel
 		data.toplevels[resource] = Data::Instance();
 		data.toplevels[resource].surface = surface;
 
-		Surface::data.surfaces[resource].xPosition = 200;
-		Surface::data.surfaces[resource].yPosition = 200;
+		XDG::Surface::data.surfaces[resource].xPosition = 200;
+		XDG::Surface::data.surfaces[resource].yPosition = 200;
 
 		auto surface_wl = Surface::data.surfaces[surface].surface_wl;
 
 		WM::Drawable::drawables[resource].xPosition  = &         Surface::data.surfaces[resource  ].xPosition ;
 		WM::Drawable::drawables[resource].yPosition  = &         Surface::data.surfaces[resource  ].yPosition ;
-		WM::Drawable::drawables[resource].xDimension = &         Surface::data.surfaces[resource  ].xDimension;
-		WM::Drawable::drawables[resource].yDimension = &         Surface::data.surfaces[resource  ].yDimension;
+		WM::Drawable::drawables[resource].xDimension = &Wayland::Surface::data.surfaces[surface_wl].xDimension;
+		WM::Drawable::drawables[resource].yDimension = &Wayland::Surface::data.surfaces[surface_wl].yDimension;
 		WM::Drawable::drawables[resource].data       = &Wayland::Surface::data.surfaces[surface_wl].data      ;
 		WM::Drawable::drawables[resource].surface    =                                              surface_wl;
 	}

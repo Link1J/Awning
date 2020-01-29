@@ -1,8 +1,11 @@
 #include "surface.hpp"
 #include "log.hpp"
+#include "protocols/xdg-shell-protocol.h"
 
 #include <unordered_set>
 #include <chrono>
+
+uint32_t NextSerialNum();
 
 namespace Awning::Wayland::Surface
 {
@@ -74,7 +77,13 @@ namespace Awning::Wayland::Surface
 			auto& surface = data.surfaces[resource];
 
 			if (surface.buffer == nullptr)
+			{
+				if (surface.type == 1)
+				{
+					xdg_surface_send_configure(surface.shell, NextSerialNum());
+				}
 				return;
+			}
 
 			struct wl_shm_buffer * shmBuffer = wl_shm_buffer_get(surface.buffer);
 
@@ -86,6 +95,7 @@ namespace Awning::Wayland::Surface
 			}
 
 			wl_buffer_send_release(surface.buffer);
+			HandleFrameCallbacks();
 			surface.buffer = nullptr;
 		}
 

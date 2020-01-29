@@ -8,8 +8,8 @@ namespace Awning::WM::Drawable
 {
 	struct Data
 	{
-		double* xPosition ,* yPosition ;
-		double* xDimension,* yDimension;
+		long long* xPosition ,* yPosition ;
+		long long* xDimension,* yDimension;
 		char** data;
 		bool needsFrame;
 		wl_resource* surface;

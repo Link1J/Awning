@@ -10,8 +10,8 @@ namespace Awning::XDG::Surface
 		struct Instance 
 		{
 			wl_resource* surface_wl;
-			double xPosition, yPosition;
-			double xDimension, yDimension;
+			long long xPosition, yPosition;
+			long long xDimension, yDimension;
 		};
 
 		std::unordered_map<wl_resource*, Instance> surfaces;

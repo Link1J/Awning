@@ -11,11 +11,15 @@ namespace Awning::Wayland::Pointer
 		struct Interface 
 		{
 			wl_resource* resource;
-			int xPos, yPos, xLPos, yLPos;
+			long long xPos;
+			long long yPos; 
+			long long xLPos; 
+			long long yLPos;
 		};
 
 		std::unordered_map<wl_client*,Interface> pointers;
 		wl_resource* pre_shell;
+		bool moveMode = false;
 	};
 
 	extern const struct wl_pointer_interface interface;
@@ -23,6 +27,7 @@ namespace Awning::Wayland::Pointer
 
 	void Moved(double x, double y);
 	void Button(uint32_t button, bool pressed);
+	void MoveMode();
 }
 
 namespace Awning::Wayland::Seat

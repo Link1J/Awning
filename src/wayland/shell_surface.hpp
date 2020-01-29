@@ -10,7 +10,7 @@ namespace Awning::Wayland::Shell_Surface
 		struct Instance 
 		{
 			wl_resource* surface;
-			double xPosition, yPosition;
+			long long xPosition, yPosition;
 		};
 
 		std::unordered_map<wl_resource*, Instance> shells;

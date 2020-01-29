@@ -4,6 +4,7 @@
 #include "log.hpp"
 
 #include "wm/drawable.hpp"
+#include "wayland/surface.hpp"
 
 #include <unordered_map>
 
@@ -69,6 +70,9 @@ namespace Awning::XDG::Surface
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
 		data.surfaces[resource].surface_wl = surface;
+		
+		Wayland::Surface::data.surfaces[surface].type = 1;
+		Wayland::Surface::data.surfaces[surface].shell = resource;
 	}
 
 	void Destroy(struct wl_resource* resource)

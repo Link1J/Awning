@@ -37,6 +37,8 @@ namespace Awning::Wayland::Pointer
 		wl_resource_set_implementation(resource, &interface, nullptr, nullptr);
 
 		data.pointers[wl_client].resource = resource;
+		data.pointers[wl_client].xLPos = -1;
+		data.pointers[wl_client].yLPos = -1;
 	}
 
 	void Moved(double x, double y)
@@ -60,50 +62,62 @@ namespace Awning::Wayland::Pointer
 		{
 			auto& shell = WM::Drawable::drawables[active];
 			auto& surface = Surface::data.surfaces[shell.surface];
-			auto& pointer = data.pointers[surface.client];
+			auto pointer = &data.pointers[surface.client];
 
-			pointer.xPos = x;
-			pointer.yPos = y;
+			pointer->xPos = x;
+			pointer->yPos = y;
 
 			x = (x - *shell.xPosition);
 			y = (y - *shell.yPosition);
 
-			pointer.xLPos = x;
-			pointer.yLPos = y;
+			pointer->xLPos = x;
+			pointer->yLPos = y;
 		}
 
-		int xPoint = wl_fixed_from_double(x);
-		int yPoint = wl_fixed_from_double(y);
-
-		if (active != data.pre_shell)
+		if (!data.moveMode)
 		{
-			if (data.pre_shell != nullptr)
+			int xPoint = wl_fixed_from_double(x);
+			int yPoint = wl_fixed_from_double(y);
+	
+			if (active != data.pre_shell)
 			{
-				auto& pre_shell = WM::Drawable::drawables[data.pre_shell];
-				auto& surface = Surface::data.surfaces[pre_shell.surface];
-				auto resource = data.pointers[surface.client].resource;
-				wl_pointer_send_leave(resource, NextSerialNum(), pre_shell.surface);
+				if (data.pre_shell != nullptr)
+				{
+					auto& pre_shell = WM::Drawable::drawables[data.pre_shell];
+					auto& surface = Surface::data.surfaces[pre_shell.surface];
+					auto resource = data.pointers[surface.client].resource;
+					wl_pointer_send_leave(resource, NextSerialNum(), pre_shell.surface);
+				}
+				
+				if (active != nullptr)
+				{
+					auto& shell = WM::Drawable::drawables[active];
+					auto& surface = Surface::data.surfaces[shell.surface];
+					auto resource = data.pointers[surface.client].resource;
+					wl_pointer_send_enter(resource, NextSerialNum(), shell.surface, xPoint, yPoint);
+					wl_pointer_send_frame(resource);
+				}
+				
+				data.pre_shell = active;
 			}
-			
-			if (active != nullptr)
+			else if (active != nullptr)
 			{
+				auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
 				auto& shell = WM::Drawable::drawables[active];
 				auto& surface = Surface::data.surfaces[shell.surface];
 				auto resource = data.pointers[surface.client].resource;
-				wl_pointer_send_enter(resource, NextSerialNum(), shell.surface, xPoint, yPoint);
+				wl_pointer_send_motion(resource, time, xPoint, yPoint);
 				wl_pointer_send_frame(resource);
 			}
-			
-			data.pre_shell = active;
 		}
-		else if (active != nullptr)
+		else
 		{
-			auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000;
-			auto& shell = WM::Drawable::drawables[active];
+			auto& shell = WM::Drawable::drawables[data.pre_shell];
 			auto& surface = Surface::data.surfaces[shell.surface];
-			auto resource = data.pointers[surface.client].resource;
-			wl_pointer_send_motion(resource, time, xPoint, yPoint);
-			wl_pointer_send_frame(resource);
+			auto& pointer = data.pointers[surface.client];
+
+			*shell.xPosition = pointer.xPos - pointer.xLPos;
+			*shell.yPosition = pointer.yPos - pointer.yLPos;
 		}
 	}
 
@@ -111,15 +125,33 @@ namespace Awning::Wayland::Pointer
 	{
 		//Log::Function::Called("Wayland::Pointer");
 
-		if (data.pre_shell != nullptr)
+		if (!data.moveMode)
 		{
-			auto& shell = WM::Drawable::drawables[data.pre_shell];
-			auto& surface = Surface::data.surfaces[shell.surface];
-			auto resource = data.pointers[surface.client].resource;
+			if (data.pre_shell != nullptr)
+			{
+				auto& shell = WM::Drawable::drawables[data.pre_shell];
+				auto& surface = Surface::data.surfaces[shell.surface];
+				auto resource = data.pointers[surface.client].resource;
 
-			auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000;
-			wl_pointer_send_button(resource, NextSerialNum(), time, button, released);
+				auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
+				wl_pointer_send_button(resource, NextSerialNum(), time, button, released);
+			}
 		}
+		else
+		{
+			data.moveMode = false;
+			data.pre_shell = nullptr;
+		}	
+	}
+
+	void MoveMode()
+	{
+		data.moveMode = true;
+
+		auto& pre_shell = WM::Drawable::drawables[data.pre_shell];
+		auto& surface = Surface::data.surfaces[pre_shell.surface];
+		auto resource = data.pointers[surface.client].resource;
+		wl_pointer_send_leave(resource, NextSerialNum(), pre_shell.surface);
 	}
 }
 

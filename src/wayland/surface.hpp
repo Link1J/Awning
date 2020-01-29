@@ -9,10 +9,13 @@ namespace Awning::Wayland::Surface
 	{
 		struct Instance 
 		{
-			double xDimension, yDimension;
+			long long xDimension, yDimension;
 			bool damaged = false;
+			char type = -1;
 			char* data = nullptr;
 			wl_resource* buffer;
+			wl_resource* shell;
+			wl_resource* toplevel;
 			wl_client* client;
 		};
 
