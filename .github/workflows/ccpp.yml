@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: install
-      run: sudo apt install -y extra-cmake-modules libwayland-dev wayland-protocols
+      run: sudo apt install -y extra-cmake-modules libwayland-dev wayland-protocols mesa-utils xorg-dev
     - name: configure
       run: mkdir build && cd build && cmake ..
     - name: make
