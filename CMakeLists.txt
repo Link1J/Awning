@@ -21,6 +21,7 @@ set(SOURCES
     src/xdg/surface.cpp
     src/xdg/toplevel.cpp
     src/xdg/popup.cpp
+    src/xdg/decoration.cpp
 
     src/wm/drawable.cpp
 )

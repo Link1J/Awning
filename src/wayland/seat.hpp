@@ -11,6 +11,7 @@ namespace Awning::Wayland::Pointer
 		struct Interface 
 		{
 			wl_resource* resource;
+			int xPos, yPos, xLPos, yLPos;
 		};
 
 		std::unordered_map<wl_client*,Interface> pointers;

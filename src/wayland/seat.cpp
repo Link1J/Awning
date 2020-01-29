@@ -59,9 +59,17 @@ namespace Awning::Wayland::Pointer
 		if (active)
 		{
 			auto& shell = WM::Drawable::drawables[active];
+			auto& surface = Surface::data.surfaces[shell.surface];
+			auto& pointer = data.pointers[surface.client];
+
+			pointer.xPos = x;
+			pointer.yPos = y;
 
 			x = (x - *shell.xPosition);
 			y = (y - *shell.yPosition);
+
+			pointer.xLPos = x;
+			pointer.yLPos = y;
 		}
 
 		int xPoint = wl_fixed_from_double(x);

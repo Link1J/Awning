@@ -78,7 +78,7 @@ void X11::Start()
 	GLint gl_attribs[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
 	auto vi = glXChooseVisual(display, 0, doubleBufferAttributes);
 	attribs.colormap = XCreateColormap(display, root, vi->visual, AllocNone);
-	attribs.event_mask = StructureNotifyMask|ExposureMask|ButtonPressMask|KeyPressMask|PointerMotionMask|ButtonReleaseMask;
+	attribs.event_mask = StructureNotifyMask|ExposureMask|ButtonPressMask|KeyPressMask|PointerMotionMask|ButtonReleaseMask|KeyReleaseMask;
 	
 	window = XCreateWindow(display, root, 30, 30, width , height, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &attribs);
 	XStoreName(display, window, "Awning (X11 Backend)");

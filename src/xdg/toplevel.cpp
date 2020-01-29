@@ -3,6 +3,7 @@
 #include "log.hpp"
 
 #include "wayland/surface.hpp"
+#include "wayland/seat.hpp"
 
 #include "wm/drawable.hpp"
 
@@ -59,6 +60,9 @@ namespace Awning::XDG::TopLevel
 		void Move(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
 		{
 			Log::Function::Called("XDG::TopLevel::Interface");
+
+			auto& pointer = Wayland::Pointer::data.pointers[client];
+			auto& surface = Surface::data.surfaces[data.toplevels[resource].surface];
 		}
 
 		void Resize(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, uint32_t edges)
