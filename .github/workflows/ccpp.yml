@@ -9,10 +9,12 @@ jobs:
     
     steps:
     - uses: actions/checkout@v2
+    - name: install
+      run: apt install -y extra-cmake-modules libwayland-dev wayland-protocols
     - name: configure
-      run: ./configure
+      run: mkdir build && cd build && cmake ..
     - name: make
-      run: make
+      run: cmake --build build
     - name: make check
       run: make check
     - name: make distcheck
