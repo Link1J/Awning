@@ -123,8 +123,8 @@ namespace Awning::XDG::TopLevel
 		data.toplevels[resource] = Data::Instance();
 		data.toplevels[resource].surface = surface;
 
-		XDG::Surface::data.surfaces[resource].xPosition = 200;
-		XDG::Surface::data.surfaces[resource].yPosition = 200;
+		XDG::Surface::data.surfaces[resource].xPosition = 0;
+		XDG::Surface::data.surfaces[resource].yPosition = 0;
 
 		auto surface_wl = Surface::data.surfaces[surface].surface_wl;
 
