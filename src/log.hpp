@@ -9,5 +9,6 @@ namespace Log
 	namespace Function 
 	{
 		void Called(std::string from, source_location function = source_location::current());
+		void Locate(std::string from, std::string location, source_location function = source_location::current());
 	}
 }
