@@ -147,7 +147,11 @@ namespace Awning::Wayland::Pointer
 					{
 						auto& surface = Surface::data.surfaces[pre_shell.surface];
 						auto resource = data.pointers[surface.client].resource;
-						wl_pointer_send_leave(resource, NextSerialNum(), pre_shell.surface);
+
+						if (resource)
+						{
+							wl_pointer_send_leave(resource, NextSerialNum(), pre_shell.surface);
+						}
 					}
 				}
 				
@@ -156,8 +160,12 @@ namespace Awning::Wayland::Pointer
 					auto& shell = WM::Drawable::drawables[active];
 					auto& surface = Surface::data.surfaces[shell.surface];
 					auto resource = data.pointers[surface.client].resource;
-					wl_pointer_send_enter(resource, NextSerialNum(), shell.surface, xPoint, yPoint);
-					wl_pointer_send_frame(resource);
+
+					if (resource)
+					{
+						wl_pointer_send_enter(resource, NextSerialNum(), shell.surface, xPoint, yPoint);
+						wl_pointer_send_frame(resource);
+					}
 				}
 				
 				data.pre_shell = active;
@@ -168,8 +176,12 @@ namespace Awning::Wayland::Pointer
 				auto& shell = WM::Drawable::drawables[active];
 				auto& surface = Surface::data.surfaces[shell.surface];
 				auto resource = data.pointers[surface.client].resource;
-				wl_pointer_send_motion(resource, time, xPoint, yPoint);
-				wl_pointer_send_frame(resource);
+			
+				if (resource)
+				{
+					wl_pointer_send_motion(resource, time, xPoint, yPoint);
+					wl_pointer_send_frame(resource);
+				}
 				Surface::HandleFrameCallbacks();
 			}
 		}
@@ -209,8 +221,11 @@ namespace Awning::Wayland::Pointer
 				auto& surface = Surface::data.surfaces[shell.surface];
 				auto resource = data.pointers[surface.client].resource;
 
-				auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
-				wl_pointer_send_button(resource, NextSerialNum(), time, button, pressed);
+				if (resource)
+				{
+					auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
+					wl_pointer_send_button(resource, NextSerialNum(), time, button, pressed);
+				}
 			}
 		}
 		else

@@ -95,7 +95,6 @@ namespace Awning::Wayland::Surface
 			}
 
 			wl_buffer_send_release(surface.buffer);
-			HandleFrameCallbacks();
 			surface.buffer = nullptr;
 		}
 
