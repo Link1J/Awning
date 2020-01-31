@@ -129,7 +129,6 @@ void X11::Poll()
 		}
 		else if (event.type == ClientMessage)
 		{
-			XDestroyWindow(display, window);
 		}
 		else if (event.type == MotionNotify)
 		{

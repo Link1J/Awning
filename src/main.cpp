@@ -4,6 +4,10 @@
 #include "protocols/xdg-shell-protocol.h"
 
 #include <sys/signal.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
 
 #include "wayland/compositor.hpp"
 #include "wayland/seat.hpp"
@@ -51,21 +55,27 @@ uint32_t NextSerialNum()
 
 int main()
 {
-	X11::Start();
+    int pid;
+    int status, ret;
+    char* XWaylandArgs [] = { "Xwayland", ":1", NULL };
 
-	Awning::server.display = wl_display_create();
-	Awning::server.event_loop = wl_display_get_event_loop(Awning::server.display);
+	pid = fork();
 
-	//wl_list_init(&Awning::server.child_process_list);
+	if (pid == 0) 
+	{
+		ret = execvp(XWaylandArgs[0], XWaylandArgs);
+		printf("Xwayland did not launch! %d %s\n", ret, strerror(errno));
+		return ret;
+    }
 
-	//Awning::server.signals[0] = wl_event_loop_add_signal(Awning::server.event_loop, SIGTERM, on_term_signal, Awning::server.display);
-	//Awning::server.signals[1] = wl_event_loop_add_signal(Awning::server.event_loop, SIGINT , on_term_signal, Awning::server.display);
-	//Awning::server.signals[2] = wl_event_loop_add_signal(Awning::server.event_loop, SIGQUIT, on_term_signal, Awning::server.display);
-	//Awning::server.signals[3] = wl_event_loop_add_signal(Awning::server.event_loop, SIGCHLD, sigchld_handler, NULL);
-	
-	wl_display_add_protocol_logger(Awning::server.display, ProtocolLogger, nullptr);    
+	Awning::server.display = wl_display_create(); 
 	const char* socket = wl_display_add_socket_auto(Awning::server.display);
 	std::cout << "Wayland Socket: " << socket << std::endl;
+
+	X11::Start();
+
+	Awning::server.event_loop = wl_display_get_event_loop(Awning::server.display);
+	wl_display_add_protocol_logger(Awning::server.display, ProtocolLogger, nullptr);   
 
 	{
 		using namespace Awning;
