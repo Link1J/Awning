@@ -48,29 +48,38 @@ namespace Awning::Wayland::Pointer
 		//Log::Function::Called("Wayland::Pointer");
 
 		wl_resource* active = nullptr;
-		bool frame = false;
+		int frame = 0;
 
 		for (auto& [resource, window] : WM::Drawable::drawables)
 		{
 			if (Surface::data.surfaces.find(window.surface) != Surface::data.surfaces.end())
 			{
-				if (*window.xPosition <= x) 
-					if (*window.yPosition <= y)
-						if (*window.xPosition + *window.xDimension > x)
-							if (*window.yPosition + *window.yDimension > y)
+				if(*window.xPosition <= x && *window.yPosition <= y
+				&& *window.xPosition + *window.xDimension > x
+				&& *window.yPosition + *window.yDimension > y)
 				{
 					active = resource;
 					break;
 				}
 
-				if (window.needsFrame)
-					if (*window.xPosition + 1 <= x) 
-						if (*window.yPosition - 10 <= y)
-							if (*window.xPosition + 1 + *window.xDimension > x)
-								if (*window.yPosition + 1 + *window.yDimension > y)
+				//if(window.needsFrame && *window.xPosition + 1 <= x
+				//&& *window.yPosition - 10 <= y
+				//&& *window.xPosition + 1 + *window.xDimension > x
+				//&& *window.yPosition + 1 + *window.yDimension > y)
+				//{
+				//	active = resource;
+				//	frame = true;
+				//	break;
+				//}
+
+				// Top frame
+				if(window.needsFrame && *window.xPosition + 1 <= x
+				&& *window.yPosition - 10 <= y
+				&& *window.xPosition + 1 + *window.xDimension > x
+				&& *window.yPosition > y)
 				{
 					active = resource;
-					frame = true;
+					frame = 1;
 					break;
 				}
 			}
@@ -79,22 +88,36 @@ namespace Awning::Wayland::Pointer
 		if (data.frame == 2)
 		{
 			auto& shell = WM::Drawable::drawables[data.pre_shell];
-			auto& surface = Surface::data.surfaces[shell.surface];
-			auto& pointer = data.pointers[surface.client];
 
-			*shell.xPosition += x - pointer.xPos;
-			*shell.yPosition += y - pointer.yPos;
+			*shell.xPosition += x - data.xPos;
+			*shell.yPosition += y - data.yPos;
 
-			pointer.xPos = x;
-			pointer.yPos = y;
+			data.xPos = x;
+			data.yPos = y;
 		}
-		else if (frame)
+		else if (frame == 1)
 		{
+			if (data.pre_shell != nullptr)
+			{
+				auto& pre_shell = WM::Drawable::drawables[data.pre_shell];
+				
+				if (Surface::data.surfaces.find(pre_shell.surface) != Surface::data.surfaces.end())
+				{
+					auto& surface = Surface::data.surfaces[pre_shell.surface];
+					auto resource = data.pointers[surface.client].resource;
+					wl_pointer_send_leave(resource, NextSerialNum(), pre_shell.surface);
+				}
+			}
+
 			data.frame = 1;
 			data.pre_shell = active;
+			data.xPos = x;
+			data.yPos = y;
 		}
 		else if (!data.moveMode)
 		{
+			data.frame = 0;
+
 			if (active)
 			{
 				auto& shell = WM::Drawable::drawables[active];
@@ -152,12 +175,17 @@ namespace Awning::Wayland::Pointer
 		}
 		else
 		{
+			data.frame = 0;
+
 			auto& shell = WM::Drawable::drawables[data.pre_shell];
 			auto& surface = Surface::data.surfaces[shell.surface];
 			auto& pointer = data.pointers[surface.client];
 
-			*shell.xPosition = x - *shell.xPosition;
-			*shell.yPosition = y - *shell.yPosition;
+			*shell.xPosition += x - data.xPos;
+			*shell.yPosition += y - data.yPos;
+
+			data.xPos = x;
+			data.yPos = y;
 		}
 	}
 
@@ -171,7 +199,7 @@ namespace Awning::Wayland::Pointer
 		}
 		else if (data.frame == 2 && button == BTN_LEFT && !pressed)
 		{
-			data.frame = 1;
+			data.frame = 0;
 		}
 		else if (!data.moveMode)
 		{
@@ -198,7 +226,11 @@ namespace Awning::Wayland::Pointer
 
 		auto& pre_shell = WM::Drawable::drawables[data.pre_shell];
 		auto& surface = Surface::data.surfaces[pre_shell.surface];
-		auto resource = data.pointers[surface.client].resource;
-		wl_pointer_send_leave(resource, NextSerialNum(), pre_shell.surface);
+		auto& pointer = data.pointers[surface.client];
+		
+		wl_pointer_send_leave(pointer.resource, NextSerialNum(), pre_shell.surface);
+
+		data.xPos = pointer.xPos;
+		data.yPos = pointer.yPos;
 	}
 }

@@ -74,8 +74,6 @@ namespace Awning::Wayland::Surface
 		{
 			Log::Function::Called("Wayland::Surface::Interface");
 
-			printf("%s %p\n", wl_resource_get_class(resource), wl_resource_get_id(resource));
-
 			auto& surface = data.surfaces[resource];
 
 			if (surface.buffer == nullptr)

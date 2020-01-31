@@ -20,7 +20,8 @@ namespace Awning::Wayland::Pointer
 		std::unordered_map<wl_client*,Interface> pointers;
 		wl_resource* pre_shell;
 		bool moveMode = false;
-		int frame;
+		long long frame = 0;
+		long long xPos, yPos; 
 	};
 
 	extern const struct wl_pointer_interface interface;

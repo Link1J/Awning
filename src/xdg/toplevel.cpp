@@ -65,12 +65,6 @@ namespace Awning::XDG::TopLevel
 			auto& surface = XDG::Surface::data.surfaces[topleve.surface];
 			auto& pointer = Wayland::Pointer::data.pointers[client];
 
-			//printf("%d %d\n", surface.xPosition, surface.yPosition);
-			//printf("%d %d\n", surface.xDimension, surface.yDimension);
-			//printf("%d %d\n", pointer.xPos, pointer.yPos);
-			//printf("%d %d\n", pointer.xLPos, pointer.yLPos);
-			printf("%d %d\n", pointer.xPos - pointer.xLPos, pointer.yPos - pointer.yLPos);
-
 			Wayland::Pointer::MoveMode();
 		}
 
