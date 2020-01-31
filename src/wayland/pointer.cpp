@@ -5,6 +5,8 @@
 
 #include "wm/drawable.hpp"
 
+#include <linux/input.h>
+
 #include <chrono>
 #include <iostream>
 
@@ -46,6 +48,8 @@ namespace Awning::Wayland::Pointer
 		//Log::Function::Called("Wayland::Pointer");
 
 		wl_resource* active = nullptr;
+		bool frame = false;
+
 		for (auto& [resource, window] : WM::Drawable::drawables)
 		{
 			if (Surface::data.surfaces.find(window.surface) != Surface::data.surfaces.end())
@@ -58,10 +62,38 @@ namespace Awning::Wayland::Pointer
 					active = resource;
 					break;
 				}
+
+				if (window.needsFrame)
+					if (*window.xPosition + 1 <= x) 
+						if (*window.yPosition - 10 <= y)
+							if (*window.xPosition + 1 + *window.xDimension > x)
+								if (*window.yPosition + 1 + *window.yDimension > y)
+				{
+					active = resource;
+					frame = true;
+					break;
+				}
 			}
 		}
 
-		if (!data.moveMode)
+		if (data.frame == 2)
+		{
+			auto& shell = WM::Drawable::drawables[data.pre_shell];
+			auto& surface = Surface::data.surfaces[shell.surface];
+			auto& pointer = data.pointers[surface.client];
+
+			*shell.xPosition += x - pointer.xPos;
+			*shell.yPosition += y - pointer.yPos;
+
+			pointer.xPos = x;
+			pointer.yPos = y;
+		}
+		else if (frame)
+		{
+			data.frame = 1;
+			data.pre_shell = active;
+		}
+		else if (!data.moveMode)
 		{
 			if (active)
 			{
@@ -129,11 +161,19 @@ namespace Awning::Wayland::Pointer
 		}
 	}
 
-	void Button(uint32_t button, bool released)
+	void Button(uint32_t button, bool pressed)
 	{
 		//Log::Function::Called("Wayland::Pointer");
 
-		if (!data.moveMode)
+		if (data.frame == 1 && button == BTN_LEFT && pressed)
+		{
+			data.frame = 2;
+		}
+		else if (data.frame == 2 && button == BTN_LEFT && !pressed)
+		{
+			data.frame = 1;
+		}
+		else if (!data.moveMode)
 		{
 			if (data.pre_shell != nullptr)
 			{
@@ -142,7 +182,7 @@ namespace Awning::Wayland::Pointer
 				auto resource = data.pointers[surface.client].resource;
 
 				auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
-				wl_pointer_send_button(resource, NextSerialNum(), time, button, released);
+				wl_pointer_send_button(resource, NextSerialNum(), time, button, pressed);
 			}
 		}
 		else
