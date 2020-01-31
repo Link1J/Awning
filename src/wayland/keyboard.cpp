@@ -45,8 +45,11 @@ namespace Awning::Wayland::Keyboard
 			auto& surface = Surface::data.surfaces[shell.surface];
 			auto resource = data.keyboards[surface.client].resource;
 
-			auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
-			//wl_keyboard_send_key(resource, NextSerialNum(), time, button, released);
+			if (resource)
+			{
+				auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
+				wl_keyboard_send_key(resource, NextSerialNum(), time, button, released);
+			}
 		}
 	}
 }

@@ -98,6 +98,18 @@ void X11::Start()
 	glClearColor(1, 1, 1, 1);
 }
 
+uint32_t XorgMouseToLinuxInputMouse(uint32_t button)
+{
+	if (button == Button1) return BTN_LEFT;
+	if (button == Button2) return BTN_MIDDLE;
+	if (button == Button3) return BTN_RIGHT;
+	return BTN_EXTRA;
+}
+
+uint32_t XorgKeyboardToLinuxInputKeyboard(uint32_t button)
+{
+}
+
 void X11::Poll()
 {
 	XEvent event;
@@ -117,6 +129,7 @@ void X11::Poll()
 		}
 		else if (event.type == ClientMessage)
 		{
+			XDestroyWindow(display, window);
 		}
 		else if (event.type == MotionNotify)
 		{
@@ -124,27 +137,21 @@ void X11::Poll()
 		}
 		else if (event.type == ButtonPress)
 		{
-			uint32_t button = BTN_EXTRA;
-			if (event.xbutton.button == Button1) button = BTN_LEFT;
-			if (event.xbutton.button == Button2) button = BTN_MIDDLE;
-			if (event.xbutton.button == Button3) button = BTN_RIGHT;
+			uint32_t button = XorgMouseToLinuxInputMouse(event.xbutton.button);
 			Awning::Wayland::Pointer::Button(button, true);
 		}
 		else if (event.type == ButtonRelease)
 		{
-			uint32_t button = BTN_EXTRA;
-			if (event.xbutton.button == Button1) button = BTN_LEFT;
-			if (event.xbutton.button == Button2) button = BTN_MIDDLE;
-			if (event.xbutton.button == Button3) button = BTN_RIGHT;
+			uint32_t button = XorgMouseToLinuxInputMouse(event.xbutton.button);
 			Awning::Wayland::Pointer::Button(button, false);
 		}
 		else if (event.type == KeyPress)
 		{
-			Awning::Wayland::Keyboard::Button(event.xkey.keycode, true);
+			Awning::Wayland::Keyboard::Button(event.xkey.keycode - 8, true);
 		}
 		else if (event.type == KeyRelease)
 		{
-			Awning::Wayland::Keyboard::Button(event.xkey.keycode, false);
+			Awning::Wayland::Keyboard::Button(event.xkey.keycode - 8, false);
 		}
 	}
 
