@@ -12,7 +12,7 @@ namespace Log
 			std::cout << "[CALLED ] " << from << "::" << function.function_name() << "\n";
 		}
 
-		void Locate(std::string from, std::string location, source_location function = source_location::current())
+		void Locate(std::string from, std::string location, source_location function)
 		{
 			std::cout << "[LOCATE ] " << from << "::" << function.function_name() << "::" << location << "\n";
 		}
