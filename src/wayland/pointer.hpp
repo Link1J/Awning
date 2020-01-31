@@ -30,5 +30,6 @@ namespace Awning::Wayland::Pointer
 	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id);
 	void Moved(double x, double y);
 	void Button(uint32_t button, bool pressed);
+	void Axis(uint32_t axis, float value);
 	void MoveMode();
 }

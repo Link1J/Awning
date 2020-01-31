@@ -235,6 +235,25 @@ namespace Awning::Wayland::Pointer
 		}	
 	}
 
+	void Axis(uint32_t axis, float value)
+	{
+		//Log::Function::Called("Wayland::Pointer");
+
+		if (data.pre_shell != nullptr)
+		{
+			auto& shell = WM::Drawable::drawables[data.pre_shell];
+			auto& surface = Surface::data.surfaces[shell.surface];
+			auto resource = data.pointers[surface.client].resource;
+
+			if (resource)
+			{
+				auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
+				int step = wl_fixed_from_double(value);
+				wl_pointer_send_axis(resource, time, axis, step);
+			}
+		}	
+	}
+
 	void MoveMode()
 	{
 		data.moveMode = true;

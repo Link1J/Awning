@@ -136,8 +136,29 @@ void X11::Poll()
 		}
 		else if (event.type == ButtonPress)
 		{
-			uint32_t button = XorgMouseToLinuxInputMouse(event.xbutton.button);
-			Awning::Wayland::Pointer::Button(button, true);
+			printf("Button: %d\n", event.xbutton.button);
+			if (event.xbutton.button > Button3)
+			{
+				int axis = -1;
+				int step = 0;
+
+				if (event.xbutton.button == Button4)
+				{
+					step = -15;
+					axis = 0;
+				}
+				if (event.xbutton.button == Button5)
+				{
+					step = 15;
+					axis = 0;
+				}
+				Awning::Wayland::Pointer::Axis(axis, step);
+			}
+			else
+			{
+				uint32_t button = XorgMouseToLinuxInputMouse(event.xbutton.button);
+				Awning::Wayland::Pointer::Button(button, true);
+			}
 		}
 		else if (event.type == ButtonRelease)
 		{
