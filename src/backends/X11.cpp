@@ -136,7 +136,6 @@ void X11::Poll()
 		}
 		else if (event.type == ButtonPress)
 		{
-			printf("Button: %d\n", event.xbutton.button);
 			if (event.xbutton.button > Button3)
 			{
 				int axis = -1;

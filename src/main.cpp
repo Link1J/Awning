@@ -53,20 +53,34 @@ uint32_t NextSerialNum()
 	return lastSerialNum;
 }
 
-int main()
+int main(int argc, char* argv[])
 {
-    int pid;
-    int status, ret;
-    char* XWaylandArgs [] = { "Xwayland", ":1", NULL };
+	bool noX = false;
 
-	pid = fork();
-
-	if (pid == 0) 
+	for(int a = 0; a < argc; a++)
 	{
-		ret = execvp(XWaylandArgs[0], XWaylandArgs);
-		printf("Xwayland did not launch! %d %s\n", ret, strerror(errno));
-		return ret;
-    }
+		auto arg = std::string(argv[a]);
+		if (arg == "-noX")
+		{
+			noX = true;
+		}
+	}
+
+	if (!noX)
+	{
+    	int pid;
+    	int status, ret;
+    	char* XWaylandArgs [] = { "Xwayland", ":1", NULL };
+
+		pid = fork();
+
+		if (pid == 0) 
+		{
+			ret = execvp(XWaylandArgs[0], XWaylandArgs);
+			printf("Xwayland did not launch! %d %s\n", ret, strerror(errno));
+			return ret;
+    	}
+	}
 
 	Awning::server.display = wl_display_create(); 
 	const char* socket = wl_display_add_socket_auto(Awning::server.display);
