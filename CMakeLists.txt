@@ -28,6 +28,7 @@ set(SOURCES
     src/xdg/decoration.cpp
 
     src/wm/drawable.cpp
+    src/wm/manager.cpp
 
     src/wm/x/wm.cpp
 )
