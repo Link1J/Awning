@@ -1,7 +1,7 @@
 #pragma once
 #include "wm/texture.hpp"
 
-namespace Awning::Backend::X11 
+namespace Awning::Backend::FBDEV 
 {
 	void Start();
 	void Poll();

@@ -8,6 +8,8 @@ set(SOURCES
     src/log.cpp
 
     src/backends/X11.cpp
+    src/backends/manager.cpp
+    src/backends/fbdev.cpp
 
     src/wayland/compositor.cpp
     src/wayland/seat.cpp
@@ -26,6 +28,8 @@ set(SOURCES
     src/xdg/decoration.cpp
 
     src/wm/drawable.cpp
+
+    src/wm/x/wm.cpp
 )
 
 set(SOURCE_WAYLAND

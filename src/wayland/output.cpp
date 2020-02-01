@@ -1,7 +1,7 @@
 #include "output.hpp"
 #include "log.hpp"
 
-#include "backends/X11.hpp"
+#include "backends/manager.hpp"
 
 namespace Awning::Wayland::Output
 {
@@ -31,13 +31,32 @@ namespace Awning::Wayland::Output
 		}
 		wl_resource_set_implementation(resource, &interface, data, nullptr);
 
-		if (version >= WL_OUTPUT_GEOMETRY_SINCE_VERSION)
-			wl_output_send_geometry(resource, 0, 0, X11::Width(), X11::Height(), WL_OUTPUT_SUBPIXEL_NONE, "X.Org Foundation", "11.0", WL_OUTPUT_TRANSFORM_NORMAL);
-		if (version >= WL_OUTPUT_SCALE_SINCE_VERSION   )
-			wl_output_send_scale   (resource, 1);
-		if (version >= WL_OUTPUT_MODE_SINCE_VERSION    )
-			wl_output_send_mode    (resource, WL_OUTPUT_MODE_CURRENT | WL_OUTPUT_MODE_PREFERRED, X11::Width(), X11::Height(), 60000);
-		if (version >= WL_OUTPUT_DONE_SINCE_VERSION    )
-			wl_output_send_done    (resource);
+		for (auto& output : Backend::Outputs::Get())
+		{
+			wl_output_send_geometry(resource, 
+				0, 
+				0, 
+				output.physical.width, 
+				output.physical.height, 
+				WL_OUTPUT_SUBPIXEL_NONE, 
+				output.manufacturer.c_str(), 
+				output.model.c_str(), 
+				WL_OUTPUT_TRANSFORM_NORMAL
+			);
+
+			wl_output_send_scale(resource, 1);
+
+			for (auto& mode : output.modes)
+			{
+				wl_output_send_mode(resource, 
+					mode.current  ? WL_OUTPUT_MODE_CURRENT : 0 | 
+					mode.prefered ? WL_OUTPUT_MODE_PREFERRED : 0 , 
+					mode.resolution.width, 
+					mode.resolution.height, 
+					mode.refresh_rate
+				);
+			}
+		}
+		wl_output_send_done(resource);
 	}
 }

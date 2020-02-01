@@ -11,23 +11,23 @@
 
 #include "log.hpp"
 
-#include <cstdio>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <chrono>
 #include <thread>
 
 #include "X11.hpp"
+#include "manager.hpp"
 
-static Display*		display;
-static Window		window;
-static GLXContext	context;
-static GLuint		texture;
-
-static int 			width   = 1024;
-static int 			height  = 576;
-static bool 		resized = false;
-static char*		buffer  = nullptr;
+static Display*		             display;
+static Window		             window;
+static GLXContext	             context;
+static GLuint		             texture;
+             
+static bool 		             resized = false;
+static Awning::WM::Texture::Data framebuffer;
 
 static int doubleBufferAttributes[] = {
     GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
@@ -42,7 +42,7 @@ static int doubleBufferAttributes[] = {
 
 using namespace std::chrono_literals;
 
-namespace X11
+namespace Awning::Backend::X11
 {
 	void CreateBackingTexture()
 	{
@@ -52,20 +52,28 @@ namespace X11
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, framebuffer.width, framebuffer.height, 
+			0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
-		buffer = new char[width * height * 4];
+		framebuffer.buffer.u8 = new uint8_t[framebuffer.size];
 	}
 
 	void ReleaseBackingTexture()
 	{
 		glDeleteTextures(1, &texture);
-		delete buffer;
+
+		if (framebuffer.buffer.u8)
+		{
+			delete framebuffer.buffer.u8;
+			framebuffer.buffer.u8 = nullptr;
+		}
 	}
 }
 
-void X11::Start()
+void Awning::Backend::X11::Start()
 {
+	int width = 800, height = 600;
+
 	int screen;
 	XSetWindowAttributes attribs;
  
@@ -78,12 +86,11 @@ void X11::Start()
 	screen = DefaultScreen(display);
 	auto root = RootWindow(display, screen);
 
-	GLint gl_attribs[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
 	auto vi = glXChooseVisual(display, 0, doubleBufferAttributes);
 	attribs.colormap = XCreateColormap(display, root, vi->visual, AllocNone);
 	attribs.event_mask = StructureNotifyMask|ExposureMask|ButtonPressMask|KeyPressMask|PointerMotionMask|ButtonReleaseMask|KeyReleaseMask;
 	
-	window = XCreateWindow(display, root, 30, 30, width , height, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &attribs);
+	window = XCreateWindow(display, root, 30, 30, width, height, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &attribs);
 	XStoreName(display, window, "Awning (X11 Backend)");
 	XMapWindow(display, window);
 
@@ -94,8 +101,49 @@ void X11::Start()
 	fprintf(stdout, "GL Vendor     : %s\n", glGetString(GL_VENDOR  ));
 	fprintf(stdout, "GL Renderer   : %s\n", glGetString(GL_RENDERER));
 
+	framebuffer = Awning::WM::Texture::Data {
+        .size         = width * height * 4,
+        .bitsPerPixel = 32,
+        .bytesPerLine = width * 4,
+        .red          = { 
+			.size   = 8,
+			.offset = 0
+		},
+        .green        = { 
+			.size   = 8,
+			.offset = 8
+		},
+        .blue         = { 
+			.size   = 8,
+			.offset = 16
+		},
+        .width        = width,
+        .height       = height
+    };
+
 	CreateBackingTexture();
 	glClearColor(1, 1, 1, 1);
+
+	Output output {
+		.manufacturer = "X.Org Foundation",
+		.model        = "11.0",
+		.physical     = {
+			.width  = 0,
+			.height = 0,
+		},
+		.modes        = {
+			Output::Mode {
+				.resolution   = {
+					.width  = framebuffer.width,
+					.height = framebuffer.height,
+				},
+				.refresh_rate = 60000,
+				.prefered     = true,
+				.current      = true,
+			}
+		}
+	};
+	Outputs::Add(output);
 }
 
 uint32_t XorgMouseToLinuxInputMouse(uint32_t button)
@@ -110,10 +158,10 @@ uint32_t XorgKeyboardToLinuxInputKeyboard(uint32_t button)
 {
 }
 
-void X11::Poll()
+void Awning::Backend::X11::Poll()
 {
 	XEvent event;
-	int preWidth = width, preHeight = height;
+	int preWidth = framebuffer.width, preHeight = framebuffer.height;
 
 	while(XPending(display))
 	{
@@ -121,10 +169,10 @@ void X11::Poll()
 
 		if (event.type == ConfigureNotify)
 		{
-			width   = event.xconfigurerequest.width ;
-			height  = event.xconfigurerequest.height;
+			framebuffer.width   = event.xconfigurerequest.width ;
+			framebuffer.height  = event.xconfigurerequest.height;
 
-			if (preWidth != width || preHeight != height)
+			if (preWidth != framebuffer.width || preHeight != framebuffer.height)
 				resized = true;
 		}
 		else if (event.type == ClientMessage)
@@ -176,30 +224,46 @@ void X11::Poll()
 
 	if (resized)
 	{
+		framebuffer.size = framebuffer.width * framebuffer.height * 4;
+		framebuffer.bytesPerLine = framebuffer.width * 4;
+
 		ReleaseBackingTexture();
 		CreateBackingTexture();
+
+		Output output {
+			.manufacturer = "X.Org Foundation",
+			.model        = "11.0",
+			.physical     = {
+				.width  = 0,
+				.height = 0,
+			},
+			.modes        = {
+				Output::Mode {
+					.resolution   = {
+						.width  = framebuffer.width,
+						.height = framebuffer.height,
+					},
+					.refresh_rate = 60000,
+					.prefered     = true,
+					.current      = true,
+				}
+			}
+		};
+		Outputs::Update(0, output);
+
 		resized = false;
 	}
 
 	glClear(GL_COLOR_BUFFER_BIT);
-	glViewport(0, 0, width, height);
+	glViewport(0, 0, framebuffer.width, framebuffer.height);
 
-	for (int x = 0; x < width; x++)
-	{
-		for (int y = 0; y < height; y++)
-		{
-			int framebOffset = (x + y * width) * 4;
-			buffer[framebOffset + 0] = 0;
-			buffer[framebOffset + 1] = 0;
-			buffer[framebOffset + 2] = 0;
-			buffer[framebOffset + 3] = 0;
-		}
-	}
+	memset(framebuffer.buffer.u8, 0, framebuffer.size);
 }
 
-void X11::Draw()
+void Awning::Backend::X11::Draw()
 {
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer.width, framebuffer.height, 
+		GL_RGBA, GL_UNSIGNED_BYTE, framebuffer.buffer.u8);
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0, 1.0); glVertex3f(-1.0f, -1.0f, 0.0f);
 		glTexCoord2f(0.0, 0.0); glVertex3f(-1.0f,  1.0f, 0.0f);
@@ -209,17 +273,7 @@ void X11::Draw()
 	glXSwapBuffers(display, window);
 }
 
-char* X11::Data()
+Awning::WM::Texture::Data Awning::Backend::X11::Data()
 {
-	return buffer;
-}
-
-int X11::Width()
-{
-	return width;
-}
-
-int X11::Height()
-{
-	return height;
+	return framebuffer;
 }

@@ -1,13 +1,16 @@
-#include "backends/X11.hpp"
+#include "backends/manager.hpp"
 
 #include <wayland-server.h>
 #include "protocols/xdg-shell-protocol.h"
 
 #include <sys/signal.h>
 #include <sys/types.h>
+
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#include <stdio.h>
+#include <fcntl.h>
 
 #include "wayland/compositor.hpp"
 #include "wayland/seat.hpp"
@@ -21,10 +24,16 @@
 
 #include "wm/drawable.hpp"
 
+#include "wm/x/wm.hpp"
+
+#include "log.hpp"
+
 #include <iostream>
 #include <unordered_map>
 
 void ProtocolLogger(void* user_data, wl_protocol_logger_type direction, const wl_protocol_logger_message* message);
+int XWM_Start(int signal_number, void *data);
+void LaunchXwayland(int signal_number);
 
 int on_term_signal(int signal_number, void* data);
 int sigchld_handler(int signal_number, void* data);
@@ -37,8 +46,7 @@ namespace Awning
 		{
 			wl_display* display;
 			wl_event_loop* event_loop;
-			wl_event_source* signals[4];
-			wl_list child_process_list;
+			wl_event_source* sigusr1;
 			wl_protocol_logger* logger; 
 		};
 	}	
@@ -56,6 +64,7 @@ uint32_t NextSerialNum()
 int main(int argc, char* argv[])
 {
 	bool noX = false;
+	Awning::Backend::API api = Awning::Backend::API::X11;
 
 	for(int a = 0; a < argc; a++)
 	{
@@ -64,32 +73,42 @@ int main(int argc, char* argv[])
 		{
 			noX = true;
 		}
+		if (arg == "-fbdev")
+		{
+			api = Awning::Backend::API::FBDEV;
+		}
+		if (arg == "-x11")
+		{
+			api = Awning::Backend::API::X11;
+		}
 	}
+
+    int pid;
+    int status, ret;
 
 	if (!noX)
 	{
-    	int pid;
-    	int status, ret;
-    	char* XWaylandArgs [] = { "Xwayland", ":1", NULL };
-
 		pid = fork();
+	}
 
-		if (pid == 0) 
-		{
-			ret = execvp(XWaylandArgs[0], XWaylandArgs);
-			printf("Xwayland did not launch! %d %s\n", ret, strerror(errno));
-			return ret;
-    	}
+	if (!noX && pid == 0) 
+	{
+		signal(SIGUSR1, SIG_IGN);
+		signal(SIGUSR2, LaunchXwayland);
+		pause();
+   		exit(-1);
 	}
 
 	Awning::server.display = wl_display_create(); 
 	const char* socket = wl_display_add_socket_auto(Awning::server.display);
 	std::cout << "Wayland Socket: " << socket << std::endl;
 
-	X11::Start();
+	Awning::Backend::Init(api);
 
 	Awning::server.event_loop = wl_display_get_event_loop(Awning::server.display);
-	wl_display_add_protocol_logger(Awning::server.display, ProtocolLogger, nullptr);   
+	wl_display_add_protocol_logger(Awning::server.display, ProtocolLogger, nullptr);
+
+	Awning::server.sigusr1 = wl_event_loop_add_signal(Awning::server.event_loop, SIGUSR1, XWM_Start, nullptr);
 
 	{
 		using namespace Awning;
@@ -111,15 +130,22 @@ int main(int argc, char* argv[])
 		WM_Base           ::data.global = wl_global_create(server.display, &xdg_wm_base_interface               , 1, nullptr, WM_Base           ::Bind);
 		Decoration_Manager::data.global = wl_global_create(server.display, &zxdg_decoration_manager_v1_interface, 1, nullptr, Decoration_Manager::Bind);
 	}
-	
-	while (1)
+
+	if (pid != 0)
 	{
-		X11::Poll();
+		kill(pid, SIGUSR2);
+	}
+	
+	while(1)
+	{
+		Awning::Backend::Poll();
 
 		wl_event_loop_dispatch(Awning::server.event_loop, 0);
 		wl_display_flush_clients(Awning::server.display);
 
-		auto data = X11::Data();
+		Awning::WM::X::EventLoop();
+
+		auto data = Awning::Backend::Data();
 
 		for (auto& [resource, drawable] : Awning::WM::Drawable::drawables)
 		{
@@ -131,40 +157,45 @@ int main(int argc, char* argv[])
 			for (int x = -1; x < *drawable.xDimension + 1; x++)
 				for (int y = -10; y < *drawable.yDimension + 1; y++)
 				{
-					if ((*drawable.xPosition + x) <  0            )
+					if ((*drawable.xPosition + x) <  0          )
 						continue;
-					if ((*drawable.yPosition + y) <  0            )
+					if ((*drawable.yPosition + y) <  0          )
 						continue;
-					if ((*drawable.xPosition + x) >= X11::Width ())
+					if ((*drawable.xPosition + x) >= data.width )
 						continue;
-					if ((*drawable.yPosition + y) >= X11::Height())
+					if ((*drawable.yPosition + y) >= data.height)
 						continue;
 
 					int windowOffset = (x + y * (*drawable.xDimension)) * 4;
-					int framebOffset = ((*drawable.xPosition + x) + (*drawable.yPosition + y) * X11::Width()) * 4;
+					int framebOffset = (*drawable.xPosition + x) * (data.bitsPerPixel / 8)
+									 + (*drawable.yPosition + y) * data.bytesPerLine;
+
+					uint8_t red, green, blue;
 
 					if (x < *drawable.xDimension && y < *drawable.yDimension && x >= 0 && y >= 0)
 					{
-						data[framebOffset + 0] = (*drawable.data)[windowOffset + 2];
-						data[framebOffset + 1] = (*drawable.data)[windowOffset + 1];
-						data[framebOffset + 2] = (*drawable.data)[windowOffset + 0];
-						data[framebOffset + 3] = (*drawable.data)[windowOffset + 3];
+						red   = (*drawable.data)[windowOffset + 2];
+						green = (*drawable.data)[windowOffset + 1];
+						blue  = (*drawable.data)[windowOffset + 0];
 					}
 					else
 					{
 						if (drawable.needsFrame)
 						{
-							data[framebOffset + 0] = 0xFF;
-							data[framebOffset + 1] = 0xFF;
-							data[framebOffset + 2] = 0xFF;
-							data[framebOffset + 3] = 0xFF;
+							red   = 0xFF;
+							green = 0xFF;
+							blue  = 0xFF;
 						}
 					}
+
+					data.buffer.u8[framebOffset + (data.red  .offset / 8)] = red  ;
+					data.buffer.u8[framebOffset + (data.green.offset / 8)] = green;
+					data.buffer.u8[framebOffset + (data.blue .offset / 8)] = blue ;
 				}
 		}
 
 		Awning::Wayland::Surface::HandleFrameCallbacks();
-		X11::Draw();
+		Awning::Backend::Draw();
 	}
 
 	wl_display_destroy(Awning::server.display);
@@ -178,6 +209,29 @@ int on_term_signal(int signal_number, void *data)
 int sigchld_handler(int signal_number, void *data)
 {
 	return 0;
+}
+
+int XWM_Start(int signal_number, void *data)
+{
+	Log::Function::Called("");
+	//Awning::WM::X::Init();
+	signal(SIGUSR1, SIG_IGN);
+	return 0;
+}
+
+void LaunchXwayland(int signal_number)
+{
+	Log::Function::Called("");
+
+    char* XWaylandArgs [] = { "Xwayland", ":1", NULL };
+
+	int fd = open("/dev/null", O_RDWR);
+	dup2(fd, STDOUT_FILENO);
+	dup2(fd, STDERR_FILENO);
+
+	int ret = execvp(XWaylandArgs[0], XWaylandArgs);
+	printf("Xwayland did not launch! %d %s\n", ret, strerror(errno));
+	exit(ret);
 }
 
 void ProtocolLogger(void* user_data, wl_protocol_logger_type direction, const wl_protocol_logger_message* message)
