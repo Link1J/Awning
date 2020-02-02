@@ -22,5 +22,5 @@ namespace Awning::Wayland::Keyboard
 	extern Data data;
 
 	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id);
-	void Button(uint32_t button, bool pressed);
+	void Button(wl_client* client, uint32_t button, bool pressed);
 }

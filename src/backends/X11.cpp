@@ -9,7 +9,7 @@
 #include "wayland/pointer.hpp"
 #include "wayland/keyboard.hpp"
 
-#include "wm/manager/manager.hpp"
+#include "wm/manager.hpp"
 
 #include "log.hpp"
 
@@ -182,7 +182,7 @@ void Awning::Backend::X11::Poll()
 		}
 		else if (event.type == MotionNotify)
 		{
-			Awning::Wayland::Pointer::Moved(event.xbutton.x, event.xbutton.y);			
+			Awning::WM::Manager::Handle::Input::Mouse::Moved(event.xbutton.x, event.xbutton.y);			
 		}
 		else if (event.type == ButtonPress)
 		{

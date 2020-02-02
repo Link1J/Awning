@@ -2,15 +2,17 @@
 
 namespace Awning::WM
 {
-	Window* Window::Create()
+	Window* Window::Create(void* client)
 	{
 		Window* window = new Window();
-		Manager::Window::Add(window);
 
 		window->data = nullptr;
 		window->mapped = false;
 		window->xPos = 10;
 		window->yPos = 10;
+
+		Manager::Window::Add(window);
+		Client::Bind(client, window);
 
 		return window;
 	}
@@ -18,6 +20,7 @@ namespace Awning::WM
 	void Window::Destory(Window*& window)
 	{
 		Manager::Window::Remove(window);
+		Client::Unbind(window);
 		delete window;
 		window = nullptr;
 	}
@@ -87,5 +90,10 @@ namespace Awning::WM
 	void Window::Data(void* data)
 	{
 		this->data = data;
+	}
+
+	void* Window::Client()
+	{
+		return client;
 	}
 }

@@ -28,8 +28,11 @@ namespace Awning::Wayland::Pointer
 	extern Data data;
 
 	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id);
-	void Moved(double x, double y);
-	void Button(uint32_t button, bool pressed);
-	void Axis(uint32_t axis, float value);
-	void MoveMode();
+
+	void Enter(wl_client* client, wl_resource* surface, double x, double y);
+	void Leave(wl_client* client, wl_resource* surface);
+	void Moved(wl_client* client, double x, double y);
+	void Button(wl_client* client, uint32_t button, bool pressed);
+	void Axis(wl_client* client, uint32_t axis, float value);
+	void Frame(wl_client* client);
 }

@@ -30,7 +30,6 @@ namespace Awning::Wayland::Shell_Surface
 		void Move(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
 		{
 			Log::Function::Called("Wayland::Shell_Surface::Interface");
-			Wayland::Pointer::MoveMode();
 		}
 
 		void Resize(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, uint32_t edges)

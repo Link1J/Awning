@@ -27,8 +27,9 @@ set(SOURCES
     src/xdg/popup.cpp
     src/xdg/decoration.cpp
 
-    src/wm/manager/manager.cpp
+    src/wm/manager.cpp
     src/wm/window.cpp
+    src/wm/client.cpp
 
     src/wm/x/wm.cpp
 )

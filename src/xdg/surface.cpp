@@ -4,7 +4,7 @@
 #include "log.hpp"
 
 #include "wayland/surface.hpp"
-#include "wm/manager/manager.hpp"
+#include "wm/manager.hpp"
 
 #include <unordered_map>
 

@@ -24,6 +24,7 @@
 
 #include "wm/x/wm.hpp"
 #include "wm/window.hpp"
+#include "wm/client.hpp"
 
 #include "log.hpp"
 
@@ -34,6 +35,19 @@ void ProtocolLogger(void* user_data, wl_protocol_logger_type direction, const wl
 int XWM_Start(int signal_number, void *data);
 void LaunchXwayland(int signal_number);
 void on_term_signal(int signal_number);
+void client_created(struct wl_listener *listener, void *data);
+
+// -------------------------------------------------------------------
+// --- Reversed iterable
+
+template <typename T>
+struct reversion_wrapper { T& iterable; };
+template <typename T>
+auto begin (reversion_wrapper<T> w) { return std::rbegin(w.iterable); }
+template <typename T>
+auto end (reversion_wrapper<T> w) { return std::rend(w.iterable); }
+template <typename T>
+reversion_wrapper<T> reverse (T&& iterable) { return { iterable }; }
 
 namespace Awning
 {
@@ -45,6 +59,7 @@ namespace Awning
 			wl_event_loop* event_loop;
 			wl_event_source* sigusr1;
 			wl_protocol_logger* logger; 
+			wl_listener client_listener;
 		};
 	}	
 	Server::Data server;
@@ -102,8 +117,11 @@ int main(int argc, char* argv[])
 
 	Awning::Backend::Init(api);
 
+	Awning::server.client_listener.notify = client_created;
+
 	Awning::server.event_loop = wl_display_get_event_loop(Awning::server.display);
 	wl_display_add_protocol_logger(Awning::server.display, ProtocolLogger, nullptr);
+	wl_display_add_client_created_listener(Awning::server.display, &Awning::server.client_listener);
 
 	Awning::server.sigusr1 = wl_event_loop_add_signal(Awning::server.event_loop, SIGUSR1, XWM_Start, nullptr);
 
@@ -143,8 +161,9 @@ int main(int argc, char* argv[])
 		Awning::WM::X::EventLoop();
 
 		auto data = Awning::Backend::Data();
+		auto list = Awning::WM::Manager::Window::Get();
 
-		for (auto& window : Awning::WM::Manager::Window::Get())
+		for (auto& window : reverse(list))
 		{
 			if (!window->Mapped())
 				continue;
@@ -240,5 +259,14 @@ void ProtocolLogger(void* user_data, wl_protocol_logger_type direction, const wl
 		"EVENT  "
 	};
 
-	//std::cout << "[" << direction_strings[direction] << "] " << message->resource->object.interface->name << ": " << message->message->name << "\n";
+	if (direction == 1)
+		return;
+
+	std::cout << "[" << direction_strings[direction] << "] " << message->resource->object.interface->name << ": " << message->message->name << "\n";
+}
+
+void client_created(struct wl_listener* listener, void* data)
+{
+	Log::Function::Called("");
+	Awning::WM::Client::Create(data);
 }

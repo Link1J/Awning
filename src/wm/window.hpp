@@ -1,12 +1,15 @@
 #pragma once
-#include "manager/functions.hpp"
-#include "manager/manager.hpp"
+#include "manager.hpp"
+#include "client.hpp"
 
 namespace Awning::WM
 {
 	class Window
 	{
-		friend void Manager::Window::Raise(Awning::WM::Window* window);
+		friend void  Manager::Window::Raise(Awning::WM::Window* window);
+		friend void  Client::Bind(void* id, Awning::WM::Window* window);
+		friend void  Client::Unbind(        Awning::WM::Window* window);
+		friend void* Client::Surface(       Awning::WM::Window* window);
 
 		Manager::Functions::Window::Resized Resized;
 		Manager::Functions::Window::Raised  Raised ;
@@ -15,10 +18,10 @@ namespace Awning::WM
 
 		int xPos, yPos, xSize, ySize;
 		bool mapped, needsFrame;
-		void* data;
+		void* data,* client;
 
 	public:
-		static Window* Create (               );
+		static Window* Create (void* client   );
 		static void    Destory(Window*& window);
 
 		Texture::Data* Texture   (                    );
@@ -33,6 +36,7 @@ namespace Awning::WM
 		void           ConfigPos (int xPos, int yPos  );
 		void           ConfigSize(int xSize, int ySize);
 		void           Data      (void* data          );
+		void*          Client    (                    );
 
 		void SetRaised(Manager::Functions::Window::Raised raised);
 	};

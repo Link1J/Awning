@@ -58,12 +58,6 @@ namespace Awning::XDG::TopLevel
 		void Move(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
 		{
 			Log::Function::Called("XDG::TopLevel::Interface");
-
-			auto& topleve = data.toplevels[resource];
-			auto& surface = XDG::Surface::data.surfaces[topleve.surface];
-			auto& pointer = Wayland::Pointer::data.pointers[client];
-
-			Wayland::Pointer::MoveMode();
 		}
 
 		void Resize(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, uint32_t edges)
@@ -122,7 +116,7 @@ namespace Awning::XDG::TopLevel
 
 		data.toplevels[resource] = Data::Instance();
 		data.toplevels[resource].surface = surface;
-		data.toplevels[resource].window = WM::Window::Create();
+		data.toplevels[resource].window = WM::Window::Create(wl_client);
 
 		Wayland::Surface::data.surfaces[surface_wl].window = data.toplevels[resource].window;
 		         Surface::data.surfaces[surface   ].window = data.toplevels[resource].window;

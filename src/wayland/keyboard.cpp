@@ -33,21 +33,9 @@ namespace Awning::Wayland::Keyboard
 		data.keyboards[wl_client].resource = resource;
 	}
 
-	void Button(uint32_t button, bool released)
+	void Button(wl_client* client, uint32_t button, bool released)
 	{
-		//Log::Function::Called("Wayland::Keyboard");
-
-		if (Pointer::data.pre_shell != nullptr)
-		{
-			//auto& shell = WM::Drawable::drawables[Pointer::data.pre_shell];
-			//auto& surface = Surface::data.surfaces[shell.surface];
-			//auto resource = data.keyboards[surface.client].resource;
-//
-			//if (resource)
-			//{
-			//	auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
-			//	wl_keyboard_send_key(resource, NextSerialNum(), time, button, released);
-			//}
-		}
+		auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
+		wl_keyboard_send_key(data.keyboards[client].resource, NextSerialNum(), time, button, released);
 	}
 }
