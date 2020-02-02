@@ -45,5 +45,6 @@ namespace Awning::XDG::TopLevel
 	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* surface);
 	void Destroy(struct wl_resource* resource);
 
-	void Raised(void* data);
+	void Raised (void* data);
+	void Resized(void* data, int width, int height);
 }

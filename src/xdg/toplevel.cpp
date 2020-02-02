@@ -5,6 +5,8 @@
 #include "wayland/surface.hpp"
 #include "wayland/pointer.hpp"
 
+#include "wm/manager.hpp"
+
 #include <iostream>
 
 namespace Awning::XDG::TopLevel
@@ -58,11 +60,13 @@ namespace Awning::XDG::TopLevel
 		void Move(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
 		{
 			Log::Function::Called("XDG::TopLevel::Interface");
+			WM::Manager::Handle::Input::Lock(WM::Manager::Handle::Input::MOVE);
 		}
 
 		void Resize(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, uint32_t edges)
 		{
 			Log::Function::Called("XDG::TopLevel::Interface");
+			WM::Manager::Handle::Input::Lock(WM::Manager::Handle::Input::RESIZE);
 		}
 
 		void Set_Max_Size(struct wl_client* client, struct wl_resource* resource, int32_t width, int32_t height)
@@ -121,8 +125,9 @@ namespace Awning::XDG::TopLevel
 		Wayland::Surface::data.surfaces[surface_wl].window = data.toplevels[resource].window;
 		         Surface::data.surfaces[surface   ].window = data.toplevels[resource].window;
 
-		Awning::XDG::TopLevel::data.toplevels[resource].window->Data     (resource);
-		Awning::XDG::TopLevel::data.toplevels[resource].window->SetRaised(Raised  );
+		Awning::XDG::TopLevel::data.toplevels[resource].window->Data      (resource);
+		Awning::XDG::TopLevel::data.toplevels[resource].window->SetRaised (Raised  );
+		Awning::XDG::TopLevel::data.toplevels[resource].window->SetResized(Resized );
 	}
 
 	void Destroy(struct wl_resource* resource)
@@ -147,6 +152,20 @@ namespace Awning::XDG::TopLevel
 		wl_array* states;
 		wl_array_init(states);
 		wl_array_add(states, XDG_TOPLEVEL_STATE_ACTIVATED);
+		xdg_toplevel_send_configure(resource, 
+			Awning::XDG::TopLevel::data.toplevels[resource].window->XSize(),
+			Awning::XDG::TopLevel::data.toplevels[resource].window->YSize(),
+			states);
+		//wl_array_release(states);
+	}
+
+	void Resized(void* data, int width, int height)
+	{
+		Log::Function::Called("XDG::TopLevel");
+		
+		struct wl_resource* resource = (struct wl_resource*)data;
+		wl_array* states;
+		wl_array_init(states);
 		xdg_toplevel_send_configure(resource, 
 			Awning::XDG::TopLevel::data.toplevels[resource].window->XSize(),
 			Awning::XDG::TopLevel::data.toplevels[resource].window->YSize(),

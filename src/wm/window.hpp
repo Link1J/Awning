@@ -6,10 +6,11 @@ namespace Awning::WM
 {
 	class Window
 	{
-		friend void  Manager::Window::Raise(Awning::WM::Window* window);
-		friend void  Client::Bind(void* id, Awning::WM::Window* window);
-		friend void  Client::Unbind(        Awning::WM::Window* window);
-		friend void* Client::Surface(       Awning::WM::Window* window);
+		friend void  Manager::Window::Raise (Awning::WM::Window* window);
+		friend void  Manager::Window::Resize(Awning::WM::Window* window);
+		friend void  Client::Bind(void* id,  Awning::WM::Window* window);
+		friend void  Client::Unbind(         Awning::WM::Window* window);
+		friend void* Client::Surface(        Awning::WM::Window* window);
 
 		Manager::Functions::Window::Resized Resized;
 		Manager::Functions::Window::Raised  Raised ;
@@ -38,6 +39,7 @@ namespace Awning::WM
 		void           Data      (void* data          );
 		void*          Client    (                    );
 
-		void SetRaised(Manager::Functions::Window::Raised raised);
+		void SetRaised (Manager::Functions::Window::Raised  raised );
+		void SetResized(Manager::Functions::Window::Resized resized);
 	};
 }

@@ -35,6 +35,9 @@ namespace Awning::Wayland::Keyboard
 
 	void Button(wl_client* client, uint32_t button, bool released)
 	{
+		if (!data.keyboards.contains(client))
+			return;
+
 		auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
 		wl_keyboard_send_key(data.keyboards[client].resource, NextSerialNum(), time, button, released);
 	}

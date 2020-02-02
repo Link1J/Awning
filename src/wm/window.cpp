@@ -96,4 +96,9 @@ namespace Awning::WM
 	{
 		return client;
 	}
+
+	void Window::SetResized(Manager::Functions::Window::Resized resized)
+	{
+		Resized = resized;
+	}
 }

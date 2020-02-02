@@ -41,6 +41,24 @@ namespace Awning::WM::Manager
 	{
 		namespace Input
 		{
+			enum WindowAction
+			{
+				APPLCATION,
+				RESIZE,
+				MOVE,
+			};
+			enum WindowSide
+			{
+				TOP,
+				TOP_LEFT,
+				LEFT,
+				BOTTOM_LEFT,
+				BOTTOM,
+				BOTTOM_RIGHT,
+				RIGHT,
+				TOP_RIGHT,
+			};
+
 			namespace Mouse
 			{
 				void Scroll  (int axis, bool direction, float step);
@@ -54,6 +72,8 @@ namespace Awning::WM::Manager
 				void Pressed (uint32_t key);
 				void Released(uint32_t key);
 			}
+
+			void Lock(WindowAction action, WindowSide side = TOP);
 		}
 	}
 
@@ -62,6 +82,7 @@ namespace Awning::WM::Manager
 		void Add   (Awning::WM::Window* window);
 		void Remove(Awning::WM::Window* window);
 		void Raise (Awning::WM::Window* window);
+		void Resize(Awning::WM::Window* window);
 
 		std::list<Awning::WM::Window*> Get();
 	}

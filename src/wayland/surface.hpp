@@ -17,6 +17,7 @@ namespace Awning::Wayland::Surface
 			wl_resource* shell;
 			wl_resource* toplevel;
 			wl_client* client;
+			WM::Texture::Data* texture;
 			WM::Window* window;
 		};
 

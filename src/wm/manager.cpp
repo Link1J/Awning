@@ -9,9 +9,10 @@
 #include "wayland/pointer.hpp"
 #include "wayland/keyboard.hpp"
 
+#include <linux/input.h>
+
 static std::list<Awning::WM::Window*> windowList;
 static Awning::WM::Window* hoveredOver;
-
 
 namespace Awning::WM::Manager
 {
@@ -19,24 +20,24 @@ namespace Awning::WM::Manager
 	{
 		namespace Input
 		{
+			enum InputLock
+			{
+				UNLOCK,
+				LOCK
+			};
+
 			namespace Mouse
 			{
-				enum WindowParts
-				{
-					APPLCATION,
-					TOP_FRAME_RESIZE,
-					BOTTOM_FRAME_RESIZE,
-					LEFT_FRAME_RESIZE,
-					RIGHT_FRAME_RESIZE,
-					TOP_FRAME_MOVE,
-					BOTTOM_FRAME_MOVE,
-					LEFT_FRAME_MOVE,
-					RIGHT_FRAME_MOVE,
-				} frame;
+				WindowAction action;	
+				InputLock input;
+				int lockButton;
+				WindowSide side;
+
+				int preX = 0, preY = 0;
 				
 				void Scroll(int axis, bool direction, float step)
 				{
-					if (hoveredOver && frame == APPLCATION)
+					if (hoveredOver && action == APPLCATION)
 					{
 						Wayland::Pointer::Axis(
 							(wl_client*)hoveredOver->Client(),
@@ -48,7 +49,7 @@ namespace Awning::WM::Manager
 				void Moved(int x, int y)
 				{
 					auto curr = windowList.begin();
-					while (curr != windowList.end())
+					while (curr != windowList.end() && input == UNLOCK)
 					{
 						if((*curr)->XPos()                    <= x 
 						&& (*curr)->YPos()                    <= y
@@ -56,19 +57,31 @@ namespace Awning::WM::Manager
 						&& (*curr)->YPos() + (*curr)->YSize() >  y
 						)
 						{
-							frame = APPLCATION;
+							action = APPLCATION;
 							break;
 						}
 
 						// Top frame
 						if((*curr)->Frame()
 						&& (*curr)->XPos ()                    -  1 <= x
-						&& (*curr)->YPos ()                    - 10 <= y
+						&& (*curr)->YPos ()                    -  9 <= y
 						&& (*curr)->XPos () + (*curr)->XSize() +  1 >  x
 						&& (*curr)->YPos ()                         >  y
 						)
 						{
-							frame = TOP_FRAME_MOVE;
+							action = MOVE;
+							break;
+						}
+
+
+						if((*curr)->Frame()
+						&& (*curr)->XPos ()                    -  1 <= x
+						&& (*curr)->YPos ()                    - 10 <= y
+						&& (*curr)->XPos () + (*curr)->XSize() +  1 >  x
+						&& (*curr)->YPos ()                    -  9 >  y
+						)
+						{
+							action = MOVE;
 							break;
 						}
 						
@@ -80,7 +93,8 @@ namespace Awning::WM::Manager
 						&& (*curr)->YPos () + (*curr)->YSize() +  1 >  y
 						)
 						{
-							frame = BOTTOM_FRAME_RESIZE;
+							action = RESIZE;
+							side = BOTTOM;
 							break;
 						}
 
@@ -92,7 +106,8 @@ namespace Awning::WM::Manager
 						&& (*curr)->YPos () + (*curr)->YSize() +  1 >  y
 						)
 						{
-							frame = LEFT_FRAME_RESIZE;
+							action = RESIZE;
+							side = LEFT;
 							break;
 						}
 
@@ -104,14 +119,15 @@ namespace Awning::WM::Manager
 						&& (*curr)->YPos () + (*curr)->YSize() +  1 >  y
 						)
 						{
-							frame = RIGHT_FRAME_RESIZE;
+							action = RESIZE;
+							side = RIGHT;
 							break;
 						}
 
 						curr++;
 					}
 
-					if (hoveredOver != *curr)
+					if (hoveredOver != *curr && input == UNLOCK)
 					{
 						if (hoveredOver)
 						{
@@ -145,46 +161,105 @@ namespace Awning::WM::Manager
 							hoveredOver = *curr;
 						}
 					}
-					else if (hoveredOver && frame == APPLCATION)
+					else if (hoveredOver && action == APPLCATION)
 					{
 						int localX = x - hoveredOver->XPos();
 						int localY = y - hoveredOver->YPos();
 
 						Wayland::Pointer::Moved(
-							(wl_client  *)hoveredOver->Client(),
+							(wl_client*)hoveredOver->Client(),
 							x, y
 						);
 						Wayland::Pointer::Frame(
 							(wl_client*)hoveredOver->Client()
 						);
 					}
+					else if (hoveredOver && action == MOVE && input == LOCK)
+					{
+						int newX = hoveredOver->XPos() + (x - preX);
+						int newY = hoveredOver->YPos() + (y - preY);
+						hoveredOver->ConfigPos(newX, newY);
+					}
+					else if (hoveredOver && action == RESIZE && input == LOCK)
+					{
+						int deltaX = (x - preX);
+						int deltaY = (y - preY);
+						int newX = hoveredOver->XPos();
+						int newY = hoveredOver->YPos();
+
+						switch (side)
+						{
+						case TOP:
+						case BOTTOM:
+							newY += deltaY;
+							break;
+						case LEFT:
+						case RIGHT:
+							newX += deltaX;
+							break;	
+						default:
+							newX += deltaX;
+							newY += deltaY;
+							break;
+						}
+
+						hoveredOver->ConfigSize(newX, newY);
+					}
+
+					preX = x;
+					preY = y;
 				}
 
 				void Pressed(uint32_t button)
 				{
+					if (input == UNLOCK)
+					{
+						lockButton = button;
+					}
+
 					if (hoveredOver != windowList.front())
 					{
 						if (hoveredOver)
 							Manager::Window::Raise(hoveredOver);
 						return;
 					}
-					else if (hoveredOver && frame == APPLCATION)
+					else if (hoveredOver && action == APPLCATION)
 					{
 						Wayland::Pointer::Button(
 							(wl_client*)hoveredOver->Client(),
 							button, true
 						);
 					}
+					else if (action == MOVE || action == RESIZE)
+					{
+						if (hoveredOver)
+						{
+							Manager::Window::Raise(hoveredOver);
+							Wayland::Pointer::Leave(
+								(wl_client  *)hoveredOver->Client(), 
+								(wl_resource*)Client::Surface(hoveredOver)
+							);
+						}
+						input = LOCK;
+					}
 				}
 
 				void Released(uint32_t button)
 				{
-					if (hoveredOver && frame == APPLCATION)
+					if (hoveredOver && action == APPLCATION)
 					{
 						Wayland::Pointer::Button(
 							(wl_client*)hoveredOver->Client(),
 							button, false
 						);
+					}
+					else if (action == MOVE || action == RESIZE)
+					{
+						if (button == lockButton)
+						{
+							hoveredOver = nullptr;
+							input = UNLOCK;
+						}
 					}
 				}
 			}
@@ -214,6 +289,16 @@ namespace Awning::WM::Manager
 						);
 					}
 				}
+			}
+
+			void Lock(WindowAction action, WindowSide side)
+			{
+				if (action == APPLCATION)
+					return;
+				
+				Mouse::action = action;
+				Mouse::input  = LOCK  ;
+				Mouse::side   = side  ;
 			}
 		}
 	}
@@ -255,6 +340,14 @@ namespace Awning::WM::Manager
 
 			if (window->Raised)
 				window->Raised(window->data);
+		}
+
+		void Resize(Awning::WM::Window* window)
+		{
+			int newX = window->XPos();
+			int newY = window->YPos();
+			if (window->Resized)
+				window->Resized(window->data, newX, newY);
 		}
 
 		std::list<Awning::WM::Window*> Get()

@@ -262,7 +262,7 @@ void ProtocolLogger(void* user_data, wl_protocol_logger_type direction, const wl
 	if (direction == 1)
 		return;
 
-	std::cout << "[" << direction_strings[direction] << "] " << message->resource->object.interface->name << ": " << message->message->name << "\n";
+	//std::cout << "[" << direction_strings[direction] << "] " << message->resource->object.interface->name << ": " << message->message->name << "\n";
 }
 
 void client_created(struct wl_listener* listener, void* data)

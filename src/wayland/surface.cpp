@@ -84,28 +84,33 @@ namespace Awning::Wayland::Surface
 				{
 					xdg_surface_send_configure(surface.shell, NextSerialNum());
 				}
+				if (surface.window)
+				{
+					surface.texture = surface.window->Texture();
+				}
 				return;
 			}
 
-			auto texture = surface.window->Texture();
+			if (!surface.texture)
+				return;
 
 			struct wl_shm_buffer * shmBuffer = wl_shm_buffer_get(surface.buffer);
 
 			if (shmBuffer)
 			{
-				texture->width        =           wl_shm_buffer_get_width (shmBuffer);
-				texture->height       =           wl_shm_buffer_get_height(shmBuffer);
-				texture->bitsPerPixel =           32;
-				texture->bytesPerLine =           wl_shm_buffer_get_stride(shmBuffer);
-				texture->size         =           texture->bytesPerLine * texture->height;
-				texture->buffer.u8    = (uint8_t*)wl_shm_buffer_get_data  (shmBuffer);
-				texture->red          = { .size = 8, .offset = 16 };
-				texture->green        = { .size = 8, .offset =  8 };
-				texture->blue         = { .size = 8, .offset =  0 };
+				surface.texture->width        =           wl_shm_buffer_get_width (shmBuffer);
+				surface.texture->height       =           wl_shm_buffer_get_height(shmBuffer);
+				surface.texture->bitsPerPixel =           32;
+				surface.texture->bytesPerLine =           wl_shm_buffer_get_stride(shmBuffer);
+				surface.texture->size         =           surface.texture->bytesPerLine * surface.texture->height;
+				surface.texture->buffer.u8    = (uint8_t*)wl_shm_buffer_get_data  (shmBuffer);
+				surface.texture->red          = { .size = 8, .offset = 16 };
+				surface.texture->green        = { .size = 8, .offset =  8 };
+				surface.texture->blue         = { .size = 8, .offset =  0 };
 
 				if (surface.window->XSize() == 0 || surface.window->YSize() == 0)
 				{
-					surface.window->ConfigSize(texture->width, texture->height);
+					surface.window->ConfigSize(surface.texture->width, surface.texture->height);
 				}
 
 				surface.window->Mapped(true);
