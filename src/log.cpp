@@ -14,7 +14,7 @@ namespace Log
 
 		void Locate(std::string from, std::string location, source_location function)
 		{
-			std::cout << "[LOCATE ] " << from << "::" << function.function_name() << "::" << location << "\n";
+			std::cout << "[LOCATE ] " << from << "::" << function.function_name() << "." << location << "\n";
 		}
 	}
 }

@@ -5,6 +5,8 @@
 #include <unordered_set>
 #include <chrono>
 
+#include <vector>
+
 uint32_t NextSerialNum();
 
 namespace Awning::Wayland::Surface
@@ -85,13 +87,28 @@ namespace Awning::Wayland::Surface
 				return;
 			}
 
+			auto texture = surface.window->Texture();
+
 			struct wl_shm_buffer * shmBuffer = wl_shm_buffer_get(surface.buffer);
 
 			if (shmBuffer)
 			{
-				surface.xDimension =        wl_shm_buffer_get_width (shmBuffer);
-				surface.yDimension =        wl_shm_buffer_get_height(shmBuffer);
-				surface.data       = (char*)wl_shm_buffer_get_data  (shmBuffer);
+				texture->width        =           wl_shm_buffer_get_width (shmBuffer);
+				texture->height       =           wl_shm_buffer_get_height(shmBuffer);
+				texture->bitsPerPixel =           32;
+				texture->bytesPerLine =           wl_shm_buffer_get_stride(shmBuffer);
+				texture->size         =           texture->bytesPerLine * texture->height;
+				texture->buffer.u8    = (uint8_t*)wl_shm_buffer_get_data  (shmBuffer);
+				texture->red          = { .size = 8, .offset = 16 };
+				texture->green        = { .size = 8, .offset =  8 };
+				texture->blue         = { .size = 8, .offset =  0 };
+
+				if (surface.window->XSize() == 0 || surface.window->YSize() == 0)
+				{
+					surface.window->ConfigSize(texture->width, texture->height);
+				}
+
+				surface.window->Mapped(true);
 			}
 
 			wl_buffer_send_release(surface.buffer);

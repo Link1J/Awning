@@ -3,12 +3,10 @@
 #include "popup.hpp"
 #include "log.hpp"
 
-#include "wm/drawable.hpp"
 #include "wayland/surface.hpp"
+#include "wm/manager/manager.hpp"
 
 #include <unordered_map>
-
-extern std::unordered_map<wl_resource*, Awning::WM::Drawable::Data> drawables;
 
 uint32_t NextSerialNum();
 
@@ -46,15 +44,14 @@ namespace Awning::XDG::Surface
 		void Set_Window_Geometry(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
 		{
 			Log::Function::Called("XDG::Surface::Interface");
-			data.surfaces[resource].xPosition  = x     ;
-			data.surfaces[resource].yPosition  = y     ;
-			data.surfaces[resource].xDimension = width ;
-			data.surfaces[resource].yDimension = height;
+			data.surfaces[resource].window->ConfigPos(x+2, y + 12);
+			data.surfaces[resource].window->ConfigSize(width, height);
 		}
 
 		void Ack_Configure(struct wl_client* client, struct wl_resource* resource, uint32_t serial)
 		{
 			Log::Function::Called("XDG::Surface::Interface");
+			WM::Manager::Window::Raise(data.surfaces[resource].window);
 		}
 	}
 

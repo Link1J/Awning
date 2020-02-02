@@ -3,8 +3,6 @@
 #include "surface.hpp"
 #include "log.hpp"
 
-#include "wm/drawable.hpp"
-
 #include <chrono>
 #include <iostream>
 
@@ -41,15 +39,15 @@ namespace Awning::Wayland::Keyboard
 
 		if (Pointer::data.pre_shell != nullptr)
 		{
-			auto& shell = WM::Drawable::drawables[Pointer::data.pre_shell];
-			auto& surface = Surface::data.surfaces[shell.surface];
-			auto resource = data.keyboards[surface.client].resource;
-
-			if (resource)
-			{
-				auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
-				wl_keyboard_send_key(resource, NextSerialNum(), time, button, released);
-			}
+			//auto& shell = WM::Drawable::drawables[Pointer::data.pre_shell];
+			//auto& surface = Surface::data.surfaces[shell.surface];
+			//auto resource = data.keyboards[surface.client].resource;
+//
+			//if (resource)
+			//{
+			//	auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
+			//	wl_keyboard_send_key(resource, NextSerialNum(), time, button, released);
+			//}
 		}
 	}
 }

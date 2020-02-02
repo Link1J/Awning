@@ -27,8 +27,8 @@ set(SOURCES
     src/xdg/popup.cpp
     src/xdg/decoration.cpp
 
-    src/wm/drawable.cpp
-    src/wm/manager.cpp
+    src/wm/manager/manager.cpp
+    src/wm/window.cpp
 
     src/wm/x/wm.cpp
 )
@@ -84,5 +84,6 @@ target_link_libraries(Awning PRIVATE
     X11::X11
     X11::Xext
     X11::Xfixes
+    X11::Xcomposite
     OpenGL::GL
 )

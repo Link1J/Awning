@@ -3,20 +3,21 @@
 #include <wayland-server.h>
 #include <unordered_map>
 
+#include "wm/window.hpp"
+
 namespace Awning::Wayland::Surface
 {
 	struct Data 
 	{
 		struct Instance 
 		{
-			long long xDimension, yDimension;
 			bool damaged = false;
 			char type = -1;
-			char* data = nullptr;
 			wl_resource* buffer;
 			wl_resource* shell;
 			wl_resource* toplevel;
 			wl_client* client;
+			WM::Window* window;
 		};
 
 		std::unordered_map<wl_resource*, Instance> surfaces;

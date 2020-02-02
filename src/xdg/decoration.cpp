@@ -1,6 +1,5 @@
 #include "decoration.hpp"
 #include "toplevel.hpp"
-#include "wm/drawable.hpp"
 #include "log.hpp"
 
 namespace Awning::ZXDG::Toplevel_Decoration
@@ -23,14 +22,14 @@ namespace Awning::ZXDG::Toplevel_Decoration
 		{
 			Log::Function::Called("ZXDG::Toplevel_Decoration::Interface");
 			auto toplevel = data.decorations[resource].toplevel;
-			WM::Drawable::drawables[toplevel].needsFrame = mode != ZXDG_TOPLEVEL_DECORATION_V1_MODE_CLIENT_SIDE;
+			XDG::TopLevel::data.toplevels[toplevel].window->Frame(mode != ZXDG_TOPLEVEL_DECORATION_V1_MODE_CLIENT_SIDE);
 		}
 
 		void Unset_Mode(struct wl_client* client, struct wl_resource *resource)
 		{
 			Log::Function::Called("ZXDG::Toplevel_Decoration::Interface");
 			auto toplevel = data.decorations[resource].toplevel;
-			WM::Drawable::drawables[toplevel].needsFrame = true;
+			XDG::TopLevel::data.toplevels[toplevel].window->Frame(true);
 		}
 	}
 
@@ -52,7 +51,6 @@ namespace Awning::ZXDG::Toplevel_Decoration
 	{
 	}
 }
-
 
 namespace Awning::ZXDG::Decoration_Manager
 {

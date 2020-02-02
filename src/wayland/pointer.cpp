@@ -3,8 +3,6 @@
 #include "surface.hpp"
 #include "log.hpp"
 
-#include "wm/drawable.hpp"
-
 #include <linux/input.h>
 
 #include <chrono>
@@ -45,12 +43,13 @@ namespace Awning::Wayland::Pointer
 
 	void Moved(double x, double y)
 	{
+		return;
 		//Log::Function::Called("Wayland::Pointer");
 
 		wl_resource* active = nullptr;
 		int frame = 0;
 
-		for (auto& [resource, window] : WM::Drawable::drawables)
+		/*for (auto& [resource, window] : WM::Drawable::drawables)
 		{
 			if (Surface::data.surfaces.find(window.surface) != Surface::data.surfaces.end())
 			{
@@ -198,14 +197,14 @@ namespace Awning::Wayland::Pointer
 
 			data.xPos = x;
 			data.yPos = y;
-		}
+		}*/
 	}
 
 	void Button(uint32_t button, bool pressed)
 	{
 		//Log::Function::Called("Wayland::Pointer");
 
-		if (data.frame == 1 && button == BTN_LEFT && pressed)
+		/*if (data.frame == 1 && button == BTN_LEFT && pressed)
 		{
 			data.frame = 2;
 		}
@@ -232,14 +231,14 @@ namespace Awning::Wayland::Pointer
 		{
 			data.moveMode = false;
 			data.pre_shell = nullptr;
-		}	
+		}*/	
 	}
 
 	void Axis(uint32_t axis, float value)
 	{
 		//Log::Function::Called("Wayland::Pointer");
 
-		if (data.pre_shell != nullptr)
+		/*if (data.pre_shell != nullptr)
 		{
 			auto& shell = WM::Drawable::drawables[data.pre_shell];
 			auto& surface = Surface::data.surfaces[shell.surface];
@@ -251,20 +250,20 @@ namespace Awning::Wayland::Pointer
 				int step = wl_fixed_from_double(value);
 				wl_pointer_send_axis(resource, time, axis, step);
 			}
-		}	
+		}*/
 	}
 
 	void MoveMode()
 	{
-		data.moveMode = true;
-
-		auto& pre_shell = WM::Drawable::drawables[data.pre_shell];
-		auto& surface = Surface::data.surfaces[pre_shell.surface];
-		auto& pointer = data.pointers[surface.client];
-		
-		wl_pointer_send_leave(pointer.resource, NextSerialNum(), pre_shell.surface);
-
-		data.xPos = pointer.xPos;
-		data.yPos = pointer.yPos;
+		//data.moveMode = true;
+//
+		//auto& pre_shell = WM::Drawable::drawables[data.pre_shell];
+		//auto& surface = Surface::data.surfaces[pre_shell.surface];
+		//auto& pointer = data.pointers[surface.client];
+		//
+		//wl_pointer_send_leave(pointer.resource, NextSerialNum(), pre_shell.surface);
+//
+		//data.xPos = pointer.xPos;
+		//data.yPos = pointer.yPos;
 	}
 }

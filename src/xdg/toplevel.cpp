@@ -5,8 +5,6 @@
 #include "wayland/surface.hpp"
 #include "wayland/pointer.hpp"
 
-#include "wm/drawable.hpp"
-
 #include <iostream>
 
 namespace Awning::XDG::TopLevel
@@ -120,27 +118,45 @@ namespace Awning::XDG::TopLevel
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
-		data.toplevels[resource] = Data::Instance();
-		data.toplevels[resource].surface = surface;
-
-		XDG::Surface::data.surfaces[resource].xPosition = 0;
-		XDG::Surface::data.surfaces[resource].yPosition = 0;
-
 		auto surface_wl = Surface::data.surfaces[surface].surface_wl;
 
-		WM::Drawable::drawables[resource].xPosition  = &         Surface::data.surfaces[resource  ].xPosition ;
-		WM::Drawable::drawables[resource].yPosition  = &         Surface::data.surfaces[resource  ].yPosition ;
-		WM::Drawable::drawables[resource].xDimension = &Wayland::Surface::data.surfaces[surface_wl].xDimension;
-		WM::Drawable::drawables[resource].yDimension = &Wayland::Surface::data.surfaces[surface_wl].yDimension;
-		WM::Drawable::drawables[resource].data       = &Wayland::Surface::data.surfaces[surface_wl].data      ;
-		WM::Drawable::drawables[resource].surface    =                                              surface_wl;
+		data.toplevels[resource] = Data::Instance();
+		data.toplevels[resource].surface = surface;
+		data.toplevels[resource].window = WM::Window::Create();
+
+		Wayland::Surface::data.surfaces[surface_wl].window = data.toplevels[resource].window;
+		         Surface::data.surfaces[surface   ].window = data.toplevels[resource].window;
+
+		Awning::XDG::TopLevel::data.toplevels[resource].window->Data     (resource);
+		Awning::XDG::TopLevel::data.toplevels[resource].window->SetRaised(Raised  );
 	}
 
 	void Destroy(struct wl_resource* resource)
 	{
 		Log::Function::Called("XDG::TopLevel");
 
-		WM::Drawable::drawables.erase(resource);
+		auto surface    =         data.toplevels[resource].surface; 
+		auto surface_wl = Surface::data.surfaces[surface ].surface_wl;
+
+			     Surface::data.surfaces[surface   ].window = nullptr;
+		Wayland::Surface::data.surfaces[surface_wl].window = nullptr;
+
+		WM::Window::Destory(data.toplevels[resource].window);
 		data.toplevels.erase(resource);
+	}
+
+	void Raised(void* data)
+	{
+		Log::Function::Called("XDG::TopLevel");
+		
+		struct wl_resource* resource = (struct wl_resource*)data;
+		wl_array* states;
+		wl_array_init(states);
+		wl_array_add(states, XDG_TOPLEVEL_STATE_ACTIVATED);
+		xdg_toplevel_send_configure(resource, 
+			Awning::XDG::TopLevel::data.toplevels[resource].window->XSize(),
+			Awning::XDG::TopLevel::data.toplevels[resource].window->YSize(),
+			states);
+		//wl_array_release(states);
 	}
 }

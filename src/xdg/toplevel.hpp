@@ -3,6 +3,7 @@
 #include "protocols/xdg-shell-protocol.h"
 #include <unordered_map>
 #include <string>
+#include "wm/window.hpp"
 
 namespace Awning::XDG::TopLevel
 {
@@ -14,6 +15,7 @@ namespace Awning::XDG::TopLevel
 			wl_resource* parent;
 			std::string title;
 			std::string appid;
+			WM::Window* window;
 		};
 
 		std::unordered_map<wl_resource*, Instance> toplevels;
@@ -42,4 +44,6 @@ namespace Awning::XDG::TopLevel
 
 	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* surface);
 	void Destroy(struct wl_resource* resource);
+
+	void Raised(void* data);
 }

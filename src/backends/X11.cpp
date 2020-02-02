@@ -9,6 +9,8 @@
 #include "wayland/pointer.hpp"
 #include "wayland/keyboard.hpp"
 
+#include "wm/manager/manager.hpp"
+
 #include "log.hpp"
 
 #include <stdio.h>
@@ -72,7 +74,7 @@ namespace Awning::Backend::X11
 
 void Awning::Backend::X11::Start()
 {
-	int width = 800, height = 600;
+	int width = 1024, height = 576;
 
 	int screen;
 	XSetWindowAttributes attribs;
@@ -88,9 +90,9 @@ void Awning::Backend::X11::Start()
 
 	auto vi = glXChooseVisual(display, 0, doubleBufferAttributes);
 	attribs.colormap = XCreateColormap(display, root, vi->visual, AllocNone);
-	attribs.event_mask = StructureNotifyMask|ExposureMask|ButtonPressMask|KeyPressMask|PointerMotionMask|ButtonReleaseMask|KeyReleaseMask;
+	attribs.event_mask = StructureNotifyMask|ButtonPressMask|KeyPressMask|PointerMotionMask|ButtonReleaseMask|KeyReleaseMask;
 	
-	window = XCreateWindow(display, root, 30, 30, width, height, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &attribs);
+	window = XCreateWindow(display, root, 0, 0, width, height, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &attribs);
 	XStoreName(display, window, "Awning (X11 Backend)");
 	XMapWindow(display, window);
 
@@ -186,39 +188,33 @@ void Awning::Backend::X11::Poll()
 		{
 			if (event.xbutton.button > Button3)
 			{
-				int axis = -1;
-				int step = 0;
-
 				if (event.xbutton.button == Button4)
 				{
-					step = -15;
-					axis = 0;
+					Awning::WM::Manager::Handle::Input::Mouse::Scroll(0, false, 15);
 				}
 				if (event.xbutton.button == Button5)
 				{
-					step = 15;
-					axis = 0;
+					Awning::WM::Manager::Handle::Input::Mouse::Scroll(0, true, 15);
 				}
-				Awning::Wayland::Pointer::Axis(axis, step);
 			}
 			else
 			{
 				uint32_t button = XorgMouseToLinuxInputMouse(event.xbutton.button);
-				Awning::Wayland::Pointer::Button(button, true);
+				Awning::WM::Manager::Handle::Input::Mouse::Pressed(button);
 			}
 		}
 		else if (event.type == ButtonRelease)
 		{
 			uint32_t button = XorgMouseToLinuxInputMouse(event.xbutton.button);
-			Awning::Wayland::Pointer::Button(button, false);
+			Awning::WM::Manager::Handle::Input::Mouse::Released(button);
 		}
 		else if (event.type == KeyPress)
 		{
-			Awning::Wayland::Keyboard::Button(event.xkey.keycode - 8, true);
+			Awning::WM::Manager::Handle::Input::Keyboard::Pressed(event.xkey.keycode - 8);
 		}
 		else if (event.type == KeyRelease)
 		{
-			Awning::Wayland::Keyboard::Button(event.xkey.keycode - 8, false);
+			Awning::WM::Manager::Handle::Input::Keyboard::Released(event.xkey.keycode - 8);
 		}
 	}
 

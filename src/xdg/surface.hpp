@@ -3,6 +3,8 @@
 #include "protocols/xdg-shell-protocol.h"
 #include <unordered_map>
 
+#include "wm/window.hpp"
+
 namespace Awning::XDG::Surface
 {
 	struct Data 
@@ -10,8 +12,7 @@ namespace Awning::XDG::Surface
 		struct Instance 
 		{
 			wl_resource* surface_wl;
-			long long xPosition, yPosition;
-			long long xDimension, yDimension;
+			WM::Window* window;
 		};
 
 		std::unordered_map<wl_resource*, Instance> surfaces;

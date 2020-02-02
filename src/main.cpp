@@ -22,9 +22,8 @@
 #include "xdg/wm_base.hpp"
 #include "xdg/decoration.hpp"
 
-#include "wm/drawable.hpp"
-
 #include "wm/x/wm.hpp"
+#include "wm/window.hpp"
 
 #include "log.hpp"
 
@@ -34,9 +33,7 @@
 void ProtocolLogger(void* user_data, wl_protocol_logger_type direction, const wl_protocol_logger_message* message);
 int XWM_Start(int signal_number, void *data);
 void LaunchXwayland(int signal_number);
-
-int on_term_signal(int signal_number, void* data);
-int sigchld_handler(int signal_number, void* data);
+void on_term_signal(int signal_number);
 
 namespace Awning
 {
@@ -63,7 +60,7 @@ uint32_t NextSerialNum()
 
 int main(int argc, char* argv[])
 {
-	bool noX = false;
+	bool noX = true;
 	Awning::Backend::API api = Awning::Backend::API::X11;
 
 	for(int a = 0; a < argc; a++)
@@ -147,40 +144,48 @@ int main(int argc, char* argv[])
 
 		auto data = Awning::Backend::Data();
 
-		for (auto& [resource, drawable] : Awning::WM::Drawable::drawables)
+		for (auto& window : Awning::WM::Manager::Window::Get())
 		{
-			if (!drawable.data)
-				continue;
-			if (!*drawable.data)
+			if (!window->Mapped())
 				continue;
 
-			for (int x = -1; x < *drawable.xDimension + 1; x++)
-				for (int y = -10; y < *drawable.yDimension + 1; y++)
+			auto texture = window->Texture();
+
+			for (int x = -1; x < window->XSize() + 1; x++)
+				for (int y = -10; y < window->YSize() + 1; y++)
 				{
-					if ((*drawable.xPosition + x) <  0          )
+					if ((window->XPos() + x) <  0          )
 						continue;
-					if ((*drawable.yPosition + y) <  0          )
+					if ((window->YPos() + y) <  0          )
 						continue;
-					if ((*drawable.xPosition + x) >= data.width )
+					if ((window->XPos() + x) >= data.width )
 						continue;
-					if ((*drawable.yPosition + y) >= data.height)
+					if ((window->YPos() + y) >= data.height)
 						continue;
 
-					int windowOffset = (x + y * (*drawable.xDimension)) * 4;
-					int framebOffset = (*drawable.xPosition + x) * (data.bitsPerPixel / 8)
-									 + (*drawable.yPosition + y) * data.bytesPerLine;
+					int windowOffset = (x) * (texture->bitsPerPixel / 8)
+									 + (y) * texture->bytesPerLine;
+
+					int framebOffset = (window->XPos() + x) * (data.bitsPerPixel / 8)
+									 + (window->YPos() + y) * data.bytesPerLine;
 
 					uint8_t red, green, blue;
 
-					if (x < *drawable.xDimension && y < *drawable.yDimension && x >= 0 && y >= 0)
+					if (x < window->XSize() && y < window->YSize() && x >= 0 && y >= 0)
 					{
-						red   = (*drawable.data)[windowOffset + 2];
-						green = (*drawable.data)[windowOffset + 1];
-						blue  = (*drawable.data)[windowOffset + 0];
+						if (texture->buffer.u8 != nullptr)
+						{
+							if ((texture->buffer.u8)[windowOffset + 3] != 0)
+							{
+								red   = texture->buffer.u8[windowOffset + (texture->red  .offset / 8)];
+								green = texture->buffer.u8[windowOffset + (texture->green.offset / 8)];
+								blue  = texture->buffer.u8[windowOffset + (texture->blue .offset / 8)];
+							}
+						}
 					}
 					else
 					{
-						if (drawable.needsFrame)
+						if (window->Frame())
 						{
 							red   = 0xFF;
 							green = 0xFF;
@@ -201,21 +206,15 @@ int main(int argc, char* argv[])
 	wl_display_destroy(Awning::server.display);
 }
 
-int on_term_signal(int signal_number, void *data)
+void on_term_signal(int signal_number)
 {
-	return 0;
-}
-
-int sigchld_handler(int signal_number, void *data)
-{
-	return 0;
 }
 
 int XWM_Start(int signal_number, void *data)
 {
 	Log::Function::Called("");
-	//Awning::WM::X::Init();
-	signal(SIGUSR1, SIG_IGN);
+	Awning::WM::X::Init();
+	signal(SIGUSR1, on_term_signal);
 	return 0;
 }
 
@@ -226,8 +225,8 @@ void LaunchXwayland(int signal_number)
     char* XWaylandArgs [] = { "Xwayland", ":1", NULL };
 
 	int fd = open("/dev/null", O_RDWR);
-	dup2(fd, STDOUT_FILENO);
-	dup2(fd, STDERR_FILENO);
+	//dup2(fd, STDOUT_FILENO);
+	//dup2(fd, STDERR_FILENO);
 
 	int ret = execvp(XWaylandArgs[0], XWaylandArgs);
 	printf("Xwayland did not launch! %d %s\n", ret, strerror(errno));
