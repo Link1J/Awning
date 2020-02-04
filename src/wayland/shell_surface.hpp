@@ -3,6 +3,8 @@
 #include <wayland-server.h>
 #include <unordered_map>
 
+#include "wm/window.hpp"
+
 namespace Awning::Wayland::Shell_Surface
 {
 	struct Data 
@@ -10,7 +12,7 @@ namespace Awning::Wayland::Shell_Surface
 		struct Instance 
 		{
 			wl_resource* surface;
-			long long xPosition, yPosition;
+			WM::Window* window;
 		};
 
 		std::unordered_map<wl_resource*, Instance> shells;

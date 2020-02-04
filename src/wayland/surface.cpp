@@ -80,13 +80,14 @@ namespace Awning::Wayland::Surface
 
 			if (surface.buffer == nullptr)
 			{
-				if (surface.type == 1)
-				{
-					xdg_surface_send_configure(surface.shell, NextSerialNum());
-				}
 				if (surface.window)
 				{
 					surface.texture = surface.window->Texture();
+					WM::Manager::Window::Raise(surface.window);
+				}
+				if (surface.type == 1)
+				{
+					xdg_surface_send_configure(surface.shell, NextSerialNum());
 				}
 				return;
 			}
@@ -161,7 +162,7 @@ namespace Awning::Wayland::Surface
 	{
 		for (auto i: frameCallbacks)
 		{
-			auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000;
+			auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
 			wl_callback_send_done(i, time);
 			wl_resource_destroy(i);
 		}

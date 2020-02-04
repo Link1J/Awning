@@ -51,7 +51,6 @@ namespace Awning::XDG::Surface
 		void Ack_Configure(struct wl_client* client, struct wl_resource* resource, uint32_t serial)
 		{
 			Log::Function::Called("XDG::Surface::Interface");
-			WM::Manager::Window::Raise(data.surfaces[resource].window);
 		}
 	}
 
@@ -76,7 +75,6 @@ namespace Awning::XDG::Surface
 	{
 		Log::Function::Called("XDG::Surface");
 
-		//openWindows.erase(resource);
 		data.surfaces.erase(resource);
 	}
 }

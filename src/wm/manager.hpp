@@ -7,6 +7,31 @@
 
 namespace Awning::WM { class Window; }
 
+namespace Frame 
+{
+	namespace Resize 
+	{
+		int const top    = 2;
+		int const bottom = 2;
+		int const left   = 2;
+		int const right  = 2;
+	}
+	namespace Move 
+	{
+		int const top    = 8;
+		int const bottom = 0;
+		int const left   = 0;
+		int const right  = 0;
+	}
+	namespace Size 
+	{
+		int const top    = Resize::top    + Move::top   ;
+		int const bottom = Resize::bottom + Move::bottom;
+		int const left   = Resize::left   + Move::left  ;
+		int const right  = Resize::right  + Move::right ;
+	}
+}
+
 namespace Awning::WM::Manager::Functions
 {
 	namespace Input
@@ -79,10 +104,11 @@ namespace Awning::WM::Manager
 
 	namespace Window
 	{
-		void Add   (Awning::WM::Window* window);
-		void Remove(Awning::WM::Window* window);
-		void Raise (Awning::WM::Window* window);
-		void Resize(Awning::WM::Window* window);
+		void Add       (Awning::WM::Window* window                      );
+		void Remove    (Awning::WM::Window* window                      );
+		void Raise     (Awning::WM::Window* window                      );
+		void Resize    (Awning::WM::Window* window, int xSize, int ySize);
+		void Reposition(Awning::WM::Window* window, int xPos , int yPos );
 
 		std::list<Awning::WM::Window*> Get();
 	}

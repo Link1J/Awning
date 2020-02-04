@@ -87,25 +87,18 @@ namespace Awning::Wayland::Shell_Surface
 		data.shells[resource] = Data::Instance();
 
 		data.shells[resource].surface   = surface;
-		data.shells[resource].xPosition = 0;
-		data.shells[resource].yPosition = 0;
-
-		//WM::Drawable::drawables[resource].xPosition  = &         data.shells  [resource].xPosition ;
-		//WM::Drawable::drawables[resource].yPosition  = &         data.shells  [resource].yPosition ;
-		//WM::Drawable::drawables[resource].xDimension = &Surface::data.surfaces[surface ].xDimension;
-		//WM::Drawable::drawables[resource].yDimension = &Surface::data.surfaces[surface ].yDimension;
-		//WM::Drawable::drawables[resource].data       = &Surface::data.surfaces[surface ].data      ;
-		//WM::Drawable::drawables[resource].surface    =                                   surface   ;
+		data.shells[resource].window = WM::Window::Create(wl_client);
+		Surface::data.surfaces[surface].window = data.shells[resource].window;
 	}
 
 	void Destroy(struct wl_resource* resource)
 	{
 		Log::Function::Called("Wayland::Shell_Surface");
 
-		if (Pointer::data.pre_shell == resource)
-			Pointer::data.pre_shell = nullptr;
+		auto surface = data.shells[resource].surface; 
+		Surface::data.surfaces[surface].window = nullptr;
 
-		//Awning::WM::Drawable::drawables.erase(resource);
+		WM::Window::Destory(data.shells[resource].window);
 		data.shells.erase(resource);
 	}
 }

@@ -1,6 +1,7 @@
 #include "wm_base.hpp"
 #include "surface.hpp"
 #include "log.hpp"
+#include "wm/client.hpp"
 
 namespace Awning::XDG::WM_Base
 {
@@ -47,5 +48,6 @@ namespace Awning::XDG::WM_Base
 			return;
 		}
 		wl_resource_set_implementation(resource, &interface, data, nullptr);
+		WM::Client::SetWM(wl_client, resource);
 	}
 }

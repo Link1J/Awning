@@ -25,6 +25,7 @@
 #include "wm/x/wm.hpp"
 #include "wm/window.hpp"
 #include "wm/client.hpp"
+#include "wm/manager.hpp"
 
 #include "log.hpp"
 
@@ -170,8 +171,8 @@ int main(int argc, char* argv[])
 
 			auto texture = window->Texture();
 
-			for (int x = -1; x < window->XSize() + 1; x++)
-				for (int y = -10; y < window->YSize() + 1; y++)
+			for (int x = -Frame::Size::left; x < window->XSize() + Frame::Size::right; x++)
+				for (int y = -Frame::Size::top; y < window->YSize() + Frame::Size::bottom; y++)
 				{
 					if ((window->XPos() + x) <  0          )
 						continue;
@@ -199,6 +200,12 @@ int main(int argc, char* argv[])
 								red   = texture->buffer.u8[windowOffset + (texture->red  .offset / 8)];
 								green = texture->buffer.u8[windowOffset + (texture->green.offset / 8)];
 								blue  = texture->buffer.u8[windowOffset + (texture->blue .offset / 8)];
+							}
+							else
+							{
+								red   = 0xFF;
+								green = 0xFF;
+								blue  = 0x00;
 							}
 						}
 					}

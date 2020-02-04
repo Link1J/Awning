@@ -149,14 +149,16 @@ namespace Awning::XDG::TopLevel
 		Log::Function::Called("XDG::TopLevel");
 		
 		struct wl_resource* resource = (struct wl_resource*)data;
-		wl_array* states;
+		wl_array* states = new wl_array();
 		wl_array_init(states);
-		wl_array_add(states, XDG_TOPLEVEL_STATE_ACTIVATED);
+		wl_array_add(states, sizeof(xdg_toplevel_state));
+		((xdg_toplevel_state*)states->data)[0] = XDG_TOPLEVEL_STATE_ACTIVATED;
 		xdg_toplevel_send_configure(resource, 
 			Awning::XDG::TopLevel::data.toplevels[resource].window->XSize(),
 			Awning::XDG::TopLevel::data.toplevels[resource].window->YSize(),
 			states);
-		//wl_array_release(states);
+		wl_array_release(states);
+		delete states;
 	}
 
 	void Resized(void* data, int width, int height)
@@ -164,12 +166,13 @@ namespace Awning::XDG::TopLevel
 		Log::Function::Called("XDG::TopLevel");
 		
 		struct wl_resource* resource = (struct wl_resource*)data;
-		wl_array* states;
+		wl_array* states = new wl_array();
 		wl_array_init(states);
-		xdg_toplevel_send_configure(resource, 
-			Awning::XDG::TopLevel::data.toplevels[resource].window->XSize(),
-			Awning::XDG::TopLevel::data.toplevels[resource].window->YSize(),
-			states);
-		//wl_array_release(states);
+		wl_array_add(states, sizeof(xdg_toplevel_state) * 2);
+		((xdg_toplevel_state*)states->data)[0] = XDG_TOPLEVEL_STATE_ACTIVATED;
+		((xdg_toplevel_state*)states->data)[1] = XDG_TOPLEVEL_STATE_RESIZING;
+		xdg_toplevel_send_configure(resource, width, height, states);
+		wl_array_release(states);
+		delete states;
 	}
 }

@@ -10,6 +10,7 @@
 #include "wayland/keyboard.hpp"
 
 #include <linux/input.h>
+#include "protocols/xdg-shell-protocol.h"
 
 static std::list<Awning::WM::Window*> windowList;
 static Awning::WM::Window* hoveredOver;
@@ -63,34 +64,45 @@ namespace Awning::WM::Manager
 
 						// Top frame
 						if((*curr)->Frame()
-						&& (*curr)->XPos ()                    -  1 <= x
-						&& (*curr)->YPos ()                    -  9 <= y
-						&& (*curr)->XPos () + (*curr)->XSize() +  1 >  x
-						&& (*curr)->YPos ()                         >  y
+						&& (*curr)->XPos ()                                       <= x
+						&& (*curr)->YPos ()                    - Frame::Move::top <= y
+						&& (*curr)->XPos () + (*curr)->XSize()                    >  x
+						&& (*curr)->YPos ()                                       >  y
 						)
 						{
 							action = MOVE;
 							break;
 						}
 
-
 						if((*curr)->Frame()
-						&& (*curr)->XPos ()                    -  1 <= x
-						&& (*curr)->YPos ()                    - 10 <= y
-						&& (*curr)->XPos () + (*curr)->XSize() +  1 >  x
-						&& (*curr)->YPos ()                    -  9 >  y
+						&& (*curr)->XPos ()                                                            <= x
+						&& (*curr)->YPos ()                    - Frame::Move::top - Frame::Resize::top <= y
+						&& (*curr)->XPos () + (*curr)->XSize()                                         >  x
+						&& (*curr)->YPos ()                    - Frame::Move::top                      >  y
 						)
 						{
-							action = MOVE;
+							action = RESIZE;
+							side = TOP;
 							break;
 						}
 						
 						// Bottom frame
 						if((*curr)->Frame()
-						&& (*curr)->XPos ()                    -  1 <= x
-						&& (*curr)->YPos () + (*curr)->YSize()      <= y
-						&& (*curr)->XPos () + (*curr)->XSize() +  1 >  x
-						&& (*curr)->YPos () + (*curr)->YSize() +  1 >  y
+						&& (*curr)->XPos ()                                          <= x
+						&& (*curr)->YPos () + (*curr)->YSize()                       <= y
+						&& (*curr)->XPos () + (*curr)->XSize()                       >  x
+						&& (*curr)->YPos () + (*curr)->YSize() + Frame::Move::bottom >  y
+						)
+						{
+							action = MOVE;
+							break;
+						}
+
+						if((*curr)->Frame()
+						&& (*curr)->XPos ()                                                                  <= x
+						&& (*curr)->YPos () + (*curr)->YSize() + Frame::Move::bottom                         <= y
+						&& (*curr)->XPos () + (*curr)->XSize()                                               >  x
+						&& (*curr)->YPos () + (*curr)->YSize() + Frame::Move::bottom + Frame::Resize::bottom >  y
 						)
 						{
 							action = RESIZE;
@@ -100,10 +112,21 @@ namespace Awning::WM::Manager
 
 						// Left frame
 						if((*curr)->Frame()
-						&& (*curr)->XPos ()                    -  1 <= x
-						&& (*curr)->YPos ()                    - 10 <= y
-						&& (*curr)->XPos ()                         >  x
-						&& (*curr)->YPos () + (*curr)->YSize() +  1 >  y
+						&& (*curr)->XPos ()                    - Frame::Move::left <= x
+						&& (*curr)->YPos ()                                        <= y
+						&& (*curr)->XPos ()                                        >  x
+						&& (*curr)->YPos () + (*curr)->YSize()                     >  y
+						)
+						{
+							action = MOVE;
+							break;
+						}
+
+						if((*curr)->Frame()
+						&& (*curr)->XPos ()                    - Frame::Move::left - Frame::Resize::left <= x
+						&& (*curr)->YPos ()                                                              <= y
+						&& (*curr)->XPos ()                    - Frame::Move::left                       >  x
+						&& (*curr)->YPos () + (*curr)->YSize()                                           >  y
 						)
 						{
 							action = RESIZE;
@@ -113,10 +136,21 @@ namespace Awning::WM::Manager
 
 						// Right frame
 						if((*curr)->Frame()
-						&& (*curr)->XPos () + (*curr)->XSize()      <= x
-						&& (*curr)->YPos ()                    - 10 <= y
-						&& (*curr)->XPos () + (*curr)->XSize() +  1 >  x
-						&& (*curr)->YPos () + (*curr)->YSize() +  1 >  y
+						&& (*curr)->XPos () + (*curr)->XSize()                      <= x
+						&& (*curr)->YPos ()                                         <= y
+						&& (*curr)->XPos () + (*curr)->XSize() + Frame::Move::right >  x
+						&& (*curr)->YPos () + (*curr)->YSize()                      >  y
+						)
+						{
+							action = MOVE;
+							break;
+						}
+
+						if((*curr)->Frame()
+						&& (*curr)->XPos () + (*curr)->XSize() + Frame::Move::right                        <= x
+						&& (*curr)->YPos ()                                                                <= y
+						&& (*curr)->XPos () + (*curr)->XSize() + Frame::Move::right + Frame::Resize::right >  x
+						&& (*curr)->YPos () + (*curr)->YSize()                                             >  y
 						)
 						{
 							action = RESIZE;
@@ -178,36 +212,48 @@ namespace Awning::WM::Manager
 					{
 						int newX = hoveredOver->XPos() + (x - preX);
 						int newY = hoveredOver->YPos() + (y - preY);
-						hoveredOver->ConfigPos(newX, newY);
+						Manager::Window::Reposition(hoveredOver, newX, newY);
 					}
 					else if (hoveredOver && action == RESIZE && input == LOCK)
 					{
 						int deltaX = (x - preX);
 						int deltaY = (y - preY);
-						int newX = hoveredOver->XPos();
-						int newY = hoveredOver->YPos();
+						int XSize = hoveredOver->XSize();
+						int YSize = hoveredOver->YSize();
+						int XPos = hoveredOver->XPos();
+						int YPos = hoveredOver->YPos();
 
 						switch (side)
 						{
 						case TOP:
+							YPos += deltaY;
+							YSize -= deltaY;
+							break;
 						case BOTTOM:
-							newY += deltaY;
+							YSize += deltaY;
 							break;
 						case LEFT:
-						case RIGHT:
-							newX += deltaX;
+							XPos += deltaX;
+							XSize -= deltaX;
 							break;	
-						default:
-							newX += deltaX;
-							newY += deltaY;
+						case RIGHT:
+							XSize += deltaX;
 							break;
 						}
 
-						hoveredOver->ConfigSize(newX, newY);
+						Manager::Window::Reposition(hoveredOver, XPos , YPos );
+						Manager::Window::Resize    (hoveredOver, XSize, YSize);
 					}
 
 					preX = x;
 					preY = y;
+
+					if (hoveredOver)
+					{
+						void* id = hoveredOver->Client();
+						wl_resource* wm =  (wl_resource*)Client::WM(id);
+						xdg_wm_base_send_ping(wm, 1);
+					}
 				}
 
 				void Pressed(uint32_t button)
@@ -342,13 +388,24 @@ namespace Awning::WM::Manager
 				window->Raised(window->data);
 		}
 
-		void Resize(Awning::WM::Window* window)
+		void Resize(Awning::WM::Window* window, int xSize, int ySize)
 		{
-			int newX = window->XPos();
-			int newY = window->YPos();
+			if (xSize < 1)
+				xSize = 1;
+			if (ySize < 1)
+				ySize = 1;
+			
 			if (window->Resized)
-				window->Resized(window->data, newX, newY);
+				window->Resized(window->data, xSize, ySize);
+
+			window->ConfigSize(xSize, ySize);
 		}
+
+		void Reposition(Awning::WM::Window* window, int xPos, int yPos)
+		{
+			window->ConfigPos(xPos, yPos);
+		}
+
 
 		std::list<Awning::WM::Window*> Get()
 		{

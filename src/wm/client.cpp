@@ -14,6 +14,7 @@ namespace Awning::WM::Client
 			void* surface = nullptr;
 		};
 		std::unordered_map<Window*, Windows> windows;
+		void* wm_base;
 	};
 
 	std::unordered_map<void*,Data> clients;
@@ -34,6 +35,11 @@ namespace Awning::WM::Client
 		clients[window->client].windows.erase(window);
 	}
 
+	void SetWM(void* id, void* wm)
+	{
+		clients[id].wm_base = wm;
+	}
+
 	void* Surface(Window* window)
 	{
 		void* surface = clients[window->client].windows[window].surface;
@@ -50,5 +56,10 @@ namespace Awning::WM::Client
 			}
 		}
 		return surface;
+	}
+
+	void* WM(void* id)
+	{
+		return clients[id].wm_base;
 	}
 }

@@ -43,6 +43,8 @@ namespace Awning::Wayland::Pointer
 
 	void Enter(wl_client* client, wl_resource* surface, double x, double y) 
 	{
+		if (!data.pointers.contains(client))
+			return;
 		int xPoint = wl_fixed_from_double(x);
 		int yPoint = wl_fixed_from_double(y);
 		wl_pointer_send_enter(data.pointers[client].resource, NextSerialNum(), surface, xPoint, yPoint);
@@ -57,6 +59,8 @@ namespace Awning::Wayland::Pointer
 
 	void Moved(wl_client* client, double x, double y) 
 	{
+		if (!data.pointers.contains(client))
+			return;
 		int xPoint = wl_fixed_from_double(x);
 		int yPoint = wl_fixed_from_double(y);
 		auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
@@ -65,12 +69,16 @@ namespace Awning::Wayland::Pointer
 
 	void Button(wl_client* client, uint32_t button, bool pressed) 
 	{
+		if (!data.pointers.contains(client))
+			return;
 		auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
 		wl_pointer_send_button(data.pointers[client].resource, NextSerialNum(), time, button, pressed);
 	}
 
 	void Axis(wl_client* client, uint32_t axis, float value) 
 	{
+		if (!data.pointers.contains(client))
+			return;
 		auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
 		int step = wl_fixed_from_double(value);
 		wl_pointer_send_axis(data.pointers[client].resource, time, axis, step);
@@ -78,6 +86,8 @@ namespace Awning::Wayland::Pointer
 
 	void Frame(wl_client* client)
 	{
+		if (!data.pointers.contains(client))
+			return;
 		wl_pointer_send_frame(data.pointers[client].resource);
 	}
 }
