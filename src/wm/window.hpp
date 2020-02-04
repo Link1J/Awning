@@ -17,7 +17,7 @@ namespace Awning::WM
 
 		Texture::Data texture;
 
-		int xPos, yPos, xSize, ySize;
+		int xPos, yPos, xSize, ySize, xOffset, yOffset;
 		bool mapped, needsFrame;
 		void* data,* client;
 
@@ -25,19 +25,21 @@ namespace Awning::WM
 		static Window* Create (void* client   );
 		static void    Destory(Window*& window);
 
-		Texture::Data* Texture   (                    );
-		void           Mapped    (bool map            );
-		bool           Mapped    (                    );
-		int            XPos      (                    );
-		int            YPos      (                    );
-		int            XSize     (                    );
-		int            YSize     (                    );
-		void           Frame     (bool frame          );
-		bool           Frame     (                    );
-		void           ConfigPos (int xPos, int yPos  );
-		void           ConfigSize(int xSize, int ySize);
-		void           Data      (void* data          );
-		void*          Client    (                    );
+		Texture::Data* Texture   (                                       );
+		void           Mapped    (bool map                               );
+		bool           Mapped    (                                       );
+		int            XPos      (                                       );
+		int            YPos      (                                       );
+		int            XSize     (                                       );
+		int            YSize     (                                       );
+		void           Frame     (bool frame                             );
+		bool           Frame     (                                       );
+		void           ConfigPos (int xPos, int yPos, bool offset = false);
+		void           ConfigSize(int xSize, int ySize                   );
+		void           Data      (void* data                             );
+		void*          Client    (                                       );
+		int            XOffset   (                                       );
+		int            YOffset   (                                       );
 
 		void SetRaised (Manager::Functions::Window::Raised  raised );
 		void SetResized(Manager::Functions::Window::Resized resized);

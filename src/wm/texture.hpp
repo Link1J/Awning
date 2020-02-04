@@ -13,7 +13,7 @@ namespace Awning::WM::Texture
 			uintptr_t size;
 			uintptr_t offset;
 		} 
-		red, green, blue;
+		red, green, blue, alpha;
 
 		uintptr_t width;
 		uintptr_t height;

@@ -70,10 +70,16 @@ namespace Awning::WM
 		return needsFrame;
 	}
 
-	void Window::ConfigPos(int xPos, int yPos)
+	void Window::ConfigPos(int xPos, int yPos, bool offset)
 	{
-		this->xPos  = xPos ;
-		this->yPos  = yPos ;
+		this->xPos  = xPos;
+		this->yPos  = yPos;
+
+		if (offset)
+		{
+			this->xOffset = xPos;
+			this->yOffset = yPos;
+		}
 	}
 
 	void Window::ConfigSize(int xSize, int ySize)
@@ -100,5 +106,15 @@ namespace Awning::WM
 	void Window::SetResized(Manager::Functions::Window::Resized resized)
 	{
 		Resized = resized;
+	}
+
+	int Window::XOffset()
+	{
+		return xOffset;
+	}
+
+	int Window::YOffset()
+	{
+		return yOffset;
 	}
 }

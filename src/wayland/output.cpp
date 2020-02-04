@@ -49,8 +49,8 @@ namespace Awning::Wayland::Output
 			for (auto& mode : output.modes)
 			{
 				wl_output_send_mode(resource, 
-					mode.current  ? WL_OUTPUT_MODE_CURRENT : 0 | 
-					mode.prefered ? WL_OUTPUT_MODE_PREFERRED : 0 , 
+					(mode.current  ? WL_OUTPUT_MODE_CURRENT   : 0) | 
+					(mode.prefered ? WL_OUTPUT_MODE_PREFERRED : 0) , 
 					mode.resolution.width, 
 					mode.resolution.height, 
 					mode.refresh_rate

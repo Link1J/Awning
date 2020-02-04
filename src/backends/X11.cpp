@@ -32,13 +32,12 @@ static bool 		             resized = false;
 static Awning::WM::Texture::Data framebuffer;
 
 static int doubleBufferAttributes[] = {
-    GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
-    GLX_RENDER_TYPE,   GLX_RGBA_BIT,
-    GLX_DOUBLEBUFFER,  True,  /* Request a double-buffered color buffer with */
-    GLX_RED_SIZE,      1,     /* the maximum number of bits per component    */
-    GLX_GREEN_SIZE,    1, 
-    GLX_BLUE_SIZE,     1,
-	GLX_DEPTH_SIZE,    24,
+    GLX_RGBA,
+	GLX_DOUBLEBUFFER,
+	GLX_RED_SIZE,      8,     /* the maximum number of bits per component    */
+    GLX_GREEN_SIZE,    8, 
+    GLX_BLUE_SIZE,     8,
+	GLX_ALPHA_SIZE,    8,
     None
 };
 
@@ -88,7 +87,7 @@ void Awning::Backend::X11::Start()
 	screen = DefaultScreen(display);
 	auto root = RootWindow(display, screen);
 
-	auto vi = glXChooseVisual(display, 0, doubleBufferAttributes);
+	auto vi = glXChooseVisual(display, screen, doubleBufferAttributes);
 	attribs.colormap = XCreateColormap(display, root, vi->visual, AllocNone);
 	attribs.event_mask = StructureNotifyMask|ButtonPressMask|KeyPressMask|PointerMotionMask|ButtonReleaseMask|KeyReleaseMask;
 	
@@ -118,6 +117,10 @@ void Awning::Backend::X11::Start()
         .blue         = { 
 			.size   = 8,
 			.offset = 16
+		},
+        .alpha        = { 
+			.size   = 8,
+			.offset = 24
 		},
         .width        = width,
         .height       = height

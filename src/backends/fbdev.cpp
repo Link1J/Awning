@@ -55,6 +55,10 @@ void Awning::Backend::FBDEV::Start()
 			.size   = vinf.blue.length,
 			.offset = vinf.blue.offset
 		},
+        .alpha        = { 
+			.size   = 0,
+			.offset = 0
+		},
         .width        = vinf.xres,
         .height       = vinf.yres
     };

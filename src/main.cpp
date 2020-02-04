@@ -170,43 +170,49 @@ int main(int argc, char* argv[])
 				continue;
 
 			auto texture = window->Texture();
+			auto winPosX = window->XPos();
+			auto winPosY = window->YPos();
+			auto winSizeX = window->XSize();
+			auto winSizeY = window->YSize();
 
-			for (int x = -Frame::Size::left; x < window->XSize() + Frame::Size::right; x++)
-				for (int y = -Frame::Size::top; y < window->YSize() + Frame::Size::bottom; y++)
+			for (int x = -Frame::Size::left; x < winSizeX + Frame::Size::right; x++)
+				for (int y = -Frame::Size::top; y < winSizeY + Frame::Size::bottom; y++)
 				{
-					if ((window->XPos() + x) <  0          )
+					if ((winPosX + x) <  0          )
 						continue;
-					if ((window->YPos() + y) <  0          )
+					if ((winPosY + y) <  0          )
 						continue;
-					if ((window->XPos() + x) >= data.width )
+					if ((winPosX + x) >= data.width )
 						continue;
-					if ((window->YPos() + y) >= data.height)
+					if ((winPosY + y) >= data.height)
 						continue;
 
-					int windowOffset = (x) * (texture->bitsPerPixel / 8)
-									 + (y) * texture->bytesPerLine;
+					int windowOffset = (x + window->XOffset()) * (texture->bitsPerPixel / 8)
+									 + (y + window->YOffset()) *  texture->bytesPerLine    ;
 
-					int framebOffset = (window->XPos() + x) * (data.bitsPerPixel / 8)
-									 + (window->YPos() + y) * data.bytesPerLine;
+					int framebOffset = (winPosX + x) * (data.bitsPerPixel / 8)
+									 + (winPosY + y) *  data.bytesPerLine    ;
 
-					uint8_t red, green, blue;
+					uint8_t red, green, blue, alpha;
 
-					if (x < window->XSize() && y < window->YSize() && x >= 0 && y >= 0)
+					if (x < winSizeX && y < winSizeY && x >= 0 && y >= 0)
 					{
 						if (texture->buffer.u8 != nullptr)
 						{
-							if ((texture->buffer.u8)[windowOffset + 3] != 0)
-							{
+							//if ((texture->buffer.u8)[windowOffset + 3] != 0)
+							//{
 								red   = texture->buffer.u8[windowOffset + (texture->red  .offset / 8)];
 								green = texture->buffer.u8[windowOffset + (texture->green.offset / 8)];
 								blue  = texture->buffer.u8[windowOffset + (texture->blue .offset / 8)];
-							}
-							else
-							{
-								red   = 0xFF;
-								green = 0xFF;
-								blue  = 0x00;
-							}
+								alpha = texture->buffer.u8[windowOffset + (texture->alpha.offset / 8)];
+							//}
+							//else
+							//{
+							//	red   = 0xFF;
+							//	green = 0xFF;
+							//	blue  = 0x00;
+							//	alpha = 0xFF;
+							//}
 						}
 					}
 					else
@@ -216,12 +222,26 @@ int main(int argc, char* argv[])
 							red   = 0xFF;
 							green = 0xFF;
 							blue  = 0xFF;
+							alpha = 0xFF;
+						}
+						else 
+						{
+							red   = 0x00;
+							green = 0x00;
+							blue  = 0x00;
+							alpha = 0x00;
 						}
 					}
 
-					data.buffer.u8[framebOffset + (data.red  .offset / 8)] = red  ;
-					data.buffer.u8[framebOffset + (data.green.offset / 8)] = green;
-					data.buffer.u8[framebOffset + (data.blue .offset / 8)] = blue ;
+					if (alpha > 0)
+					{
+						data.buffer.u8[framebOffset + (data.red  .offset / 8)] = red  ;
+						data.buffer.u8[framebOffset + (data.green.offset / 8)] = green;
+						data.buffer.u8[framebOffset + (data.blue .offset / 8)] = blue ;
+
+						if (data.alpha.size != 0)
+							data.buffer.u8[framebOffset + (data.alpha.offset / 8)] = alpha;
+					}
 				}
 		}
 

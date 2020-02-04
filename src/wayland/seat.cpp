@@ -50,6 +50,7 @@ namespace Awning::Wayland::Seat
 		}
 		wl_resource_set_implementation(resource, &interface, data, nullptr);
 
+		wl_seat_send_name(resource, "Maybe Working Input.");
 		wl_seat_send_capabilities(resource, WL_SEAT_CAPABILITY_POINTER|WL_SEAT_CAPABILITY_KEYBOARD);
 	}
 }

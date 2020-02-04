@@ -108,8 +108,9 @@ namespace Awning::Wayland::Surface
 				surface.texture->red          = { .size = 8, .offset = 16 };
 				surface.texture->green        = { .size = 8, .offset =  8 };
 				surface.texture->blue         = { .size = 8, .offset =  0 };
+				surface.texture->alpha        = { .size = 8, .offset = 24 };
 
-				if (surface.window->XSize() == 0 || surface.window->YSize() == 0)
+				if (surface.window->XSize() == 0 && surface.window->YSize() == 0)
 				{
 					surface.window->ConfigSize(surface.texture->width, surface.texture->height);
 				}

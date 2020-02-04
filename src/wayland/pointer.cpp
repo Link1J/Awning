@@ -45,6 +45,8 @@ namespace Awning::Wayland::Pointer
 	{
 		if (!data.pointers.contains(client))
 			return;
+		if (!surface)
+			return;
 		int xPoint = wl_fixed_from_double(x);
 		int yPoint = wl_fixed_from_double(y);
 		wl_pointer_send_enter(data.pointers[client].resource, NextSerialNum(), surface, xPoint, yPoint);
@@ -53,6 +55,8 @@ namespace Awning::Wayland::Pointer
 	void Leave(wl_client* client, wl_resource* surface) 
 	{
 		if (!data.pointers.contains(client))
+			return;
+		if (!surface)
 			return;
 		wl_pointer_send_leave(data.pointers[client].resource, NextSerialNum(), surface);
 	}

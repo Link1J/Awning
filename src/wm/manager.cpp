@@ -173,13 +173,13 @@ namespace Awning::WM::Manager
 
 						if (curr != windowList.end())
 						{
-							int localX = x - (*curr)->XPos();
-							int localY = y - (*curr)->YPos();
+							int localX = x - (*curr)->XPos() + (*curr)->XOffset();
+							int localY = y - (*curr)->YPos() + (*curr)->YOffset();
 
 							Wayland::Pointer::Enter(
 								(wl_client  *)(*curr)->Client(), 
 								(wl_resource*)Client::Surface(*curr),
-								x, y
+								localX, localY
 							);
 							Wayland::Pointer::Frame(
 								(wl_client*)(*curr)->Client()
@@ -197,12 +197,12 @@ namespace Awning::WM::Manager
 					}
 					else if (hoveredOver && action == APPLCATION)
 					{
-						int localX = x - hoveredOver->XPos();
-						int localY = y - hoveredOver->YPos();
+						int localX = x - hoveredOver->XPos() + hoveredOver->XOffset();
+						int localY = y - hoveredOver->YPos() + hoveredOver->YOffset();
 
 						Wayland::Pointer::Moved(
 							(wl_client*)hoveredOver->Client(),
-							x, y
+							localX, localY
 						);
 						Wayland::Pointer::Frame(
 							(wl_client*)hoveredOver->Client()
@@ -248,12 +248,12 @@ namespace Awning::WM::Manager
 					preX = x;
 					preY = y;
 
-					if (hoveredOver)
-					{
-						void* id = hoveredOver->Client();
-						wl_resource* wm =  (wl_resource*)Client::WM(id);
-						xdg_wm_base_send_ping(wm, 1);
-					}
+					//if (hoveredOver)
+					//{
+					//	void* id = hoveredOver->Client();
+					//	wl_resource* wm =  (wl_resource*)Client::WM(id);
+					//	xdg_wm_base_send_ping(wm, 1);
+					//}
 				}
 
 				void Pressed(uint32_t button)
@@ -305,6 +305,7 @@ namespace Awning::WM::Manager
 						{
 							hoveredOver = nullptr;
 							input = UNLOCK;
+							action = APPLCATION;
 						}
 					}
 				}

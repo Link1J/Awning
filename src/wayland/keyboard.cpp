@@ -29,6 +29,7 @@ namespace Awning::Wayland::Keyboard
 			return;
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, nullptr);
+		wl_keyboard_send_keymap(resource, 0, 0, 0);
 
 		data.keyboards[wl_client].resource = resource;
 	}
