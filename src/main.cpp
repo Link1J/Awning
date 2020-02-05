@@ -66,6 +66,9 @@ namespace Awning
 	Server::Data server;
 };
 
+struct something { int x; int y; };
+extern something cursor;
+
 uint32_t lastSerialNum = 1;
 
 uint32_t NextSerialNum()
@@ -77,7 +80,8 @@ uint32_t NextSerialNum()
 int main(int argc, char* argv[])
 {
 	bool noX = true;
-	Awning::Backend::API api = Awning::Backend::API::X11;
+	Awning::Backend::API api_output = Awning::Backend::API::FBDEV;
+	Awning::Backend::API api_input  = Awning::Backend::API::EVDEV;
 
 	for(int a = 0; a < argc; a++)
 	{
@@ -88,11 +92,13 @@ int main(int argc, char* argv[])
 		}
 		if (arg == "-fbdev")
 		{
-			api = Awning::Backend::API::FBDEV;
+			api_output = Awning::Backend::API::FBDEV;
+			api_input  = Awning::Backend::API::EVDEV;
 		}
 		if (arg == "-x11")
 		{
-			api = Awning::Backend::API::X11;
+			api_output = Awning::Backend::API::X11;
+			api_input  = Awning::Backend::API::X11;
 		}
 	}
 
@@ -116,7 +122,7 @@ int main(int argc, char* argv[])
 	const char* socket = wl_display_add_socket_auto(Awning::server.display);
 	std::cout << "Wayland Socket: " << socket << std::endl;
 
-	Awning::Backend::Init(api);
+	Awning::Backend::Init(api_output, api_input);
 
 	Awning::server.client_listener.notify = client_created;
 
@@ -144,7 +150,7 @@ int main(int argc, char* argv[])
 		using namespace Awning::ZXDG;
 
 		WM_Base           ::data.global = wl_global_create(server.display, &xdg_wm_base_interface               , 1, nullptr, WM_Base           ::Bind);
-		Decoration_Manager::data.global = wl_global_create(server.display, &zxdg_decoration_manager_v1_interface, 1, nullptr, Decoration_Manager::Bind);
+		//Decoration_Manager::data.global = wl_global_create(server.display, &zxdg_decoration_manager_v1_interface, 1, nullptr, Decoration_Manager::Bind);
 	}
 
 	if (pid != 0)
@@ -155,6 +161,7 @@ int main(int argc, char* argv[])
 	while(1)
 	{
 		Awning::Backend::Poll();
+		Awning::Backend::Hand();
 
 		wl_event_loop_dispatch(Awning::server.event_loop, 0);
 		wl_display_flush_clients(Awning::server.display);
@@ -244,6 +251,16 @@ int main(int argc, char* argv[])
 					}
 				}
 		}
+
+		int framebOffset = (cursor.x) * (data.bitsPerPixel / 8)
+						 + (cursor.y) *  data.bytesPerLine    ; 
+
+		data.buffer.u8[framebOffset + (data.red  .offset / 8)] = 0x00;
+		data.buffer.u8[framebOffset + (data.green.offset / 8)] = 0xFF;
+		data.buffer.u8[framebOffset + (data.blue .offset / 8)] = 0x00;
+
+		if (data.alpha.size != 0)
+			data.buffer.u8[framebOffset + (data.alpha.offset / 8)] = 0x00;
 
 		Awning::Wayland::Surface::HandleFrameCallbacks();
 		Awning::Backend::Draw();

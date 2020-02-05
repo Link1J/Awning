@@ -2,18 +2,20 @@
 
 #include "X11.hpp"
 #include "fbdev.hpp"
+#include "evdev.hpp"
 
 namespace Awning::Backend
 {
 	Functions::Poll Poll;
 	Functions::Draw Draw;
 	Functions::Data Data;
+	Functions::Hand Hand;
 
 	std::vector<Output> outputs;
 
-	void Init(API api)
+	void Init(API output, API input)
 	{
-		switch (api)
+		switch (output)
 		{
 		case API::X11:
 			X11::Start();
@@ -26,6 +28,20 @@ namespace Awning::Backend
 			Poll = FBDEV::Poll;
 			Draw = FBDEV::Draw;
 			Data = FBDEV::Data;
+			break;
+		
+		default:
+			break;
+		}
+
+		switch (input)
+		{
+		case API::X11:
+			Hand = X11::Hand;
+			break;
+		case API::EVDEV:
+			EVDEV::Start();
+			Hand = EVDEV::Hand;
 			break;
 		
 		default:

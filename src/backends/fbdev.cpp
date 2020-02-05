@@ -27,8 +27,8 @@ static int fd, tty_fd;
 
 void Awning::Backend::FBDEV::Start()
 {
-	//int tty_fd = open("/dev/tty0", O_RDWR);
-	//ioctl(tty_fd, KDSETMODE, KD_GRAPHICS);
+	int tty_fd = open("/dev/tty0", O_RDWR);
+	ioctl(tty_fd, KDSETMODE, KD_GRAPHICS);
 	//ioctl(tty_fd, KDSETMODE, KD_TEXT);
 
 	fd = open("/dev/fb0", O_RDWR);

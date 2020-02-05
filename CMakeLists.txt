@@ -10,6 +10,7 @@ set(SOURCES
     src/backends/X11.cpp
     src/backends/manager.cpp
     src/backends/fbdev.cpp
+    src/backends/evdev.cpp
 
     src/wayland/compositor.cpp
     src/wayland/seat.cpp

@@ -66,7 +66,21 @@ namespace Awning::XDG::TopLevel
 		void Resize(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, uint32_t edges)
 		{
 			Log::Function::Called("XDG::TopLevel::Interface");
-			WM::Manager::Handle::Input::Lock(WM::Manager::Handle::Input::RESIZE);
+
+			WM::Manager::Handle::Input::WindowSide side;
+			switch (edges)
+			{
+			case XDG_TOPLEVEL_RESIZE_EDGE_TOP         : side = WM::Manager::Handle::Input::TOP         ; break;
+			case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM      : side = WM::Manager::Handle::Input::BOTTOM      ; break;
+			case XDG_TOPLEVEL_RESIZE_EDGE_LEFT        : side = WM::Manager::Handle::Input::LEFT        ; break;
+			case XDG_TOPLEVEL_RESIZE_EDGE_TOP_LEFT    : side = WM::Manager::Handle::Input::TOP_LEFT    ; break;
+			case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_LEFT : side = WM::Manager::Handle::Input::BOTTOM_LEFT ; break;
+			case XDG_TOPLEVEL_RESIZE_EDGE_RIGHT       : side = WM::Manager::Handle::Input::RIGHT       ; break;
+			case XDG_TOPLEVEL_RESIZE_EDGE_TOP_RIGHT   : side = WM::Manager::Handle::Input::TOP_RIGHT   ; break;
+			case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_RIGHT: side = WM::Manager::Handle::Input::BOTTOM_RIGHT; break;
+			}
+
+			WM::Manager::Handle::Input::Lock(WM::Manager::Handle::Input::RESIZE, side);
 		}
 
 		void Set_Max_Size(struct wl_client* client, struct wl_resource* resource, int32_t width, int32_t height)

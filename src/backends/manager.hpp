@@ -7,13 +7,14 @@ namespace Awning::Backend
 {
 	enum class API
 	{
-		NONE, X11, FBDEV,
+		NONE, X11, FBDEV, EVDEV,
 	};
 
 	namespace Functions
 	{
 		typedef void                     (*Poll)();
 		typedef void                     (*Draw)();
+		typedef void                     (*Hand)();
 		typedef Awning::WM::Texture::Data(*Data)();
 	};
 
@@ -37,11 +38,12 @@ namespace Awning::Backend
 		std::vector<Mode> modes;
 	};
 
-	void Init(API api);
+	void Init(API output, API input);
 
-	extern Functions::Poll   Poll  ;
-	extern Functions::Draw   Draw  ;
-	extern Functions::Data   Data  ;
+	extern Functions::Poll Poll;
+	extern Functions::Draw Draw;
+	extern Functions::Data Data;
+	extern Functions::Hand Hand;
 
 	namespace Outputs
 	{

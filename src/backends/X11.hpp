@@ -5,6 +5,7 @@ namespace Awning::Backend::X11
 {
 	void Start();
 	void Poll();
+	void Hand();
 	void Draw();
 	
 	Awning::WM::Texture::Data Data();

@@ -163,7 +163,7 @@ uint32_t XorgKeyboardToLinuxInputKeyboard(uint32_t button)
 {
 }
 
-void Awning::Backend::X11::Poll()
+void Awning::Backend::X11::Hand()
 {
 	XEvent event;
 	int preWidth = framebuffer.width, preHeight = framebuffer.height;
@@ -270,6 +270,10 @@ void Awning::Backend::X11::Draw()
 		glTexCoord2f(1.0, 1.0); glVertex3f( 1.0f, -1.0f, 0.0f);
 	glEnd();
 	glXSwapBuffers(display, window);
+}
+
+void Awning::Backend::X11::Poll()
+{
 }
 
 Awning::WM::Texture::Data Awning::Backend::X11::Data()
