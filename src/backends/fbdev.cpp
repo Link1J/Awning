@@ -30,6 +30,7 @@ void Awning::Backend::FBDEV::Start()
 {
 	int tty_fd = open("/dev/tty0", O_RDWR);
 	ioctl(tty_fd, KDSETMODE, KD_GRAPHICS);
+	ioctl(tty_fd, KDSKBMODE, K_OFF);
 
 	fd = open("/dev/fb0", O_RDWR);
 

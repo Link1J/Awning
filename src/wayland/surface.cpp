@@ -2,9 +2,10 @@
 #include "log.hpp"
 #include "protocols/xdg-shell-protocol.h"
 
+#include <cstring>
+
 #include <unordered_set>
 #include <chrono>
-
 #include <vector>
 
 uint32_t NextSerialNum();
@@ -45,7 +46,12 @@ namespace Awning::Wayland::Surface
 		void Damage(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
 		{
 			Log::Function::Called("Wayland::Surface::Interface");
-			data.surfaces[resource].damaged = true;
+
+			auto& surface = data.surfaces[resource];
+			surface.damage.xp = x;
+			surface.damage.yp = y;
+			surface.damage.xs = width;
+			surface.damage.ys = height;
 		}
 
 		void Frame(struct wl_client* client, struct wl_resource* resource, uint32_t callback)
@@ -102,20 +108,30 @@ namespace Awning::Wayland::Surface
 				}
 			}
 
-			struct wl_shm_buffer * shmBuffer = wl_shm_buffer_get(surface.buffer);
+			auto shm_buffer = wl_shm_buffer_get(surface.buffer);
 
-			if (shmBuffer)
+			if (shm_buffer)
 			{
-				surface.texture->width        =           wl_shm_buffer_get_width (shmBuffer);
-				surface.texture->height       =           wl_shm_buffer_get_height(shmBuffer);
+				//auto size = wl_shm_buffer_get_height(shm_buffer) * wl_shm_buffer_get_stride(shm_buffer);
+				//if (surface.texture->size != size)
+				//{
+				//	if (surface.texture->buffer.u8)
+				//		delete surface.texture->buffer.u8;
+				//	surface.texture->buffer.u8 = (uint8_t*)malloc(size);
+				//}
+				//memcpy(surface.texture->buffer.u8, wl_shm_buffer_get_data(shm_buffer), size);
+
+				surface.texture->width        =           wl_shm_buffer_get_width (shm_buffer);
+				surface.texture->height       =           wl_shm_buffer_get_height(shm_buffer);
 				surface.texture->bitsPerPixel =           32;
-				surface.texture->bytesPerLine =           wl_shm_buffer_get_stride(shmBuffer);
+				surface.texture->bytesPerLine =           wl_shm_buffer_get_stride(shm_buffer);
 				surface.texture->size         =           surface.texture->bytesPerLine * surface.texture->height;
-				surface.texture->buffer.u8    = (uint8_t*)wl_shm_buffer_get_data  (shmBuffer);
 				surface.texture->red          = { .size = 8, .offset = 16 };
 				surface.texture->green        = { .size = 8, .offset =  8 };
 				surface.texture->blue         = { .size = 8, .offset =  0 };
 				surface.texture->alpha        = { .size = 8, .offset = 24 };
+
+				surface.texture->buffer.u8 = (uint8_t*)wl_shm_buffer_get_data(shm_buffer);
 
 				if (surface.window)
 				{
@@ -128,8 +144,8 @@ namespace Awning::Wayland::Surface
 				}
 			}
 
-			//wl_buffer_send_release(surface.buffer);
-			//surface.buffer = nullptr;
+			wl_buffer_send_release(surface.buffer);
+			surface.buffer = nullptr;
 		}
 
 		void Set_Buffer_Transform(struct wl_client* client, struct wl_resource* resource, int32_t transform)

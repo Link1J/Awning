@@ -88,5 +88,6 @@ target_link_libraries(Awning PRIVATE
     X11::Xext
     X11::Xfixes
     X11::Xcomposite
+    X11::Xrender
     OpenGL::GL
 )

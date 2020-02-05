@@ -7,6 +7,7 @@ namespace Awning::WM
 		Window* window = new Window();
 
 		window->data = nullptr;
+		window->texture = nullptr;
 		window->mapped = false;
 		window->xPos = 0;
 		window->yPos = 0;
@@ -22,6 +23,7 @@ namespace Awning::WM
 		Window* window = new Window();
 
 		window->data = nullptr;
+		window->texture = nullptr;
 		window->mapped = false;
 		window->xPos = 0;
 		window->yPos = 0;

@@ -37,7 +37,6 @@ static int doubleBufferAttributes[] = {
 	GLX_RED_SIZE,      8,     /* the maximum number of bits per component    */
     GLX_GREEN_SIZE,    8, 
     GLX_BLUE_SIZE,     8,
-	GLX_ALPHA_SIZE,    8,
     None
 };
 
@@ -256,7 +255,7 @@ void Awning::Backend::X11::Hand()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glViewport(0, 0, framebuffer.width, framebuffer.height);
 
-	memset(framebuffer.buffer.u8, 0, framebuffer.size);
+	memset(framebuffer.buffer.u8, 0xEE, framebuffer.size);
 }
 
 void Awning::Backend::X11::Draw()

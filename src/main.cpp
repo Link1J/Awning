@@ -177,6 +177,8 @@ int main(int argc, char* argv[])
 		auto list = Awning::WM::Manager::Window::Get();
 		void* client = 0;
 
+		memset(data.buffer.u8, 0xEE, data.size);
+
 		for (auto& window : reverse(list))
 		{
 			auto texture = window->Texture();
@@ -215,27 +217,17 @@ int main(int argc, char* argv[])
 					{
 						if (texture->buffer.u8 != nullptr)
 						{
-							//if ((texture->buffer.u8)[windowOffset + 3] != 0)
-							//{
-								red   = texture->buffer.u8[windowOffset + (texture->red  .offset / 8)];
-								green = texture->buffer.u8[windowOffset + (texture->green.offset / 8)];
-								blue  = texture->buffer.u8[windowOffset + (texture->blue .offset / 8)];
-								alpha = texture->buffer.u8[windowOffset + (texture->alpha.offset / 8)];
-							//}
-							//else
-							//{
-							//	red   = 0xFF;
-							//	green = 0xFF;
-							//	blue  = 0x00;
-							//	alpha = 0xFF;
-							//}
+							red   = texture->buffer.u8[windowOffset + (texture->red  .offset / 8)];
+							green = texture->buffer.u8[windowOffset + (texture->green.offset / 8)];
+							blue  = texture->buffer.u8[windowOffset + (texture->blue .offset / 8)];
+							alpha = texture->buffer.u8[windowOffset + (texture->alpha.offset / 8)];
 						}
 					}
 					else
 					{
 						if (window->Frame())
 						{
-							red   = 0xFF;
+							red   = 0x00;
 							green = 0xFF;
 							blue  = 0xFF;
 							alpha = 0xFF;
@@ -251,76 +243,122 @@ int main(int argc, char* argv[])
 
 					if (alpha > 0)
 					{
-						data.buffer.u8[framebOffset + (data.red  .offset / 8)] = red  ;
-						data.buffer.u8[framebOffset + (data.green.offset / 8)] = green;
-						data.buffer.u8[framebOffset + (data.blue .offset / 8)] = blue ;
+						uint8_t& buffer_red   = data.buffer.u8[framebOffset + (data.red  .offset / 8)];
+						uint8_t& buffer_green = data.buffer.u8[framebOffset + (data.green.offset / 8)];
+						uint8_t& buffer_blue  = data.buffer.u8[framebOffset + (data.blue .offset / 8)];
 
-						if (data.alpha.size != 0)
-							data.buffer.u8[framebOffset + (data.alpha.offset / 8)] = alpha;
+						buffer_red   = red   * (alpha / 256.) + buffer_red   * (1 - alpha / 256.);
+						buffer_green = green * (alpha / 256.) + buffer_green * (1 - alpha / 256.);
+						buffer_blue  = blue  * (alpha / 256.) + buffer_blue  * (1 - alpha / 256.);
 					}
 				}
 			client = window->Client();
 		}
 
 		{
-			for (auto pointer : Awning::WM::Client::Get::All::Pointers(client))
+			auto pointers = Awning::WM::Client::Get::All::Pointers(client);
+			if (pointers.size() >= 1)
 			{
-				auto texture = Awning::Wayland::Pointer::data.pointers[(wl_resource*)pointer].texture;
-
-				if (texture)
+				for (auto pointer : pointers)
 				{
-					auto winSizeX = texture->width  ? texture->width  : 3;
-					auto winSizeY = texture->height ? texture->height : 3;
+					auto texture = Awning::Wayland::Pointer::data.pointers[(wl_resource*)pointer].texture;
 
-					for (int x = 0; x < winSizeX; x++)
-						for (int y = 0; y < winSizeY; y++)
-						{
-							if ((cursor.x + x) <  0          )
-								continue;
-							if ((cursor.y + y) <  0          )
-								continue;
-							if ((cursor.x + x) >= data.width )
-								continue;
-							if ((cursor.y + y) >= data.height)
-								continue;
+					if (texture)
+					{
+						auto winSizeX = texture->width  ? texture->width  : 3;
+						auto winSizeY = texture->height ? texture->height : 3;
 
-							int windowOffset = (x) * (texture->bitsPerPixel / 8)
-											 + (y) *  texture->bytesPerLine    ;
-
-							int framebOffset = (cursor.x + x) * (data.bitsPerPixel / 8)
-											 + (cursor.y + y) *  data.bytesPerLine    ;
-
-							uint8_t red, green, blue, alpha;
-
-							if (texture->buffer.u8 != nullptr)
+						for (int x = 0; x < winSizeX; x++)
+							for (int y = 0; y < winSizeY; y++)
 							{
-								red   = texture->buffer.u8[windowOffset + (texture->red  .offset / 8)];
-								green = texture->buffer.u8[windowOffset + (texture->green.offset / 8)];
-								blue  = texture->buffer.u8[windowOffset + (texture->blue .offset / 8)];
-								alpha = texture->buffer.u8[windowOffset + (texture->alpha.offset / 8)];
-							}
-							else
-							{
-								red   = 0x00;
-								green = 0xFF;
-								blue  = 0x00;
-								alpha = 0xFF;
+								if ((cursor.x + x) <  0          )
+									continue;
+								if ((cursor.y + y) <  0          )
+									continue;
+								if ((cursor.x + x) >= data.width )
+									continue;
+								if ((cursor.y + y) >= data.height)
+									continue;
+
+								int windowOffset = (x) * (texture->bitsPerPixel / 8)
+												 + (y) *  texture->bytesPerLine    ;
+
+								int framebOffset = (cursor.x + x) * (data.bitsPerPixel / 8)
+												 + (cursor.y + y) *  data.bytesPerLine    ;
+
+								uint8_t red, green, blue, alpha;
+
+								if (texture->buffer.u8 != nullptr)
+								{
+									red   = texture->buffer.u8[windowOffset + (texture->red  .offset / 8)];
+									green = texture->buffer.u8[windowOffset + (texture->green.offset / 8)];
+									blue  = texture->buffer.u8[windowOffset + (texture->blue .offset / 8)];
+									alpha = texture->buffer.u8[windowOffset + (texture->alpha.offset / 8)];
+								}
+								else
+								{
+									red   = 0x00;
+									green = 0xFF;
+									blue  = 0x00;
+									alpha = 0xFF;
+								}
+
+								if (alpha > 0)
+								{
+									uint8_t& buffer_red   = data.buffer.u8[framebOffset + (data.red  .offset / 8)];
+									uint8_t& buffer_green = data.buffer.u8[framebOffset + (data.green.offset / 8)];
+									uint8_t& buffer_blue  = data.buffer.u8[framebOffset + (data.blue .offset / 8)];
+
+									buffer_red   = red   * (alpha / 256.) + buffer_red   * (1 - alpha / 256.);
+									buffer_green = green * (alpha / 256.) + buffer_green * (1 - alpha / 256.);
+									buffer_blue  = blue  * (alpha / 256.) + buffer_blue  * (1 - alpha / 256.);
+								}
 							}
 
-							if (alpha > 0)
-							{
-								data.buffer.u8[framebOffset + (data.red  .offset / 8)] = red  ;
-								data.buffer.u8[framebOffset + (data.green.offset / 8)] = green;
-								data.buffer.u8[framebOffset + (data.blue .offset / 8)] = blue ;
-
-								if (data.alpha.size != 0)
-									data.buffer.u8[framebOffset + (data.alpha.offset / 8)] = alpha;
-							}
-						}
-					
-					break;
+						break;
+					}
 				}
 			}
+			else
+			{
+				auto winSizeX = 3;
+				auto winSizeY = 3;
+
+				for (int x = 0; x < winSizeX; x++)
+					for (int y = 0; y < winSizeY; y++)
+					{
+						if ((cursor.x + x) <  0          )
+							continue;
+						if ((cursor.y + y) <  0          )
+							continue;
+						if ((cursor.x + x) >= data.width )
+							continue;
+						if ((cursor.y + y) >= data.height)
+							continue;
+
+						int framebOffset = (cursor.x + x) * (data.bitsPerPixel / 8)
+										 + (cursor.y + y) *  data.bytesPerLine    ;
+
+						uint8_t red, green, blue, alpha;
+
+						red   = 0x00;
+						green = 0xFF;
+						blue  = 0x00;
+						alpha = 0xFF;
+
+						if (alpha > 0)
+						{
+							uint8_t& buffer_red   = data.buffer.u8[framebOffset + (data.red  .offset / 8)];
+							uint8_t& buffer_green = data.buffer.u8[framebOffset + (data.green.offset / 8)];
+							uint8_t& buffer_blue  = data.buffer.u8[framebOffset + (data.blue .offset / 8)];
+
+							buffer_red   = red   * (alpha / 256.) + buffer_red   * (1 - alpha / 256.);
+							buffer_green = green * (alpha / 256.) + buffer_green * (1 - alpha / 256.);
+							buffer_blue  = blue  * (alpha / 256.) + buffer_blue  * (1 - alpha / 256.);
+						}
+					}
+			}
+			
 		}
 
 		Awning::Wayland::Surface::HandleFrameCallbacks();
@@ -329,6 +367,7 @@ int main(int argc, char* argv[])
 
 	wl_display_destroy(Awning::server.display);
 	ioctl(tty_fd, KDSETMODE, KD_TEXT);
+	ioctl(tty_fd, KDSKBMODE, K_RAW);
 }
 
 void on_term_signal(int signal_number)
@@ -374,5 +413,9 @@ void ProtocolLogger(void* user_data, wl_protocol_logger_type direction, const wl
 void client_created(struct wl_listener* listener, void* data)
 {
 	Log::Function::Called("");
+
 	Awning::WM::Client::Create(data);
+
+	if (!Awning::WM::X::xWaylandClient)
+		Awning::WM::X::xWaylandClient = (wl_client*)data;
 }

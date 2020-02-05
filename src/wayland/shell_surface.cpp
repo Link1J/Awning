@@ -113,9 +113,14 @@ namespace Awning::Wayland::Shell_Surface
 	{
 		Log::Function::Called("Wayland::Shell_Surface");
 
+		if (!data.shells.contains(resource))
+			return;
+
 		auto surface = data.shells[resource].surface; 
 		Surface::data.surfaces[surface].window = nullptr;
-
+		
+		data.shells[resource].window->Mapped(false);
+		data.shells[resource].window->Texture(nullptr);
 		WM::Window::Destory(data.shells[resource].window);
 		data.shells.erase(resource);
 	}
