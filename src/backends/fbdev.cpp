@@ -23,13 +23,13 @@
 
 static Awning::WM::Texture::Data framebuffer;
 static uint8_t* framebufferMaped;
-static int fd, tty_fd;
+static int fd;
+int tty_fd;
 
 void Awning::Backend::FBDEV::Start()
 {
 	int tty_fd = open("/dev/tty0", O_RDWR);
 	ioctl(tty_fd, KDSETMODE, KD_GRAPHICS);
-	//ioctl(tty_fd, KDSETMODE, KD_TEXT);
 
 	fd = open("/dev/fb0", O_RDWR);
 

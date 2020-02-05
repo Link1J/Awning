@@ -3,6 +3,9 @@
 #include <wayland-server.h>
 #include "protocols/xdg-shell-protocol.h"
 
+#include <linux/kd.h>
+
+#include <sys/ioctl.h>
 #include <sys/signal.h>
 #include <sys/types.h>
 
@@ -69,6 +72,7 @@ namespace Awning
 
 struct something { int x; int y; };
 extern something cursor;
+extern int tty_fd;
 
 uint32_t lastSerialNum = 1;
 
@@ -80,7 +84,7 @@ uint32_t NextSerialNum()
 
 int main(int argc, char* argv[])
 {
-	bool noX = true;
+	bool noX = false;
 	Awning::Backend::API api_output = Awning::Backend::API::FBDEV;
 	Awning::Backend::API api_input  = Awning::Backend::API::EVDEV;
 
@@ -175,10 +179,13 @@ int main(int argc, char* argv[])
 
 		for (auto& window : reverse(list))
 		{
+			auto texture = window->Texture();
+
 			if (!window->Mapped())
 				continue;
+			if (!texture)
+				continue;
 
-			auto texture = window->Texture();
 			auto winPosX = window->XPos();
 			auto winPosY = window->YPos();
 			auto winSizeX = window->XSize();
@@ -321,6 +328,7 @@ int main(int argc, char* argv[])
 	}
 
 	wl_display_destroy(Awning::server.display);
+	ioctl(tty_fd, KDSETMODE, KD_TEXT);
 }
 
 void on_term_signal(int signal_number)

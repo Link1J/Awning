@@ -30,11 +30,27 @@ namespace Awning::Wayland::Shell_Surface
 		void Move(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
 		{
 			Log::Function::Called("Wayland::Shell_Surface::Interface");
+			WM::Manager::Handle::Input::Lock(WM::Manager::Handle::Input::MOVE);
 		}
 
 		void Resize(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, uint32_t edges)
 		{
 			Log::Function::Called("Wayland::Shell_Surface::Interface");
+
+			WM::Manager::Handle::Input::WindowSide side;
+			switch (edges)
+			{
+			case WL_SHELL_SURFACE_RESIZE_TOP         : side = WM::Manager::Handle::Input::TOP         ; break;
+			case WL_SHELL_SURFACE_RESIZE_BOTTOM      : side = WM::Manager::Handle::Input::BOTTOM      ; break;
+			case WL_SHELL_SURFACE_RESIZE_LEFT        : side = WM::Manager::Handle::Input::LEFT        ; break;
+			case WL_SHELL_SURFACE_RESIZE_TOP_LEFT    : side = WM::Manager::Handle::Input::TOP_LEFT    ; break;
+			case WL_SHELL_SURFACE_RESIZE_BOTTOM_LEFT : side = WM::Manager::Handle::Input::BOTTOM_LEFT ; break;
+			case WL_SHELL_SURFACE_RESIZE_RIGHT       : side = WM::Manager::Handle::Input::RIGHT       ; break;
+			case WL_SHELL_SURFACE_RESIZE_TOP_RIGHT   : side = WM::Manager::Handle::Input::TOP_RIGHT   ; break;
+			case WL_SHELL_SURFACE_RESIZE_BOTTOM_RIGHT: side = WM::Manager::Handle::Input::BOTTOM_RIGHT; break;
+			}
+
+			WM::Manager::Handle::Input::Lock(WM::Manager::Handle::Input::RESIZE, side);
 		}
 
 		void Set_Toplevel(struct wl_client* client, struct wl_resource* resource)
@@ -86,9 +102,11 @@ namespace Awning::Wayland::Shell_Surface
 
 		data.shells[resource] = Data::Instance();
 
-		data.shells[resource].surface   = surface;
+		data.shells[resource].surface = surface;
 		data.shells[resource].window = WM::Window::Create(wl_client);
 		Surface::data.surfaces[surface].window = data.shells[resource].window;
+
+		WM::Manager::Window::Raise(data.shells[resource].window);
 	}
 
 	void Destroy(struct wl_resource* resource)

@@ -93,6 +93,15 @@ namespace Awning::Wayland::Surface
 				return;
 			}
 
+			if (surface.window)
+			{
+				if (!surface.window->Texture())
+				{
+					surface.window->Texture(surface.texture);
+					WM::Manager::Window::Raise(surface.window);
+				}
+			}
+
 			struct wl_shm_buffer * shmBuffer = wl_shm_buffer_get(surface.buffer);
 
 			if (shmBuffer)

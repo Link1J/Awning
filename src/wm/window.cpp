@@ -8,8 +8,8 @@ namespace Awning::WM
 
 		window->data = nullptr;
 		window->mapped = false;
-		window->xPos = 10;
-		window->yPos = 10;
+		window->xPos = 0;
+		window->yPos = 0;
 
 		Manager::Window::Add(window);
 		Client::Bind::Window(client, window);
