@@ -27,6 +27,7 @@ set(SOURCES
     src/xdg/toplevel.cpp
     src/xdg/popup.cpp
     src/xdg/decoration.cpp
+    src/xdg/positioner.cpp
 
     src/wm/manager.cpp
     src/wm/window.cpp

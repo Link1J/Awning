@@ -27,7 +27,7 @@ namespace Awning::XDG::Popup
 	{
 		Log::Function::Called("XDG::Popup");
 
-		struct wl_resource* resource = wl_resource_create(wl_client, &xdg_surface_interface, version, id);
+		struct wl_resource* resource = wl_resource_create(wl_client, &xdg_popup_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
 			return;

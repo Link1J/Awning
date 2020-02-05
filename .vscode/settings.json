@@ -64,7 +64,8 @@
 		"variant": "cpp",
 		"iomanip": "cpp",
 		"stdint.h": "c",
-		"wayland-util.h": "c"
+		"wayland-util.h": "c",
+		"codecvt": "cpp"
 	},
 	"C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools"
 }

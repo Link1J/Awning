@@ -45,6 +45,12 @@ namespace Awning::XDG::Surface
 		void Set_Window_Geometry(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
 		{
 			Log::Function::Called("XDG::Surface::Interface");
+			
+			if (!data.surfaces.contains(resource))
+				return;
+			if (!data.surfaces[resource].window)
+				return;
+
 			data.surfaces[resource].window->ConfigPos(x, y, true);
 			data.surfaces[resource].window->ConfigSize(width, height);
 		}

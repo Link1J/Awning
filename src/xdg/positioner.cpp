@@ -1,23 +1,16 @@
 #include "positioner.hpp"
 #include "log.hpp"
 
-namespace Awning::XDG::TopLevel
+namespace Awning::XDG::Positioner
 {
 	const struct xdg_positioner_interface interface = {
-		.destroy          = Interface::Destroy,
-		.set_parent       = Interface::Set_Parent,
-		.set_title        = Interface::Set_Title,
-		.set_app_id       = Interface::Set_App_id,
-		.show_window_menu = Interface::Show_Window_Menu,
-		.move             = Interface::Move,
-		.resize           = Interface::Resize,
-		.set_max_size     = Interface::Set_Max_Size,
-		.set_min_size     = Interface::Set_Min_Size,
-		.set_maximized    = Interface::Set_Maximized,
-		.unset_maximized  = Interface::Unset_Maximized,
-		.set_fullscreen   = Interface::Set_Fullscreen,
-		.unset_fullscreen = Interface::Unset_Fullscreen,
-		.set_minimized    = Interface::Set_Minimized,
+		.destroy                   = Interface::Destroy,
+		.set_size                  = Interface::Set_Size,
+		.set_anchor_rect           = Interface::Set_Anchor_Rect,
+		.set_anchor                = Interface::Set_Anchor,
+		.set_gravity               = Interface::Set_Gravity,
+		.set_constraint_adjustment = Interface::Set_Constraint_Adjustment,
+		.set_offset                = Interface::Set_Offset
 	};
 
 	Data data;
@@ -26,78 +19,43 @@ namespace Awning::XDG::TopLevel
 	{
 		void Destroy(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("XDG::Positioner::Interface");
 		}
 
-		void Set_Parent(struct wl_client* client, struct wl_resource* resource, struct wl_resource* parent)
+		void Set_Size(struct wl_client* client, struct wl_resource* resource, int32_t width, int32_t height)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("XDG::Positioner::Interface");
 		}
 
-		void Set_Title(struct wl_client* client, struct wl_resource* resource, const char* title)
+		void Set_Anchor_Rect(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("XDG::Positioner::Interface");
 		}
 
-		void Set_App_id(struct wl_client* client, struct wl_resource* resource, const char* app_id)
+		void Set_Anchor(struct wl_client* client, struct wl_resource* resource, uint32_t anchor)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("XDG::Positioner::Interface");
 		}
 
-		void Show_Window_Menu(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, int32_t x, int32_t y)
+		void Set_Gravity(struct wl_client* client, struct wl_resource* resource, uint32_t gravity)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("XDG::Positioner::Interface");
 		}
 
-		void Move(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
+		void Set_Constraint_Adjustment(struct wl_client* client, struct wl_resource* resource, uint32_t constraint_adjustment)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("XDG::Positioner::Interface");
 		}
 
-		void Resize(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, uint32_t edges)
+		void Set_Offset(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
-		}
-
-		void Set_Max_Size(struct wl_client* client, struct wl_resource* resource, int32_t width, int32_t height)
-		{
-			Log::Function::Called("XDG::TopLevel::Interface");
-		}
-
-		void Set_Min_Size(struct wl_client* client, struct wl_resource* resource, int32_t width, int32_t height)
-		{
-			Log::Function::Called("XDG::TopLevel::Interface");
-		}
-
-		void Set_Maximized(struct wl_client* client, struct wl_resource* resource)
-		{
-			Log::Function::Called("XDG::TopLevel::Interface");
-		}
-
-		void Unset_Maximized(struct wl_client* client, struct wl_resource* resource)
-		{
-			Log::Function::Called("XDG::TopLevel::Interface");
-		}
-
-		void Set_Fullscreen(struct wl_client* client, struct wl_resource* resource, struct wl_resource* output)
-		{
-			Log::Function::Called("XDG::TopLevel::Interface");
-		}
-
-		void Unset_Fullscreen(struct wl_client* client, struct wl_resource* resource)
-		{
-			Log::Function::Called("XDG::TopLevel::Interface");
-		}
-
-		void Set_Minimized(struct wl_client* client, struct wl_resource* resource)
-		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("XDG::Positioner::Interface");
 		}
 	}
 
 	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id) 
 	{
-		Log::Function::Called("XDG::TopLevel");
+		Log::Function::Called("XDG::Positioner");
 
 		struct wl_resource* resource = wl_resource_create(wl_client, &xdg_positioner_interface, version, id);
 		if (resource == nullptr) {
@@ -105,14 +63,10 @@ namespace Awning::XDG::TopLevel
 			return;
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
-
-		data.toplevels[resource] = Data::Instance();
 	}
 
 	void Destroy(struct wl_resource* resource)
 	{
-		Log::Function::Called("XDG::TopLevel");
-
-		data.toplevels.erase(resource);
+		Log::Function::Called("XDG::Positioner");
 	}
 }
