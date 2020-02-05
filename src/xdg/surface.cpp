@@ -27,6 +27,7 @@ namespace Awning::XDG::Surface
 		void Destroy(struct wl_client* client, struct wl_resource* resource)
 		{
 			Log::Function::Called("XDG::Surface::Interface");
+			Surface::Destroy(resource);
 		}
 
 		void Get_Toplevel(struct wl_client* client, struct wl_resource* resource, uint32_t id)

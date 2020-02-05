@@ -12,7 +12,21 @@ namespace Awning::WM
 		window->yPos = 10;
 
 		Manager::Window::Add(window);
-		Client::Bind(client, window);
+		Client::Bind::Window(client, window);
+
+		return window;
+	}
+
+	Window* Window::CreateUnmanged(void* client)
+	{
+		Window* window = new Window();
+
+		window->data = nullptr;
+		window->mapped = false;
+		window->xPos = 0;
+		window->yPos = 0;
+
+		Client::Bind::Window(client, window);
 
 		return window;
 	}
@@ -20,14 +34,14 @@ namespace Awning::WM
 	void Window::Destory(Window*& window)
 	{
 		Manager::Window::Remove(window);
-		Client::Unbind(window);
+		Client::Unbind::Window(window);
 		delete window;
 		window = nullptr;
 	}
 
 	Texture::Data* Window::Texture()
 	{
-		return &texture;
+		return texture;
 	}
 
 	void Window::Mapped(bool map)
@@ -116,5 +130,10 @@ namespace Awning::WM
 	int Window::YOffset()
 	{
 		return yOffset;
+	}
+
+	void Window::Texture(Texture::Data* texture)
+	{
+		this->texture = texture;
 	}
 }

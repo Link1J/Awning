@@ -3,6 +3,8 @@
 #include "surface.hpp"
 #include "log.hpp"
 
+#include "wm/client.hpp"
+
 #include <chrono>
 #include <iostream>
 
@@ -32,6 +34,8 @@ namespace Awning::Wayland::Keyboard
 		wl_keyboard_send_keymap(resource, 0, 0, 0);
 
 		data.keyboards[wl_client].resource = resource;
+
+		WM::Client::Bind::Keyboard(wl_client, resource);
 	}
 
 	void Button(wl_client* client, uint32_t button, bool released)
@@ -40,6 +44,8 @@ namespace Awning::Wayland::Keyboard
 			return;
 
 		auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
-		wl_keyboard_send_key(data.keyboards[client].resource, NextSerialNum(), time, button, released);
+
+		for (auto resource : WM::Client::Get::All::Keyboards(client))
+			wl_keyboard_send_key((wl_resource*)resource, NextSerialNum(), time, button, released);
 	}
 }

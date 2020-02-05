@@ -90,7 +90,7 @@ void Awning::Backend::FBDEV::Start()
 
 void Awning::Backend::FBDEV::Poll()
 {
-	memset(framebuffer.buffer.u8, 0, framebuffer.size);
+	memset(framebuffer.buffer.u8, 0xEE, framebuffer.size);
 }
 
 void Awning::Backend::FBDEV::Draw()

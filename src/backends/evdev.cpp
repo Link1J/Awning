@@ -32,6 +32,7 @@
 #include "manager.hpp"
 
 #include "wm/manager.hpp"
+#include "wm/client.hpp"
 
 #define EVENT_SIZE  (sizeof(struct inotify_event))
 #define EVENT_BUF_LEN (1024 * (EVENT_SIZE + 16))
@@ -205,5 +206,6 @@ void Awning::Backend::EVDEV::Hand()
 	if (mouseMoved)
 	{
 		WM::Manager::Handle::Input::Mouse::Moved(cursor.x, cursor.y);
+		mouseMoved = false;
 	}
 }

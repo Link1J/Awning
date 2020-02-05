@@ -18,6 +18,7 @@
 #include "wayland/shell.hpp"
 #include "wayland/surface.hpp"
 #include "wayland/shell_surface.hpp"
+#include "wayland/pointer.hpp"
 
 #include "xdg/wm_base.hpp"
 #include "xdg/decoration.hpp"
@@ -170,6 +171,7 @@ int main(int argc, char* argv[])
 
 		auto data = Awning::Backend::Data();
 		auto list = Awning::WM::Manager::Window::Get();
+		void* client = 0;
 
 		for (auto& window : reverse(list))
 		{
@@ -250,17 +252,69 @@ int main(int argc, char* argv[])
 							data.buffer.u8[framebOffset + (data.alpha.offset / 8)] = alpha;
 					}
 				}
+			client = window->Client();
 		}
 
-		int framebOffset = (cursor.x) * (data.bitsPerPixel / 8)
-						 + (cursor.y) *  data.bytesPerLine    ; 
+		{
+			for (auto pointer : Awning::WM::Client::Get::All::Pointers(client))
+			{
+				auto texture = Awning::Wayland::Pointer::data.pointers[(wl_resource*)pointer].texture;
 
-		data.buffer.u8[framebOffset + (data.red  .offset / 8)] = 0x00;
-		data.buffer.u8[framebOffset + (data.green.offset / 8)] = 0xFF;
-		data.buffer.u8[framebOffset + (data.blue .offset / 8)] = 0x00;
+				if (texture)
+				{
+					auto winSizeX = texture->width  ? texture->width  : 3;
+					auto winSizeY = texture->height ? texture->height : 3;
 
-		if (data.alpha.size != 0)
-			data.buffer.u8[framebOffset + (data.alpha.offset / 8)] = 0x00;
+					for (int x = 0; x < winSizeX; x++)
+						for (int y = 0; y < winSizeY; y++)
+						{
+							if ((cursor.x + x) <  0          )
+								continue;
+							if ((cursor.y + y) <  0          )
+								continue;
+							if ((cursor.x + x) >= data.width )
+								continue;
+							if ((cursor.y + y) >= data.height)
+								continue;
+
+							int windowOffset = (x) * (texture->bitsPerPixel / 8)
+											 + (y) *  texture->bytesPerLine    ;
+
+							int framebOffset = (cursor.x + x) * (data.bitsPerPixel / 8)
+											 + (cursor.y + y) *  data.bytesPerLine    ;
+
+							uint8_t red, green, blue, alpha;
+
+							if (texture->buffer.u8 != nullptr)
+							{
+								red   = texture->buffer.u8[windowOffset + (texture->red  .offset / 8)];
+								green = texture->buffer.u8[windowOffset + (texture->green.offset / 8)];
+								blue  = texture->buffer.u8[windowOffset + (texture->blue .offset / 8)];
+								alpha = texture->buffer.u8[windowOffset + (texture->alpha.offset / 8)];
+							}
+							else
+							{
+								red   = 0x00;
+								green = 0xFF;
+								blue  = 0x00;
+								alpha = 0xFF;
+							}
+
+							if (alpha > 0)
+							{
+								data.buffer.u8[framebOffset + (data.red  .offset / 8)] = red  ;
+								data.buffer.u8[framebOffset + (data.green.offset / 8)] = green;
+								data.buffer.u8[framebOffset + (data.blue .offset / 8)] = blue ;
+
+								if (data.alpha.size != 0)
+									data.buffer.u8[framebOffset + (data.alpha.offset / 8)] = alpha;
+							}
+						}
+					
+					break;
+				}
+			}
+		}
 
 		Awning::Wayland::Surface::HandleFrameCallbacks();
 		Awning::Backend::Draw();

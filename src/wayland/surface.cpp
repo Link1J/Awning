@@ -33,6 +33,7 @@ namespace Awning::Wayland::Surface
 		void Destroy(struct wl_client* client, struct wl_resource* resource)
 		{
 			Log::Function::Called("Wayland::Surface::Interface");
+			Surface::Destroy(resource);
 		}
 
 		void Attach(struct wl_client* client, struct wl_resource* resource, struct wl_resource* buffer, int32_t x, int32_t y)
@@ -82,7 +83,7 @@ namespace Awning::Wayland::Surface
 			{
 				if (surface.window)
 				{
-					surface.texture = surface.window->Texture();
+					surface.window->Texture(surface.texture);
 					WM::Manager::Window::Raise(surface.window);
 				}
 				if (surface.type == 1)
@@ -91,9 +92,6 @@ namespace Awning::Wayland::Surface
 				}
 				return;
 			}
-
-			if (!surface.texture)
-				return;
 
 			struct wl_shm_buffer * shmBuffer = wl_shm_buffer_get(surface.buffer);
 
@@ -110,12 +108,15 @@ namespace Awning::Wayland::Surface
 				surface.texture->blue         = { .size = 8, .offset =  0 };
 				surface.texture->alpha        = { .size = 8, .offset = 24 };
 
-				if (surface.window->XSize() == 0 && surface.window->YSize() == 0)
+				if (surface.window)
 				{
-					surface.window->ConfigSize(surface.texture->width, surface.texture->height);
-				}
+					if (surface.window->XSize() == 0 && surface.window->YSize() == 0)
+					{
+						surface.window->ConfigSize(surface.texture->width, surface.texture->height);
+					}
 
-				surface.window->Mapped(true);
+					surface.window->Mapped(true);
+				}
 			}
 
 			//wl_buffer_send_release(surface.buffer);
@@ -150,12 +151,17 @@ namespace Awning::Wayland::Surface
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 		
 		data.surfaces[resource].client = wl_client;
+		data.surfaces[resource].texture = new WM::Texture::Data();
 	}
 
 	void Destroy(struct wl_resource* resource)
 	{
 		Log::Function::Called("Wayland::Surface");
 
+		if (!data.surfaces.contains(resource))
+			return;
+
+		delete data.surfaces[resource].texture;
 		data.surfaces.erase(resource);
 	}
 

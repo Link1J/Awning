@@ -167,7 +167,10 @@ namespace Awning::WM::Manager
 						{
 							Wayland::Pointer::Leave(
 								(wl_client  *)hoveredOver->Client(), 
-								(wl_resource*)Client::Surface(hoveredOver)
+								(wl_resource*)Client::Get::Surface(hoveredOver)
+							);
+							Wayland::Pointer::Frame(
+								(wl_client*)hoveredOver->Client()
 							);
 						}
 
@@ -178,7 +181,7 @@ namespace Awning::WM::Manager
 
 							Wayland::Pointer::Enter(
 								(wl_client  *)(*curr)->Client(), 
-								(wl_resource*)Client::Surface(*curr),
+								(wl_resource*)Client::Get::Surface(*curr),
 								localX, localY
 							);
 							Wayland::Pointer::Frame(
@@ -283,7 +286,7 @@ namespace Awning::WM::Manager
 							Manager::Window::Raise(hoveredOver);
 							Wayland::Pointer::Leave(
 								(wl_client  *)hoveredOver->Client(), 
-								(wl_resource*)Client::Surface(hoveredOver)
+								(wl_resource*)Client::Get::Surface(hoveredOver)
 							);
 						}
 						input = LOCK;
@@ -406,7 +409,6 @@ namespace Awning::WM::Manager
 		{
 			window->ConfigPos(xPos, yPos);
 		}
-
 
 		std::list<Awning::WM::Window*> Get()
 		{

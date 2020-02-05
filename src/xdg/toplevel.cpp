@@ -35,6 +35,7 @@ namespace Awning::XDG::TopLevel
 		void Destroy(struct wl_client* client, struct wl_resource* resource)
 		{
 			Log::Function::Called("XDG::TopLevel::Interface");
+			TopLevel::Destroy(resource);
 		}
 
 		void Set_Parent(struct wl_client* client, struct wl_resource* resource, struct wl_resource* parent)
@@ -148,12 +149,17 @@ namespace Awning::XDG::TopLevel
 	{
 		Log::Function::Called("XDG::TopLevel");
 
+		if (!data.toplevels.contains(resource))
+			return;
+
 		auto surface    =         data.toplevels[resource].surface; 
 		auto surface_wl = Surface::data.surfaces[surface ].surface_wl;
 
 			     Surface::data.surfaces[surface   ].window = nullptr;
 		Wayland::Surface::data.surfaces[surface_wl].window = nullptr;
 
+		data.toplevels[resource].window->Mapped(false);
+		data.toplevels[resource].window->Texture(nullptr);
 		WM::Window::Destory(data.toplevels[resource].window);
 		data.toplevels.erase(resource);
 	}

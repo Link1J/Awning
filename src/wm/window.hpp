@@ -6,24 +6,25 @@ namespace Awning::WM
 {
 	class Window
 	{
-		friend void  Manager::Window::Raise (Awning::WM::Window* window        );
-		friend void  Manager::Window::Resize(Awning::WM::Window* window,int,int);
-		friend void  Client::Bind(void* id,  Awning::WM::Window* window        );
-		friend void  Client::Unbind(         Awning::WM::Window* window        );
-		friend void* Client::Surface(        Awning::WM::Window* window        );
+		friend void  Manager::Window::Raise (       Awning::WM::Window* window        );
+		friend void  Manager::Window::Resize(       Awning::WM::Window* window,int,int);
+		friend void  Client::Bind::Window(void* id, Awning::WM::Window* window        );
+		friend void  Client::Unbind::Window(        Awning::WM::Window* window        );
+		friend void* Client::Get::Surface(          Awning::WM::Window* window        );
 
 		Manager::Functions::Window::Resized Resized;
 		Manager::Functions::Window::Raised  Raised ;
 
-		Texture::Data texture;
+		Texture::Data* texture;
 
 		int xPos, yPos, xSize, ySize, xOffset, yOffset;
 		bool mapped, needsFrame;
 		void* data,* client;
 
 	public:
-		static Window* Create (void* client   );
-		static void    Destory(Window*& window);
+		static Window* Create        (void* client   );
+		static Window* CreateUnmanged(void* client   );
+		static void    Destory       (Window*& window);
 
 		Texture::Data* Texture   (                                       );
 		void           Mapped    (bool map                               );
@@ -40,6 +41,7 @@ namespace Awning::WM
 		void*          Client    (                                       );
 		int            XOffset   (                                       );
 		int            YOffset   (                                       );
+		void           Texture   (Texture::Data* texture                 );
 
 		void SetRaised (Manager::Functions::Window::Raised  raised );
 		void SetResized(Manager::Functions::Window::Resized resized);

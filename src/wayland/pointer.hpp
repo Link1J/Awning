@@ -4,30 +4,26 @@
 
 #include <unordered_map>
 
+#include "wm/window.hpp"
+
 namespace Awning::Wayland::Pointer
 {
 	struct Data 
 	{
 		struct Interface 
 		{
-			wl_resource* resource;
-			long long xPos;
-			long long yPos; 
-			long long xLPos; 
-			long long yLPos;
+			wl_client* client;
+			WM::Texture::Data* texture;
 		};
 
-		std::unordered_map<wl_client*,Interface> pointers;
-		wl_resource* pre_shell;
-		bool moveMode = false;
-		long long frame = 0;
-		long long xPos, yPos; 
+		std::unordered_map<wl_resource*,Interface> pointers;
 	};
 
 	extern const struct wl_pointer_interface interface;
 	extern Data data;
 
 	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id);
+	void Destroy(struct wl_resource* resource);
 
 	void Enter(wl_client* client, wl_resource* surface, double x, double y);
 	void Leave(wl_client* client, wl_resource* surface);
