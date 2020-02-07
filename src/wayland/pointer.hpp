@@ -13,10 +13,12 @@ namespace Awning::Wayland::Pointer
 		struct Interface 
 		{
 			wl_client* client;
-			WM::Texture::Data* texture;
+			bool inUse = false;
 		};
 
 		std::unordered_map<wl_resource*,Interface> pointers;
+		WM::Window* window;
+		wl_resource* inUse;
 	};
 
 	extern const struct wl_pointer_interface interface;

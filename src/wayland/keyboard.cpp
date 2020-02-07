@@ -31,7 +31,8 @@ namespace Awning::Wayland::Keyboard
 			return;
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, nullptr);
-		wl_keyboard_send_keymap(resource, 0, 0, 0);
+		wl_keyboard_send_keymap(resource, 1, 0, 0);
+		wl_keyboard_send_repeat_info(resource, 0, 0);
 
 		data.keyboards[wl_client].resource = resource;
 
@@ -43,6 +44,8 @@ namespace Awning::Wayland::Keyboard
 		auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
 
 		for (auto resource : WM::Client::Get::All::Keyboards(client))
+		{
 			wl_keyboard_send_key((wl_resource*)resource, NextSerialNum(), time, button, released);
+		}
 	}
 }

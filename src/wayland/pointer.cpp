@@ -16,11 +16,23 @@ namespace Awning::Wayland::Pointer
 		.set_cursor = [](struct wl_client *client, struct wl_resource *resource, uint32_t serial, struct wl_resource *surface, int32_t hotspot_x, int32_t hotspot_y) 
 		{
 			Log::Function::Called("Wayland::Pointer::interface.set_cursor");
-			data.pointers[resource].texture = Awning::Wayland::Surface::data.surfaces[surface].texture;
+
+			if (data.inUse)
+			{
+				data.pointers[data.inUse].inUse = false;	
+			}
+
+			if (data.window)
+			{
+				data.window->Texture(Awning::Wayland::Surface::data.surfaces[surface].texture);
+				data.pointers[resource].inUse = false;	
+				data.inUse = resource;
+			}
 		},
-		.release    = [](struct wl_client *client, struct wl_resource *resource) 
+		.release    = [](struct wl_client* client, struct wl_resource* resource) 
 		{
 			Log::Function::Called("Wayland::Pointer::interface.release");
+			Awning::Wayland::Pointer::Destroy(resource);
 		},
 	};
 
@@ -40,10 +52,22 @@ namespace Awning::Wayland::Pointer
 		data.pointers[resource].client = wl_client;
 
 		WM::Client::Bind::Pointer(wl_client, resource);
+
+		if (!data.window)
+		{
+			data.window = WM::Window::CreateUnmanged(0);
+			data.inUse = nullptr;
+		}
 	}
 
 	void Destroy(struct wl_resource* resource)
 	{
+		if (resource == data.inUse)
+		{
+			data.window->Texture(nullptr);
+			data.inUse = nullptr;
+		}
+
 		WM::Client::Unbind::Pointer(data.pointers[resource].client, resource);
 		data.pointers.erase(resource);
 	}
