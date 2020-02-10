@@ -7,7 +7,7 @@ namespace Awning::Backend
 {
 	enum class API
 	{
-		NONE, X11, FBDEV, EVDEV,
+		NONE, X11, FBDEV, EVDEV, libinput
 	};
 
 	namespace Functions

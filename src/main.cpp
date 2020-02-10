@@ -70,8 +70,6 @@ namespace Awning
 	Server::Data server;
 };
 
-struct something { int x; int y; };
-extern something cursor;
 extern int tty_fd;
 
 uint32_t lastSerialNum = 1;
@@ -85,8 +83,8 @@ uint32_t NextSerialNum()
 int main(int argc, char* argv[])
 {
 	bool noX = false;
-	Awning::Backend::API api_output = Awning::Backend::API::FBDEV;
-	Awning::Backend::API api_input  = Awning::Backend::API::EVDEV;
+	Awning::Backend::API api_output = Awning::Backend::API::X11;
+	Awning::Backend::API api_input  = Awning::Backend::API::X11;
 
 	for(int a = 0; a < argc; a++)
 	{
@@ -98,7 +96,7 @@ int main(int argc, char* argv[])
 		if (arg == "-fbdev")
 		{
 			api_output = Awning::Backend::API::FBDEV;
-			api_input  = Awning::Backend::API::EVDEV;
+			api_input  = Awning::Backend::API::libinput;
 		}
 		if (arg == "-x11")
 		{
@@ -155,7 +153,7 @@ int main(int argc, char* argv[])
 		using namespace Awning::ZXDG;
 
 		WM_Base           ::data.global = wl_global_create(server.display, &xdg_wm_base_interface               , 1, nullptr, WM_Base           ::Bind);
-		//Decoration_Manager::data.global = wl_global_create(server.display, &zxdg_decoration_manager_v1_interface, 1, nullptr, Decoration_Manager::Bind);
+		Decoration_Manager::data.global = wl_global_create(server.display, &zxdg_decoration_manager_v1_interface, 1, nullptr, Decoration_Manager::Bind);
 	}
 
 	if (pid != 0)
@@ -190,14 +188,13 @@ int main(int argc, char* argv[])
 
 			auto winPosX  = window->XPos   ();
 			auto winPosY  = window->YPos   ();
-			auto winSizeX = (int)texture->width ; //window->XSize  ();
-			auto winSizeY = (int)texture->height; //window->YSize  ();
+			auto winSizeX = window->XSize  ();
+			auto winSizeY = window->YSize  ();
 			auto winOffX  = window->XOffset();
 			auto winOffY  = window->YOffset();
 
-
-			for (int x = -Frame::Size::left; x < winSizeX + Frame::Size::right; x++)
-				for (int y = -Frame::Size::top; y < winSizeY + Frame::Size::bottom; y++)
+			for (int x = -Frame::Size::left; x < winSizeX + winOffX + Frame::Size::right; x++)
+				for (int y = -Frame::Size::top; y < winSizeY + winOffY + Frame::Size::bottom; y++)
 				{
 					if ((winPosX + x - winOffX) <  0          )
 						continue;
@@ -216,7 +213,7 @@ int main(int argc, char* argv[])
 
 					uint8_t red, green, blue, alpha;
 
-					if (x < winSizeX && y < winSizeY && x >= 0 && y >= 0)
+					if (x < winSizeX + winOffX && y < winSizeY + winOffY && x >= 0 && y >= 0)
 					{
 						if (texture->buffer.u8 != nullptr)
 						{
@@ -225,16 +222,24 @@ int main(int argc, char* argv[])
 							blue  = texture->buffer.u8[windowOffset + (texture->blue .offset / 8)];
 							alpha = texture->buffer.u8[windowOffset + (texture->alpha.offset / 8)];
 						}
+						else
+						{
+							red   = 0x00;
+							green = 0x00;
+							blue  = 0x00;
+							alpha = 0xFF;
+						}						
 					}
 					else
 					{
-						if (window->Frame())
+						//if (window->Frame())
 						{
 							red   = 0x00;
 							green = 0xFF;
 							blue  = 0xFF;
 							alpha = 0xFF;
 						}
+						/*
 						else 
 						{
 							red   = 0x00;
@@ -242,6 +247,7 @@ int main(int argc, char* argv[])
 							blue  = 0x00;
 							alpha = 0x00;
 						}
+						*/
 					}
 
 					if (alpha > 0)
@@ -255,7 +261,6 @@ int main(int argc, char* argv[])
 						buffer_blue  = blue  * (alpha / 256.) + buffer_blue  * (1 - alpha / 256.);
 					}
 				}
-			client = window->Client();
 		}
 
 		if (Awning::Wayland::Pointer::data.window)
@@ -264,26 +269,30 @@ int main(int argc, char* argv[])
 
 			if (texture)
 			{
-				auto winSizeX = texture->width  ? texture->width  : 3;
-				auto winSizeY = texture->height ? texture->height : 3;
+				auto winPosX  = Awning::Wayland::Pointer::data.window->XPos   ();
+				auto winPosY  = Awning::Wayland::Pointer::data.window->YPos   ();
+				auto winSizeX = Awning::Wayland::Pointer::data.window->XSize  ();
+				auto winSizeY = Awning::Wayland::Pointer::data.window->YSize  ();
+				auto winOffX  = Awning::Wayland::Pointer::data.window->XOffset();
+				auto winOffY  = Awning::Wayland::Pointer::data.window->YOffset();
 
 				for (int x = 0; x < winSizeX; x++)
 					for (int y = 0; y < winSizeY; y++)
 					{
-						if ((cursor.x + x) <  0          )
+						if ((winPosX + x) <  0          )
 							continue;
-						if ((cursor.y + y) <  0          )
+						if ((winPosY + y) <  0          )
 							continue;
-						if ((cursor.x + x) >= data.width )
+						if ((winPosX + x) >= data.width )
 							continue;
-						if ((cursor.y + y) >= data.height)
+						if ((winPosY + y) >= data.height)
 							continue;
 
 						int windowOffset = (x) * (texture->bitsPerPixel / 8)
 										 + (y) *  texture->bytesPerLine    ;
 
-						int framebOffset = (cursor.x + x) * (data.bitsPerPixel / 8)
-										 + (cursor.y + y) *  data.bytesPerLine    ;
+						int framebOffset = (winPosX + x) * (data.bitsPerPixel / 8)
+										 + (winPosY + y) *  data.bytesPerLine    ;
 
 						uint8_t red, green, blue, alpha;
 
@@ -316,23 +325,28 @@ int main(int argc, char* argv[])
 			}
 			else
 			{
-				auto winSizeX = 3;
-				auto winSizeY = 3;
+				auto winPosX  = Awning::Wayland::Pointer::data.window->XPos   ();
+				auto winPosY  = Awning::Wayland::Pointer::data.window->YPos   ();
+				auto winSizeX = 3                                               ;
+				auto winSizeY = 3                                               ;
+				auto winOffX  = 0                                               ;
+				auto winOffY  = 0                                               ;
 
 				for (int x = 0; x < winSizeX; x++)
 					for (int y = 0; y < winSizeY; y++)
 					{
-						if ((cursor.x + x) <  0          )
+						if ((winPosX + x - winOffX) <  0          )
 							continue;
-						if ((cursor.y + y) <  0          )
+						if ((winPosY + y - winOffY) <  0          )
 							continue;
-						if ((cursor.x + x) >= data.width )
+						if ((winPosX + x - winOffX) >= data.width )
 							continue;
-						if ((cursor.y + y) >= data.height)
+						if ((winPosY + y - winOffY) >= data.height)
 							continue;
 
-						int framebOffset = (cursor.x + x) * (data.bitsPerPixel / 8)
-										 + (cursor.y + y) *  data.bytesPerLine    ;
+
+						int framebOffset = (winPosX + x) * (data.bitsPerPixel / 8)
+										 + (winPosY + y) *  data.bytesPerLine    ;
 
 						uint8_t red, green, blue, alpha;
 

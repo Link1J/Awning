@@ -3,6 +3,7 @@
 #include "X11.hpp"
 #include "fbdev.hpp"
 #include "evdev.hpp"
+#include "libinput.hpp"
 
 namespace Awning::Backend
 {
@@ -42,6 +43,10 @@ namespace Awning::Backend
 		case API::EVDEV:
 			EVDEV::Start();
 			Hand = EVDEV::Hand;
+			break;
+		case API::libinput:
+			libinput::Start();
+			Hand = libinput::Hand;
 			break;
 		
 		default:

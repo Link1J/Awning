@@ -182,7 +182,7 @@ namespace Awning::WM::Manager
 							Wayland::Pointer::Enter(
 								(wl_client  *)(*curr)->Client(), 
 								(wl_resource*)Client::Get::Surface(*curr),
-								localX, localY
+								localX, localY, x, y
 							);
 							Wayland::Pointer::Frame(
 								(wl_client*)(*curr)->Client()
@@ -205,7 +205,7 @@ namespace Awning::WM::Manager
 
 						Wayland::Pointer::Moved(
 							(wl_client*)hoveredOver->Client(),
-							localX, localY
+							localX, localY, x, y
 						);
 						Wayland::Pointer::Frame(
 							(wl_client*)hoveredOver->Client()
@@ -216,6 +216,7 @@ namespace Awning::WM::Manager
 						int newX = hoveredOver->XPos() + (x - preX);
 						int newY = hoveredOver->YPos() + (y - preY);
 						Manager::Window::Reposition(hoveredOver, newX, newY);
+						Wayland::Pointer::Moved(nullptr, newX, newY, x, y);
 					}
 					else if (hoveredOver && action == RESIZE && input == LOCK)
 					{
@@ -246,6 +247,8 @@ namespace Awning::WM::Manager
 
 						Manager::Window::Reposition(hoveredOver, XPos , YPos );
 						Manager::Window::Resize    (hoveredOver, XSize, YSize);
+
+						Wayland::Pointer::Moved(nullptr, XPos, YPos, x, y);
 					}
 
 					preX = x;
@@ -306,6 +309,11 @@ namespace Awning::WM::Manager
 					{
 						if (button == lockButton)
 						{
+							Wayland::Pointer::Leave(
+								(wl_client  *)hoveredOver->Client(), 
+								(wl_resource*)Client::Get::Surface(hoveredOver)
+							);
+
 							hoveredOver = nullptr;
 							input = UNLOCK;
 							action = APPLCATION;
@@ -394,10 +402,14 @@ namespace Awning::WM::Manager
 
 		void Resize(Awning::WM::Window* window, int xSize, int ySize)
 		{
-			if (xSize < 1)
-				xSize = 1;
-			if (ySize < 1)
-				ySize = 1;
+			if (xSize < window->minSize.x)
+				xSize = window->minSize.x;
+			if (ySize < window->minSize.x)
+				ySize = window->minSize.x;
+			if (xSize > window->maxSize.x)
+				xSize = window->maxSize.x;
+			if (ySize > window->maxSize.x)
+				ySize = window->maxSize.x;
 			
 			if (window->Resized)
 				window->Resized(window->data, xSize, ySize);

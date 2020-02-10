@@ -9,8 +9,12 @@ namespace Awning::WM
 		window->data = nullptr;
 		window->texture = nullptr;
 		window->mapped = false;
-		window->xPos = 0;
-		window->yPos = 0;
+		window->pos.x = 0;
+		window->pos.y = 0;
+		window->minSize.x = 1;
+		window->minSize.y = 1;
+		window->maxSize.x = INT32_MAX;
+		window->maxSize.y = INT32_MAX;
 
 		Manager::Window::Add(window);
 		Client::Bind::Window(client, window);
@@ -25,8 +29,12 @@ namespace Awning::WM
 		window->data = nullptr;
 		window->texture = nullptr;
 		window->mapped = false;
-		window->xPos = 0;
-		window->yPos = 0;
+		window->pos.x = 0;
+		window->pos.y = 0;
+		window->minSize.x = 1;
+		window->minSize.y = 1;
+		window->maxSize.x = INT32_MAX;
+		window->maxSize.y = INT32_MAX;
 
 		Client::Bind::Window(client, window);
 
@@ -58,22 +66,22 @@ namespace Awning::WM
 
 	int Window::XPos()
 	{
-		return xPos;
+		return pos.x;
 	}
 
 	int Window::YPos()
 	{
-		return yPos;
+		return pos.y;
 	}
 
 	int Window::XSize()
 	{
-		return xSize;
+		return size.x;
 	}
 
 	int Window::YSize()
 	{
-		return ySize;
+		return size.y;
 	}
 
 	void Window::Frame(bool frame)
@@ -88,20 +96,22 @@ namespace Awning::WM
 
 	void Window::ConfigPos(int xPos, int yPos, bool offset)
 	{
-		this->xPos  = xPos;
-		this->yPos  = yPos;
-
 		if (offset)
 		{
-			this->xOffset = xPos;
-			this->yOffset = yPos;
+			this->offset.x = xPos;
+			this->offset.y = yPos;
+		}
+		else
+		{
+			this->pos.x  = xPos;
+			this->pos.y  = yPos;
 		}
 	}
 
 	void Window::ConfigSize(int xSize, int ySize)
 	{
-		this->xSize = xSize;
-		this->ySize = ySize;
+		this->size.x = xSize;
+		this->size.y = ySize;
 	}
 
 	void Window::SetRaised(Manager::Functions::Window::Raised raised)
@@ -126,16 +136,28 @@ namespace Awning::WM
 
 	int Window::XOffset()
 	{
-		return xOffset;
+		return offset.x;
 	}
 
 	int Window::YOffset()
 	{
-		return yOffset;
+		return offset.x;
 	}
 
 	void Window::Texture(Texture::Data* texture)
 	{
 		this->texture = texture;
+	}
+
+	void Window::ConfigMinSize(int xSize, int ySize)
+	{
+		this->minSize.x = xSize;
+		this->minSize.y = ySize;
+	}
+
+	void Window::ConfigMaxSize(int xSize, int ySize)
+	{
+		this->maxSize.x = xSize;
+		this->maxSize.y = ySize;
 	}
 }

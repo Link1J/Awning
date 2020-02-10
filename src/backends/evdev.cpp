@@ -41,9 +41,7 @@ static int inotify_fd = -1;
 static int inotify_wd = -1;
 static std::unordered_map<std::string, int> events;
 static bool scrolling = false, mouseMoved;
-
-struct something { int x; int y; };
-something cursor;
+static struct { int x; int y; } cursor;
 
 void Awning::Backend::EVDEV::Start()
 {

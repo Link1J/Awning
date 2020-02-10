@@ -6,6 +6,8 @@
 #include "wayland/surface.hpp"
 #include "wm/manager.hpp"
 
+#include "backends/manager.hpp"
+
 #include <unordered_map>
 
 uint32_t NextSerialNum();
@@ -53,6 +55,15 @@ namespace Awning::XDG::Surface
 
 			data.surfaces[resource].window->ConfigPos(x, y, true);
 			data.surfaces[resource].window->ConfigSize(width, height);
+			data.surfaces[resource].window->ConfigMinSize(width, height);
+			data.surfaces[resource].window->ConfigMaxSize(width, height);
+
+			auto texture = Backend::Data();
+
+			data.surfaces[resource].window->ConfigPos(
+				texture.width  / 2 - width  / 2,
+				texture.height / 2 - height / 2
+			);
 		}
 
 		void Ack_Configure(struct wl_client* client, struct wl_resource* resource, uint32_t serial)

@@ -87,11 +87,13 @@ namespace Awning::XDG::TopLevel
 		void Set_Max_Size(struct wl_client* client, struct wl_resource* resource, int32_t width, int32_t height)
 		{
 			Log::Function::Called("XDG::TopLevel::Interface");
+			data.toplevels[resource].window->ConfigMaxSize(width, height);
 		}
 
 		void Set_Min_Size(struct wl_client* client, struct wl_resource* resource, int32_t width, int32_t height)
 		{
 			Log::Function::Called("XDG::TopLevel::Interface");
+			data.toplevels[resource].window->ConfigMinSize(width, height);
 		}
 
 		void Set_Maximized(struct wl_client* client, struct wl_resource* resource)

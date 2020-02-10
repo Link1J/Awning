@@ -24,7 +24,20 @@ namespace Awning::Wayland::Pointer
 
 			if (data.window)
 			{
-				data.window->Texture(Awning::Wayland::Surface::data.surfaces[surface].texture);
+				int xpos = data.window->XPos();
+				int ypos = data.window->YPos();
+
+				data.window->ConfigPos(hotspot_x, hotspot_y, true);
+				data.window->ConfigPos(xpos, ypos, false);
+
+				auto texture = Awning::Wayland::Surface::data.surfaces[surface].texture;
+
+				if (!texture)
+					return;
+					
+				data.window->Texture(texture);
+				data.window->ConfigSize(texture->width, texture->height);
+
 				data.pointers[resource].inUse = false;	
 				data.inUse = resource;
 			}
@@ -72,8 +85,13 @@ namespace Awning::Wayland::Pointer
 		data.pointers.erase(resource);
 	}
 
-	void Enter(wl_client* client, wl_resource* surface, double x, double y) 
+	void Enter(wl_client* client, wl_resource* surface, double x, double y, double tx, double ty) 
 	{
+		if (data.window)
+		{
+			data.window->ConfigPos(tx, ty);
+		}
+
 		if (!surface)
 			return;
 			
@@ -93,14 +111,27 @@ namespace Awning::Wayland::Pointer
 			wl_pointer_send_leave((wl_resource*)resource, NextSerialNum(), surface);
 	}
 
-	void Moved(wl_client* client, double x, double y) 
+	void Moved(wl_client* client, double x, double y, double tx, double ty) 
 	{
+		if (data.window)
+		{
+			data.window->ConfigPos(tx, ty);
+		}
+
 		int xPoint = wl_fixed_from_double(x);
 		int yPoint = wl_fixed_from_double(y);
 		auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
 		
 		for (auto resource : WM::Client::Get::All::Pointers(client))
 			wl_pointer_send_motion((wl_resource*)resource, time, xPoint, yPoint);
+	}
+
+	void Moved(double x, double y) 
+	{
+		if (data.window)
+		{
+			data.window->ConfigPos(x, y);
+		}
 	}
 
 	void Button(wl_client* client, uint32_t button, bool pressed) 

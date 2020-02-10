@@ -12,6 +12,8 @@ namespace Awning::XDG::Surface
 		struct Instance 
 		{
 			wl_resource* surface_wl;
+			wl_resource* toplevel;
+			wl_resource* popup;
 			WM::Window* window;
 		};
 
