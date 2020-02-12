@@ -24,9 +24,48 @@ namespace Awning::WM::X
 	{
 		display = XOpenDisplay(":1");
 		root = DefaultRootWindow(display);
-		XSelectInput(display, root, SubstructureRedirectMask|SubstructureNotifyMask);
-    	XCompositeRedirectSubwindows(display, root, CompositeRedirectAutomatic);
-		surfaceID = XInternAtom(display, "WL_SURFACE_ID", False);
+		XSelectInput(display, root, StructureNotifyMask|SubstructureRedirectMask|SubstructureNotifyMask);
+    	//XCompositeRedirectSubwindows(display, root, CompositeRedirectAutomatic);
+		//surfaceID = XInternAtom(display, "WL_SURFACE_ID", True);
+	}
+
+	void UpdateTexture(XEvent e)
+	{
+		XWindowAttributes attr;
+		XGetWindowAttributes(display, e.xconfigure.window, &attr);
+
+		if (!windows[e.xconfigure.window]->Texture())
+			windows[e.xconfigure.window]->Texture(new WM::Texture::Data());
+
+		auto window = windows[e.xconfigure.window];
+		auto texture = window->Texture();
+
+		XRenderPictFormat* format = XRenderFindVisualFormat(display, attr.visual);
+		bool hasAlpha             = (format->type == PictTypeDirect && format->direct.alphaMask);
+		int x                     = attr.x;
+		int y                     = attr.y;
+		int width                 = attr.width;
+		int height                = attr.height;
+
+		XRenderPictureAttributes pa;
+		pa.subwindow_mode = IncludeInferiors; // Don't clip child widgets
+
+		Picture picture = XRenderCreatePicture(display, e.xconfigure.window, format, CPSubwindowMode, &pa);
+		XImage* image = XGetImage(display, e.xconfigure.window, 0, 0, width, height, AllPlanes, ZPixmap);
+
+		texture->buffer.u8 = (uint8_t*)image->data;
+		texture->width  = image->width ;
+		texture->height = image->height;
+		texture->bitsPerPixel = image->bits_per_pixel;
+		texture->bytesPerLine = image->bytes_per_line;
+		texture->size = texture->bytesPerLine * texture->height;
+		texture->red   = { .size = 8, .offset = 16 };
+		texture->green = { .size = 8, .offset =  8 };
+		texture->blue  = { .size = 8, .offset =  0 };
+		texture->alpha = { .size = 8, .offset = 24 };
+
+		Manager::Window::Reposition(window, x    , y     );
+		Manager::Window::Resize    (window, width, height);
 	}
 
 	void EventLoop()
@@ -119,38 +158,8 @@ namespace Awning::WM::X
 
 						XConfigureWindow(display, e.xconfigurerequest.window, e.xconfigurerequest.value_mask, &changes);
 
-						/*XWindowAttributes attr;
-						XGetWindowAttributes(display, e.xconfigurerequest.window, &attr);
-
-						if (!windows[e.xconfigurerequest.window]->Texture())
-							windows[e.xconfigurerequest.window]->Texture(new WM::Texture::Data());
-
-						auto window = windows[e.xconfigurerequest.window];
-						auto texture = window->Texture();
-
-						XRenderPictFormat* format = XRenderFindVisualFormat(display, attr.visual);
-						bool hasAlpha             = (format->type == PictTypeDirect && format->direct.alphaMask);
-						int x                     = attr.x;
-						int y                     = attr.y;
-						int width                 = attr.width;
-						int height                = attr.height;
-
-						XRenderPictureAttributes pa;
-						pa.subwindow_mode = IncludeInferiors; // Don't clip child widgets
-
-						Picture picture = XRenderCreatePicture(display, e.xconfigurerequest.window, format, CPSubwindowMode, &pa);
-						XImage* image = XGetImage(display, e.xconfigurerequest.window, 0, 0, width, height, AllPlanes, ZPixmap);
-
-						texture->buffer.u8 = (uint8_t*)image->data;
-						texture->width  = image->width ;
-						texture->height = image->height;
-						texture->bitsPerPixel = image->bits_per_pixel;
-						texture->bytesPerLine = image->bytes_per_line;
-						texture->size = texture->bytesPerLine * texture->height;
-						texture->red   = { .size = 8, .offset = 16 };
-						texture->green = { .size = 8, .offset =  8 };
-						texture->blue  = { .size = 8, .offset =  0 };
-						texture->alpha = { .size = 8, .offset = 24 };*/
+						Manager::Window::Reposition(windows[e.xconfigure.window], changes.x    , changes.y     );
+						Manager::Window::Resize    (windows[e.xconfigure.window], changes.width, changes.height);
 					}
         			break;
 				case ConfigureNotify:

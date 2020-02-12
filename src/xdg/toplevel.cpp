@@ -142,9 +142,9 @@ namespace Awning::XDG::TopLevel
 		Wayland::Surface::data.surfaces[surface_wl].window = data.toplevels[resource].window;
 		         Surface::data.surfaces[surface   ].window = data.toplevels[resource].window;
 
-		Awning::XDG::TopLevel::data.toplevels[resource].window->Data      (resource);
-		Awning::XDG::TopLevel::data.toplevels[resource].window->SetRaised (Raised  );
-		Awning::XDG::TopLevel::data.toplevels[resource].window->SetResized(Resized );
+		data.toplevels[resource].window->Data      (resource);
+		data.toplevels[resource].window->SetRaised (Raised  );
+		data.toplevels[resource].window->SetResized(Resized );
 	}
 
 	void Destroy(struct wl_resource* resource)

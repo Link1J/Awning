@@ -41,7 +41,7 @@ namespace Awning::XDG::Surface
 		void Get_Popup(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* parent, struct wl_resource* positioner)
 		{
 			Log::Function::Called("XDG::Surface::Interface");
-			Popup::Create(client, 1, id, parent);
+			Popup::Create(client, 1, id, resource, parent, positioner);
 		}
 
 		void Set_Window_Geometry(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)

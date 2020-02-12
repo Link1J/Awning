@@ -40,8 +40,13 @@ set(SOURCES
 
 set(SOURCE_WAYLAND
 	src/protocols/xdg-shell-protocol.c 
-	src/protocols/xdg-decoration-protocol.c
+    src/protocols/xdg-decoration-protocol.c
+    src/protocols/linux-dmabuf-protocol.c
 )
+
+#------------------------------------------------------------------------------
+
+#add_subdirectory(extern/fmt)
 
 #------------------------------------------------------------------------------
 
@@ -54,9 +59,12 @@ find_package(Wayland COMPONENTS Client Server Cursor Egl REQUIRED)
 find_package(UDev REQUIRED)
 find_package(Libinput REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(fmt REQUIRED)
+find_package(EGL REQUIRED)
 
 find_package(WaylandScanner REQUIRED)
 find_program(PKG_CONFIG pkg-config)
+
 
 #------------------------------------------------------------------------------
 
@@ -67,6 +75,8 @@ execute_process(COMMAND ${WaylandScanner_EXECUTABLE} server-header ${protocol_di
 				COMMAND ${WaylandScanner_EXECUTABLE} private-code ${protocol_dir}/stable/xdg-shell/xdg-shell.xml ${CMAKE_SOURCE_DIR}/src/protocols/xdg-shell-protocol.c)
 execute_process(COMMAND ${WaylandScanner_EXECUTABLE} server-header ${protocol_dir}/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml ${CMAKE_SOURCE_DIR}/src/protocols/xdg-decoration-protocol.h
 				COMMAND ${WaylandScanner_EXECUTABLE} private-code ${protocol_dir}/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml ${CMAKE_SOURCE_DIR}/src/protocols/xdg-decoration-protocol.c)
+execute_process(COMMAND ${WaylandScanner_EXECUTABLE} server-header ${protocol_dir}/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml ${CMAKE_SOURCE_DIR}/src/protocols/linux-dmabuf-protocol.h
+                COMMAND ${WaylandScanner_EXECUTABLE} private-code ${protocol_dir}/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml ${CMAKE_SOURCE_DIR}/src/protocols/linux-dmabuf-protocol.c)
 
 #------------------------------------------------------------------------------
 
@@ -96,4 +106,6 @@ target_link_libraries(Awning PRIVATE
     OpenGL::GL
     Libinput::Libinput
     UDev::UDev
+    fmt::fmt
+    EGL::EGL
 )

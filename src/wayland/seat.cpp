@@ -56,6 +56,6 @@ namespace Awning::Wayland::Seat
 
 	void Add(struct wl_display* display)
 	{
-		data.global = wl_global_create(display, &wl_seat_interface, 2, nullptr, Bind);
+		data.global = wl_global_create(display, &wl_seat_interface, 1, nullptr, Bind);
 	}
 }

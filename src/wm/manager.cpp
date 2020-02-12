@@ -216,7 +216,7 @@ namespace Awning::WM::Manager
 						int newX = hoveredOver->XPos() + (x - preX);
 						int newY = hoveredOver->YPos() + (y - preY);
 						Manager::Window::Reposition(hoveredOver, newX, newY);
-						Wayland::Pointer::Moved(nullptr, newX, newY, x, y);
+						Wayland::Pointer::Moved(nullptr, x, y, x, y);
 					}
 					else if (hoveredOver && action == RESIZE && input == LOCK)
 					{
@@ -250,6 +250,8 @@ namespace Awning::WM::Manager
 
 						Wayland::Pointer::Moved(nullptr, XPos, YPos, x, y);
 					}
+
+					Wayland::Pointer::Moved(nullptr, x, y, x, y);
 
 					preX = x;
 					preY = y;
@@ -309,10 +311,13 @@ namespace Awning::WM::Manager
 					{
 						if (button == lockButton)
 						{
-							Wayland::Pointer::Leave(
-								(wl_client  *)hoveredOver->Client(), 
-								(wl_resource*)Client::Get::Surface(hoveredOver)
-							);
+							if (hoveredOver)
+							{
+								Wayland::Pointer::Leave(
+									(wl_client  *)hoveredOver->Client(), 
+									(wl_resource*)Client::Get::Surface(hoveredOver)
+								);
+							}
 
 							hoveredOver = nullptr;
 							input = UNLOCK;
@@ -382,6 +387,7 @@ namespace Awning::WM::Manager
 
 		void Raise(Awning::WM::Window* window)
 		{
+			auto star = windowList.begin();
 			auto curr = windowList.begin();
 			while (curr != windowList.end())
 			{
@@ -392,6 +398,13 @@ namespace Awning::WM::Manager
 
 			if (curr == windowList.end())
 				return;
+
+			Wayland::Keyboard::ChangeWindow(
+				(wl_client  *)(*star)->Client(), 
+				(wl_resource*)Client::Get::Surface(*star),
+				(wl_client  *)(*curr)->Client(), 
+				(wl_resource*)Client::Get::Surface(*curr)
+			);
 
 			windowList.erase(curr);
 			windowList.emplace_front(window);

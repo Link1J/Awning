@@ -157,7 +157,16 @@ namespace Awning::WM
 
 	void Window::ConfigMaxSize(int xSize, int ySize)
 	{
-		this->maxSize.x = xSize;
-		this->maxSize.y = ySize;
+		if (xSize == 0 || ySize == 0)
+		{
+			this->maxSize.x = INT32_MAX;
+			this->maxSize.y = INT32_MAX;
+		}
+		else
+		{
+			this->maxSize.x = xSize;
+			this->maxSize.y = ySize;
+		}
+		
 	}
 }

@@ -31,7 +31,7 @@ namespace Awning::Wayland::Keyboard
 			return;
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, nullptr);
-		wl_keyboard_send_keymap(resource, 1, 0, 0);
+		wl_keyboard_send_keymap(resource, 0, 0, 0);
 		wl_keyboard_send_repeat_info(resource, 0, 0);
 
 		data.keyboards[wl_client].resource = resource;
@@ -46,6 +46,27 @@ namespace Awning::Wayland::Keyboard
 		for (auto resource : WM::Client::Get::All::Keyboards(client))
 		{
 			wl_keyboard_send_key((wl_resource*)resource, NextSerialNum(), time, button, released);
+		}
+	}
+
+	void ChangeWindow(wl_client* client1, wl_resource* surface1, wl_client* client2, wl_resource* surface2)
+	{
+		auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
+
+		for (auto resource : WM::Client::Get::All::Keyboards(client1))
+		{
+			wl_keyboard_send_leave((wl_resource*)resource, NextSerialNum(), surface1);
+		}
+
+		for (auto resource : WM::Client::Get::All::Keyboards(client2))
+		{
+			wl_array* states = new wl_array();
+			wl_array_init(states);
+
+			wl_keyboard_send_enter((wl_resource*)resource, NextSerialNum(), surface2, states);
+
+			wl_array_release(states);
+			delete states;
 		}
 	}
 }

@@ -23,4 +23,5 @@ namespace Awning::Wayland::Keyboard
 
 	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id);
 	void Button(wl_client* client, uint32_t button, bool pressed);
+	void ChangeWindow(wl_client* client1, wl_resource* surface1, wl_client* client2, wl_resource* surface2);
 }
