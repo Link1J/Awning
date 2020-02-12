@@ -17,4 +17,11 @@ namespace Log
 			std::cout << "[LOCATE ] " << from << "::" << function.function_name() << "." << location << "\n";
 		}
 	}
+	namespace Report 
+	{
+		void Error(std::string message, source_location function)
+		{
+			std::cout << "[ERROR  ] " << "(" << function.file_name() << "::" << function.line() << ")" << message << "\n";
+		}
+	}
 }
