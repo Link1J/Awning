@@ -1,3 +1,6 @@
+#define MESA_EGL_NO_X11_HEADERS
+#define EGL_NO_X11
+
 #include "backends/manager.hpp"
 
 #include <wayland-server.h>
@@ -33,6 +36,12 @@
 
 #include "log.hpp"
 
+#include <fmt/printf.h>
+
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <EGL/eglmesaext.h>
+
 #include <iostream>
 #include <unordered_map>
 
@@ -41,6 +50,7 @@ int XWM_Start(int signal_number, void *data);
 void LaunchXwayland(int signal_number);
 void on_term_signal(int signal_number);
 void client_created(struct wl_listener *listener, void *data);
+void loadEGLProc(void* proc_ptr, const char* name);
 
 // -------------------------------------------------------------------
 // --- Reversed iterable
@@ -54,6 +64,7 @@ auto end (reversion_wrapper<T> w) { return std::rend(w.iterable); }
 template <typename T>
 reversion_wrapper<T> reverse (T&& iterable) { return { iterable }; }
 
+
 namespace Awning
 {
 	namespace Server
@@ -65,10 +76,29 @@ namespace Awning
 			wl_event_source* sigusr1;
 			wl_protocol_logger* logger; 
 			wl_listener client_listener;
+
+			struct {
+				EGLDisplay display;
+				EGLint major, minor;
+			} egl;
 		};
-	}	
-	Server::Data server;
+		Data data;
+	}
 };
+
+PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXT;
+PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC eglCreatePlatformWindowSurfaceEXT;
+PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR;
+PFNEGLDESTROYIMAGEKHRPROC eglDestroyImageKHR;
+PFNEGLQUERYWAYLANDBUFFERWL eglQueryWaylandBufferWL;
+PFNEGLBINDWAYLANDDISPLAYWL eglBindWaylandDisplayWL;
+PFNEGLUNBINDWAYLANDDISPLAYWL eglUnbindWaylandDisplayWL;
+PFNEGLSWAPBUFFERSWITHDAMAGEEXTPROC eglSwapBuffersWithDamage; // KHR or EXT
+PFNEGLQUERYDMABUFFORMATSEXTPROC eglQueryDmaBufFormatsEXT;
+PFNEGLQUERYDMABUFMODIFIERSEXTPROC eglQueryDmaBufModifiersEXT;
+PFNEGLEXPORTDMABUFIMAGEQUERYMESAPROC eglExportDMABUFImageQueryMESA;
+PFNEGLEXPORTDMABUFIMAGEMESAPROC eglExportDMABUFImageMESA;
+PFNEGLDEBUGMESSAGECONTROLKHRPROC eglDebugMessageControlKHR;
 
 extern int tty_fd;
 
@@ -82,7 +112,7 @@ uint32_t NextSerialNum()
 
 int main(int argc, char* argv[])
 {
-	bool noX = false;
+	bool noX = true;
 	Awning::Backend::API api_output = Awning::Backend::API::X11;
 	Awning::Backend::API api_input  = Awning::Backend::API::X11;
 
@@ -121,30 +151,44 @@ int main(int argc, char* argv[])
    		exit(-1);
 	}
 
-	Awning::server.display = wl_display_create(); 
-	const char* socket = wl_display_add_socket_auto(Awning::server.display);
+	Awning::Server::data.display = wl_display_create(); 
+	const char* socket = wl_display_add_socket_auto(Awning::Server::data.display);
 	std::cout << "Wayland Socket: " << socket << std::endl;
 
 	Awning::Backend::Init(api_output, api_input);
 
-	//return 0;
+	Awning::Server::data.client_listener.notify = client_created;
 
-	Awning::server.client_listener.notify = client_created;
+	Awning::Server::data.event_loop = wl_display_get_event_loop(Awning::Server::data.display);
+	wl_display_add_protocol_logger(Awning::Server::data.display, ProtocolLogger, nullptr);
+	wl_display_add_client_created_listener(Awning::Server::data.display, &Awning::Server::data.client_listener);
 
-	Awning::server.event_loop = wl_display_get_event_loop(Awning::server.display);
-	wl_display_add_protocol_logger(Awning::server.display, ProtocolLogger, nullptr);
-	wl_display_add_client_created_listener(Awning::server.display, &Awning::server.client_listener);
+	Awning::Server::data.sigusr1 = wl_event_loop_add_signal(Awning::Server::data.event_loop, SIGUSR1, XWM_Start, nullptr);
 
-	Awning::server.sigusr1 = wl_event_loop_add_signal(Awning::server.event_loop, SIGUSR1, XWM_Start, nullptr);
+	loadEGLProc(&eglGetPlatformDisplayEXT , "eglGetPlatformDisplayEXT" );
+
+	eglBindAPI(EGL_OPENGL_ES_API);	
+	Awning::Server::data.egl.display = eglGetPlatformDisplayEXT(EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, NULL);
+
+	eglInitialize(Awning::Server::data.egl.display, &Awning::Server::data.egl.major, &Awning::Server::data.egl.minor);
+
+	loadEGLProc(&eglBindWaylandDisplayWL  , "eglBindWaylandDisplayWL"  );
+	loadEGLProc(&eglUnbindWaylandDisplayWL, "eglUnbindWaylandDisplayWL");
+	loadEGLProc(&eglQueryWaylandBufferWL  , "eglQueryWaylandBufferWL"  );
+
+	std::cout << "EGL Vendor    : " << eglQueryString(Awning::Server::data.egl.display, EGL_VENDOR) << "\n";
+	std::cout << "EGL Version   : " << eglQueryString(Awning::Server::data.egl.display, EGL_VERSION) << "\n";
+
+	eglBindWaylandDisplayWL(Awning::Server::data.egl.display, Awning::Server::data.display);
 	
-	Awning::Wayland::Compositor        ::Add(Awning::server.display);
-	Awning::Wayland::Seat              ::Add(Awning::server.display);
-	Awning::Wayland::Output            ::Add(Awning::server.display);
-	Awning::Wayland::Shell             ::Add(Awning::server.display);
-	Awning::XDG    ::WM_Base           ::Add(Awning::server.display);
-	Awning::ZXDG   ::Decoration_Manager::Add(Awning::server.display);
+	Awning::Wayland::Compositor        ::Add(Awning::Server::data.display);
+	Awning::Wayland::Seat              ::Add(Awning::Server::data.display);
+	Awning::Wayland::Output            ::Add(Awning::Server::data.display);
+	Awning::Wayland::Shell             ::Add(Awning::Server::data.display);
+	Awning::XDG    ::WM_Base           ::Add(Awning::Server::data.display);
+	//Awning::ZXDG   ::Decoration_Manager::Add(Awning::Server::data.display);
 
-	wl_display_init_shm(Awning::server.display);
+	wl_display_init_shm(Awning::Server::data.display);
 
 	if (pid != 0)
 	{
@@ -153,11 +197,13 @@ int main(int argc, char* argv[])
 	
 	while(1)
 	{
+		Awning::Wayland::Surface::HandleFrameCallbacks();
+
 		Awning::Backend::Poll();
 		Awning::Backend::Hand();
 
-		wl_event_loop_dispatch(Awning::server.event_loop, 0);
-		wl_display_flush_clients(Awning::server.display);
+		wl_event_loop_dispatch(Awning::Server::data.event_loop, 0);
+		wl_display_flush_clients(Awning::Server::data.display);
 
 		Awning::WM::X::EventLoop();
 
@@ -279,8 +325,8 @@ int main(int argc, char* argv[])
 						int windowOffset = (x) * (texture->bitsPerPixel / 8)
 										 + (y) *  texture->bytesPerLine    ;
 
-						int framebOffset = (winPosX + x) * (data.bitsPerPixel / 8)
-										 + (winPosY + y) *  data.bytesPerLine    ;
+						int framebOffset = (winPosX + x - winOffX) * (data.bitsPerPixel / 8)
+										 + (winPosY + y - winOffY) *  data.bytesPerLine    ;
 
 						uint8_t red, green, blue, alpha;
 
@@ -354,11 +400,10 @@ int main(int argc, char* argv[])
 			}			
 		}
 
-		Awning::Wayland::Surface::HandleFrameCallbacks();
 		Awning::Backend::Draw();
 	}
 
-	wl_display_destroy(Awning::server.display);
+	wl_display_destroy(Awning::Server::data.display);
 	ioctl(tty_fd, KDSETMODE, KD_TEXT);
 	ioctl(tty_fd, KDSKBMODE, K_RAW);
 }
@@ -370,7 +415,7 @@ void on_term_signal(int signal_number)
 int XWM_Start(int signal_number, void *data)
 {
 	Log::Function::Called("");
-	Awning::WM::X::Init();
+	//Awning::WM::X::Init();
 	signal(SIGUSR1, on_term_signal);
 	return 0;
 }
@@ -411,4 +456,14 @@ void client_created(struct wl_listener* listener, void* data)
 
 	if (!Awning::WM::X::xWaylandClient)
 		Awning::WM::X::xWaylandClient = (wl_client*)data;
+}
+
+void loadEGLProc(void* proc_ptr, const char* name)
+{
+	void* proc = (void*)eglGetProcAddress(name);
+	if (proc == NULL) {
+		Log::Report::Error(fmt::format("eglGetProcAddress({}) failed", name));
+		abort();
+	}
+	*(void**)proc_ptr = proc;
 }
