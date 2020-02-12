@@ -14,9 +14,10 @@ namespace Awning::Wayland::Compositor
 
 	namespace Interface
 	{
-		void Create_Region(struct wl_client *client, struct wl_resource *resource, uint32_t id);
-		void Create_Surface(struct wl_client *client, struct wl_resource *resource, uint32_t id);
+		void Create_Region(struct wl_client* client, struct wl_resource* resource, uint32_t id);
+		void Create_Surface(struct wl_client* client, struct wl_resource* resource, uint32_t id);
 	}
 	
-	void Bind(struct wl_client *wl_client, void *data, uint32_t version, uint32_t id);
+	void Add (struct wl_display* display                                            );
+	void Bind(struct wl_client* wl_client, void* data, uint32_t version, uint32_t id);
 }

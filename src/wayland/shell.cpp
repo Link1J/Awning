@@ -31,4 +31,9 @@ namespace Awning::Wayland::Shell
 		
 		wl_resource_set_implementation(resource, &interface, data, nullptr);
 	}
+
+	void Add(struct wl_display* display)
+	{
+		data.global = wl_global_create(display, &wl_shell_interface, 1, nullptr, Bind);
+	}
 }

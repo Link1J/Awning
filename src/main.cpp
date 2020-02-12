@@ -127,6 +127,8 @@ int main(int argc, char* argv[])
 
 	Awning::Backend::Init(api_output, api_input);
 
+	//return 0;
+
 	Awning::server.client_listener.notify = client_created;
 
 	Awning::server.event_loop = wl_display_get_event_loop(Awning::server.display);
@@ -134,27 +136,15 @@ int main(int argc, char* argv[])
 	wl_display_add_client_created_listener(Awning::server.display, &Awning::server.client_listener);
 
 	Awning::server.sigusr1 = wl_event_loop_add_signal(Awning::server.event_loop, SIGUSR1, XWM_Start, nullptr);
+	
+	Awning::Wayland::Compositor        ::Add(Awning::server.display);
+	Awning::Wayland::Seat              ::Add(Awning::server.display);
+	Awning::Wayland::Output            ::Add(Awning::server.display);
+	Awning::Wayland::Shell             ::Add(Awning::server.display);
+	Awning::XDG    ::WM_Base           ::Add(Awning::server.display);
+	Awning::ZXDG   ::Decoration_Manager::Add(Awning::server.display);
 
-	{
-		using namespace Awning;
-		using namespace Awning::Wayland;
-
-		Compositor::data.global = wl_global_create(server.display, &wl_compositor_interface, 3, nullptr, Compositor::Bind);
-		Seat      ::data.global = wl_global_create(server.display, &wl_seat_interface      , 4, nullptr, Seat      ::Bind);
-		Output    ::data.global = wl_global_create(server.display, &wl_output_interface    , 3, nullptr, Output    ::Bind);
-		Shell     ::data.global = wl_global_create(server.display, &wl_shell_interface     , 1, nullptr, Shell     ::Bind);
-
-		wl_display_init_shm(server.display);
-	}
-
-	{
-		using namespace Awning;
-		using namespace Awning::XDG;
-		using namespace Awning::ZXDG;
-
-		WM_Base           ::data.global = wl_global_create(server.display, &xdg_wm_base_interface               , 1, nullptr, WM_Base           ::Bind);
-		Decoration_Manager::data.global = wl_global_create(server.display, &zxdg_decoration_manager_v1_interface, 1, nullptr, Decoration_Manager::Bind);
-	}
+	wl_display_init_shm(Awning::server.display);
 
 	if (pid != 0)
 	{
@@ -232,14 +222,13 @@ int main(int argc, char* argv[])
 					}
 					else
 					{
-						//if (window->Frame())
+						if (window->Frame())
 						{
 							red   = 0x00;
 							green = 0xFF;
 							blue  = 0xFF;
 							alpha = 0xFF;
 						}
-						/*
 						else 
 						{
 							red   = 0x00;
@@ -247,7 +236,6 @@ int main(int argc, char* argv[])
 							blue  = 0x00;
 							alpha = 0x00;
 						}
-						*/
 					}
 
 					if (alpha > 0)

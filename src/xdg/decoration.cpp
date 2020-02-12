@@ -86,4 +86,9 @@ namespace Awning::ZXDG::Decoration_Manager
 		}
 		wl_resource_set_implementation(resource, &interface, data, nullptr);
 	}
+
+	void Add(struct wl_display* display)
+	{
+		data.global = wl_global_create(display, &zxdg_decoration_manager_v1_interface, 1, nullptr, Bind);
+	}
 }

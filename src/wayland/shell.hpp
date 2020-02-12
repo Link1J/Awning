@@ -17,5 +17,6 @@ namespace Awning::Wayland::Shell
 		void Get_Shell_Surface(struct wl_client *client, struct wl_resource *resource, uint32_t id, struct wl_resource *surface);
 	}
 	
+	void Add (struct wl_display* display                                            );
 	void Bind(struct wl_client *wl_client, void *data, uint32_t version, uint32_t id);
 }
