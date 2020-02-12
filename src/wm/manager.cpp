@@ -336,7 +336,7 @@ namespace Awning::WM::Manager
 					{
 						Wayland::Keyboard::Button(
 							(wl_client*)window->Client(),
-							key, false
+							key, true
 						);
 					}
 				}

@@ -20,6 +20,8 @@
 #include <chrono>
 #include <thread>
 
+#include <fmt/format.h>
+
 #include "X11.hpp"
 #include "manager.hpp"
 

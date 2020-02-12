@@ -14,5 +14,6 @@ namespace Log
 	namespace Report 
 	{
 		void Error(std::string message, source_location function = source_location::current());
+		void Info (std::string message, source_location function = source_location::current());
 	}
 }
