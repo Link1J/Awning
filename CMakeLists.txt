@@ -11,6 +11,8 @@ set(SOURCES
     src/backends/manager.cpp
     src/backends/fbdev.cpp
     src/backends/evdev.cpp
+    src/backends/libinput.cpp
+    src/backends/drm.cpp
 
     src/wayland/compositor.cpp
     src/wayland/seat.cpp
@@ -49,6 +51,8 @@ set(OpenGL_GL_PREFERENCE "GLVND")
 
 find_package(X11 REQUIRED)
 find_package(Wayland COMPONENTS Client Server Cursor Egl REQUIRED)
+find_package(UDev REQUIRED)
+find_package(Libinput REQUIRED)
 find_package(OpenGL REQUIRED)
 
 find_package(WaylandScanner REQUIRED)
@@ -90,4 +94,6 @@ target_link_libraries(Awning PRIVATE
     X11::Xcomposite
     X11::Xrender
     OpenGL::GL
+    Libinput::Libinput
+    UDev::UDev
 )

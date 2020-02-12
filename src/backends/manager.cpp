@@ -4,6 +4,7 @@
 #include "fbdev.hpp"
 #include "evdev.hpp"
 #include "libinput.hpp"
+#include "drm.hpp"
 
 namespace Awning::Backend
 {
@@ -29,6 +30,12 @@ namespace Awning::Backend
 			Poll = FBDEV::Poll;
 			Draw = FBDEV::Draw;
 			Data = FBDEV::Data;
+			break;
+		case API::DRM:
+			DRM::Start();
+			Poll = DRM::Poll;
+			Draw = DRM::Draw;
+			Data = DRM::Data;
 			break;
 		
 		default:

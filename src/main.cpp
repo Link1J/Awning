@@ -379,13 +379,13 @@ void LaunchXwayland(int signal_number)
 {
 	Log::Function::Called("");
 
-    char* XWaylandArgs [] = { "Xwayland", ":1", NULL };
+    const char* XWaylandArgs [] = { "Xwayland", ":1", NULL };
 
 	int fd = open("/dev/null", O_RDWR);
 	//dup2(fd, STDOUT_FILENO);
 	//dup2(fd, STDERR_FILENO);
 
-	int ret = execvp(XWaylandArgs[0], XWaylandArgs);
+	int ret = execvp(XWaylandArgs[0], (char**)XWaylandArgs);
 	printf("Xwayland did not launch! %d %s\n", ret, strerror(errno));
 	exit(ret);
 }
