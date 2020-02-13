@@ -21,7 +21,78 @@
 #include "drm.hpp"
 #include "manager.hpp"
 
-std::vector<Awning::WM::Texture::Data> framebuffers;
+struct Data
+{
+	uint32_t* memoryMappedBuffer;
+	Awning::WM::Texture::Data texture;
+};
+
+std::vector<Data> framebuffers;
+
+void CreateDumbBuffer(int dri_fd, drm_mode_card_res* res, drm_mode_get_connector* conn, int i)
+{
+	struct drm_mode_create_dumb create_dumb={0};
+	struct drm_mode_map_dumb map_dumb={0};
+	struct drm_mode_fb_cmd cmd_dumb={0};
+
+	Awning::WM::Texture::Data framebuffer;
+
+	drm_mode_modeinfo* mode_ptr = (drm_mode_modeinfo*)conn->modes_ptr;
+
+	create_dumb.width = mode_ptr->hdisplay;
+	create_dumb.height = mode_ptr->vdisplay;
+	create_dumb.bpp = 32;
+	create_dumb.flags = 0;
+	create_dumb.pitch = 0;
+	create_dumb.size = 0;
+	create_dumb.handle = 0;
+	ioctl(dri_fd, DRM_IOCTL_MODE_CREATE_DUMB, &create_dumb);
+
+	cmd_dumb.width=create_dumb.width;
+	cmd_dumb.height=create_dumb.height;
+	cmd_dumb.bpp=create_dumb.bpp;
+	cmd_dumb.pitch=create_dumb.pitch;
+	cmd_dumb.depth=24;
+	cmd_dumb.handle=create_dumb.handle;
+	ioctl(dri_fd,DRM_IOCTL_MODE_ADDFB,&cmd_dumb);
+
+	map_dumb.handle=create_dumb.handle;
+	ioctl(dri_fd,DRM_IOCTL_MODE_MAP_DUMB,&map_dumb);
+
+	Data data;
+
+	data.memoryMappedBuffer   = (uint32_t*)mmap(0, create_dumb.size, PROT_READ | PROT_WRITE, MAP_SHARED, dri_fd, map_dumb.offset);
+
+	data.texture.buffer.u8    = (uint8_t*)malloc(create_dumb.size);
+	data.texture.width        = create_dumb.width ;
+	data.texture.height       = create_dumb.height;
+	data.texture.bytesPerLine = create_dumb.pitch ;
+	data.texture.size         = create_dumb.size  ;
+	data.texture.bitsPerPixel = 32                ;
+	data.texture.red          = { .size = 8, .offset = 16 };
+	data.texture.green        = { .size = 8, .offset =  8 };
+	data.texture.blue         = { .size = 8, .offset =  0 };
+	data.texture.alpha        = { .size = 0, .offset = 24 };
+
+	framebuffers.push_back(data);
+
+	struct drm_mode_get_encoder enc={0};
+	struct drm_mode_crtc crtc={0};
+
+	enc.encoder_id = conn->encoder_id;
+	ioctl(dri_fd, DRM_IOCTL_MODE_GETENCODER, &enc);	//get encoder
+
+	crtc.crtc_id = enc.crtc_id;
+	ioctl(dri_fd, DRM_IOCTL_MODE_GETCRTC, &crtc);
+
+	crtc.fb_id = cmd_dumb.fb_id;
+	crtc.set_connectors_ptr = (&res->connector_id_ptr)[i];
+	crtc.count_connectors = 1;
+	crtc.mode = *mode_ptr;
+	crtc.mode_valid = 1;
+
+	ioctl(dri_fd, DRM_IOCTL_MODE_SETCRTC, &crtc);
+}
 
 void Awning::Backend::DRM::Start()
 {
@@ -45,12 +116,6 @@ void Awning::Backend::DRM::Start()
 
 			ioctl(dri_fd, DRM_IOCTL_MODE_GETRESOURCES, &res);
 
-			std::cout << "Size:" << "\n" 
-					  << "    " << "Min: " << res.min_width << "," << res.min_height << "\n"
-					  << "    " << "Max: " << res.max_width << "," << res.max_height << "\n";
-
-			std::cout << "Connectors:" << "\n";
-
 			for (int i = 0; i < res.count_connectors; i++)
 			{
 				bool connected;
@@ -67,56 +132,37 @@ void Awning::Backend::DRM::Start()
 
 				ioctl(dri_fd, DRM_IOCTL_MODE_GETCONNECTOR, &conn);
 
-				if (conn.count_encoders < 1 || conn.count_modes < 1 || !conn.encoder_id || !conn.connection)
+				if (!(conn.count_encoders < 1 || conn.count_modes < 1 || !conn.encoder_id || !conn.connection))
 				{
-					std::cout << "    " << i << ": Not connected " << "\n";
-					connected = false;
-				}
-				else
-				{
-					std::cout << "    " << i << ": Connected " << "\n";
-					connected = true;
-				}
+					Output output = {};
 
-				switch (conn.connector_type)
-				{
-#define CASE(T) case DRM_MODE_CONNECTOR_##T: std::cout << "        " << "Type: " << #T << "\n"; break
-					CASE(Unknown    );
-					CASE(VGA        );
-					CASE(DVII       );
-					CASE(DVID       );
-					CASE(DVIA       );
-					CASE(Composite  );
-					CASE(SVIDEO     );
-					CASE(LVDS       );
-					CASE(Component  );
-					CASE(9PinDIN    );
-					CASE(DisplayPort);
-					CASE(HDMIA      );
-					CASE(HDMIB      );
-					CASE(TV         );
-					CASE(eDP        );
-					CASE(VIRTUAL    );
-					CASE(DSI        );
-					CASE(DPI        );
-					CASE(WRITEBACK  );
-#undef CASE
-				}
+					output.physical = { 
+						.width  = conn.mm_width , 
+						.height = conn.mm_height 
+					};
 
-				if (connected)
-				{
-					std::cout << "        " << "Display Size: " << conn.mm_width << "mm," << conn.mm_height << "mm" << "\n";
-
-					std::cout << "        " << "Modes:" << "\n";
+					output.manufacturer = "N/A";
+					output.model        = "N/A";
 
 					drm_mode_modeinfo* mode_ptr = (drm_mode_modeinfo*)conn.modes_ptr;
 					for (int a = conn.count_modes - 1; a >= 0; a--)
 					{
 						drm_mode_modeinfo* mode = mode_ptr + a;
-						std::cout << "            " << mode->hdisplay << "x" << mode->vdisplay << " @ " << mode->vrefresh << "Hz" << "\n";
+
+						output.modes.push_back(Output::Mode{
+							.resolution   = {
+								.width  = mode->hdisplay,
+								.height = mode->vdisplay
+							},
+							.refresh_rate = mode->vrefresh * 1000,
+							.prefered     = mode->type & DRM_MODE_TYPE_PREFERRED,
+							.current      = a == 0,
+						});
 					}
 
-					//CreateDumbBuffer(dri_fd, &res, &conn, i);
+					Outputs::Add(output);
+
+					CreateDumbBuffer(dri_fd, &res, &conn, i);
 				}
 
 				free((void*)conn.modes_ptr      );
@@ -134,64 +180,19 @@ void Awning::Backend::DRM::Start()
 			std::cout << "\n";
 		}
 	}
-
-	/*framebuffer = Awning::WM::Texture::Data {
-        .size         = finf.line_length * vinf.yres,
-        .bitsPerPixel = vinf.bits_per_pixel,
-        .bytesPerLine = finf.line_length,
-        .red          = { 
-			.size   = vinf.red.length,
-			.offset = vinf.red.offset
-		},
-        .green        = { 
-			.size   = vinf.green.length,
-			.offset = vinf.green.offset
-		},
-        .blue         = { 
-			.size   = vinf.blue.length,
-			.offset = vinf.blue.offset
-		},
-        .alpha        = { 
-			.size   = 0,
-			.offset = 0
-		},
-        .width        = vinf.xres,
-        .height       = vinf.yres
-    };*/
-
-	/*Output output {
-		.manufacturer = finf.id,
-		.model        = "N/A",
-		.physical     = {
-			.width  = vinf.width,
-			.height = vinf.height,
-		},
-		.modes        = {
-			Output::Mode {
-				.resolution   = {
-					.width  = vinf.xres,
-					.height = vinf.yres,
-				},
-				.refresh_rate = 0,
-				.prefered     = true,
-				.current      = true,
-			}
-		}
-	};
-	Outputs::Add(output);*/
 }
 
 void Awning::Backend::DRM::Poll()
 {
-	//memset(framebuffers[0].buffer.u8, 0xEE, framebuffers[0].size);
+	memset(framebuffers[0].texture.buffer.u8, 0xEE, framebuffers[0].texture.size);
 }
 
 void Awning::Backend::DRM::Draw()
 {
-	//memcpy(framebufferMaped, framebuffers[0].buffer.u8, framebuffers[0].size);
+	memcpy(framebuffers[0].memoryMappedBuffer, framebuffers[0].texture.buffer.u8, framebuffers[0].texture.size);
 }
 
 Awning::WM::Texture::Data Awning::Backend::DRM::Data()
 {
-	return framebuffers[0];
+	return framebuffers[0].texture;
 }

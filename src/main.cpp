@@ -113,8 +113,8 @@ uint32_t NextSerialNum()
 int main(int argc, char* argv[])
 {
 	bool noX = true;
-	Awning::Backend::API api_output = Awning::Backend::API::X11;
-	Awning::Backend::API api_input  = Awning::Backend::API::X11;
+	Awning::Backend::API api_output = Awning::Backend::API::DRM;
+	Awning::Backend::API api_input  = Awning::Backend::API::libinput;
 
 	for(int a = 0; a < argc; a++)
 	{
@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
 		if (arg == "-fbdev")
 		{
 			api_output = Awning::Backend::API::FBDEV;
-			api_input  = Awning::Backend::API::libinput;
+			api_input  = Awning::Backend::API::EVDEV;
 		}
 		if (arg == "-x11")
 		{
@@ -179,20 +179,34 @@ int main(int argc, char* argv[])
 	std::cout << "EGL Vendor    : " << eglQueryString(Awning::Server::data.egl.display, EGL_VENDOR) << "\n";
 	std::cout << "EGL Version   : " << eglQueryString(Awning::Server::data.egl.display, EGL_VERSION) << "\n";
 
-	eglBindWaylandDisplayWL(Awning::Server::data.egl.display, Awning::Server::data.display);
+	//eglBindWaylandDisplayWL(Awning::Server::data.egl.display, Awning::Server::data.display);
 	
 	Awning::Wayland::Compositor        ::Add(Awning::Server::data.display);
 	Awning::Wayland::Seat              ::Add(Awning::Server::data.display);
 	Awning::Wayland::Output            ::Add(Awning::Server::data.display);
 	Awning::Wayland::Shell             ::Add(Awning::Server::data.display);
 	Awning::XDG    ::WM_Base           ::Add(Awning::Server::data.display);
-	//Awning::ZXDG   ::Decoration_Manager::Add(Awning::Server::data.display);
+	Awning::ZXDG   ::Decoration_Manager::Add(Awning::Server::data.display);
 
 	wl_display_init_shm(Awning::Server::data.display);
 
 	if (pid != 0)
 	{
 		kill(pid, SIGUSR2);
+	}
+
+	pid = fork();
+	if (pid == 0) 
+	{
+    	const char* XWaylandArgs [] = { "falkon", "-platform", "wayland", NULL };
+
+		int fd = open("/dev/null", O_RDWR);
+		//dup2(fd, STDOUT_FILENO);
+		//dup2(fd, STDERR_FILENO);
+
+		int ret = execvp(XWaylandArgs[0], (char**)XWaylandArgs);
+		printf("falkon did not launch! %d %s\n", ret, strerror(errno));
+		exit(ret);
 	}
 	
 	while(1)
@@ -251,7 +265,7 @@ int main(int argc, char* argv[])
 
 					if (x < winSizeX + winOffX && y < winSizeY + winOffY && x >= 0 && y >= 0)
 					{
-						if (texture->buffer.u8 != nullptr)
+						if (texture->buffer.u8 != nullptr && windowOffset < texture->size)
 						{
 							red   = texture->buffer.u8[windowOffset + (texture->red  .offset / 8)];
 							green = texture->buffer.u8[windowOffset + (texture->green.offset / 8)];
@@ -345,7 +359,7 @@ int main(int argc, char* argv[])
 							alpha = 0xFF;
 						}
 
-						if (alpha > 0)
+						if (alpha > 0 && framebOffset > 0 && framebOffset < data.size)
 						{
 							uint8_t& buffer_red   = data.buffer.u8[framebOffset + (data.red  .offset / 8)];
 							uint8_t& buffer_green = data.buffer.u8[framebOffset + (data.green.offset / 8)];
@@ -467,3 +481,14 @@ void loadEGLProc(void* proc_ptr, const char* name)
 	}
 	*(void**)proc_ptr = proc;
 }
+
+/*void GetSockAddress()
+{
+	const char *dir = getenv("XDG_RUNTIME_DIR");
+	if (!dir) {
+		dir = "/tmp";
+	}
+	if (path_size <= snprintf(ipc_sockaddr->sun_path, path_size,
+			"%s/awning-ipc.%i.%i.sock", dir, getuid(), getpid())) {
+	}
+}*/
