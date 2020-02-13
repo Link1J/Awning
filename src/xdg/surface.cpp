@@ -52,6 +52,8 @@ namespace Awning::XDG::Surface
 				return;
 			if (!data.surfaces[resource].window)
 				return;
+			if (data.surfaces[resource].configured)
+				return;
 
 			data.surfaces[resource].window->ConfigPos(x, y, true);
 			data.surfaces[resource].window->ConfigSize(width, height);
@@ -64,6 +66,8 @@ namespace Awning::XDG::Surface
 				texture.width  / 2 - width  / 2,
 				texture.height / 2 - height / 2
 			);
+
+			data.surfaces[resource].configured = true;
 		}
 
 		void Ack_Configure(struct wl_client* client, struct wl_resource* resource, uint32_t serial)

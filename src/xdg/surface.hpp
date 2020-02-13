@@ -15,6 +15,7 @@ namespace Awning::XDG::Surface
 			wl_resource* toplevel;
 			wl_resource* popup;
 			WM::Window* window;
+			bool configured = false;
 		};
 
 		std::unordered_map<wl_resource*, Instance> surfaces;

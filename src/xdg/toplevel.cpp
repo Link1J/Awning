@@ -9,6 +9,8 @@
 
 #include <iostream>
 
+uint32_t NextSerialNum();
+
 namespace Awning::XDG::TopLevel
 {
 	const struct xdg_toplevel_interface interface = {
@@ -154,7 +156,7 @@ namespace Awning::XDG::TopLevel
 		if (!data.toplevels.contains(resource))
 			return;
 
-		auto surface    =         data.toplevels[resource].surface; 
+		auto surface    =         data.toplevels[resource].surface   ; 
 		auto surface_wl = Surface::data.surfaces[surface ].surface_wl;
 
 			     Surface::data.surfaces[surface   ].window = nullptr;
@@ -191,10 +193,11 @@ namespace Awning::XDG::TopLevel
 		wl_array* states = new wl_array();
 		wl_array_init(states);
 		wl_array_add(states, sizeof(xdg_toplevel_state) * 2);
-		((xdg_toplevel_state*)states->data)[0] = XDG_TOPLEVEL_STATE_ACTIVATED;
-		((xdg_toplevel_state*)states->data)[1] = XDG_TOPLEVEL_STATE_RESIZING;
+		((xdg_toplevel_state*)states->data)[0] = XDG_TOPLEVEL_STATE_RESIZING ;
+		((xdg_toplevel_state*)states->data)[1] = XDG_TOPLEVEL_STATE_ACTIVATED;
 		xdg_toplevel_send_configure(resource, width, height, states);
 		wl_array_release(states);
 		delete states;
+		xdg_surface_send_configure(TopLevel::data.toplevels[resource].surface, NextSerialNum());
 	}
 }
