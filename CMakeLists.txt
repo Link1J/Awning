@@ -36,6 +36,8 @@ set(SOURCES
     src/wm/client.cpp
 
     src/wm/x/wm.cpp
+
+    src/renderers/software.cpp
 )
 
 set(SOURCE_WAYLAND
