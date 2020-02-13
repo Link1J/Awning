@@ -292,8 +292,8 @@ void LaunchXwayland(int signal_number)
     const char* XWaylandArgs [] = { "Xwayland", ":1", NULL };
 
 	int fd = open("/dev/null", O_RDWR);
-	//dup2(fd, STDOUT_FILENO);
-	//dup2(fd, STDERR_FILENO);
+	dup2(fd, STDOUT_FILENO);
+	dup2(fd, STDERR_FILENO);
 
 	int ret = execvp(XWaylandArgs[0], (char**)XWaylandArgs);
 	printf("Xwayland did not launch! %d %s\n", ret, strerror(errno));
@@ -350,8 +350,8 @@ void launchApp(const char** argv)
 	if (pid == 0) 
 	{
 		int fd = open("/dev/null", O_RDWR);
-		//dup2(fd, STDOUT_FILENO);
-		//dup2(fd, STDERR_FILENO);
+		dup2(fd, STDOUT_FILENO);
+		dup2(fd, STDERR_FILENO);
 
 		int ret = execvp(argv[0], (char**)argv);
 		printf("%s did not launch! %d %s\n", argv[0], ret, strerror(errno));

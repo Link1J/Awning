@@ -141,8 +141,12 @@ void Awning::Backend::libinput::Hand()
         case LIBINPUT_EVENT_POINTER_AXIS:
         {
             auto event = libinput_event_get_pointer_event(eventBase);
-            libinput_event_pointer_get_axis_source(event);
 
+            int vert = libinput_event_pointer_get_axis_value(event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL);
+            WM::Manager::Handle::Input::Mouse::Scroll(LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL, vert / abs(vert) >= 0, abs(vert));
+
+            int horz = libinput_event_pointer_get_axis_value(event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL);
+            WM::Manager::Handle::Input::Mouse::Scroll(LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL, horz / abs(horz) >= 0, abs(horz));
             break;
         }
         case LIBINPUT_EVENT_TOUCH_DOWN:

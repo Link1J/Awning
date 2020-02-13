@@ -187,6 +187,12 @@ namespace Awning::Wayland::Surface
 		void Damage_Buffer(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
 		{
 			Log::Function::Called("Wayland::Surface::Interface");
+
+			auto& surface = data.surfaces[resource];
+			surface.damage.xp = x;
+			surface.damage.yp = y;
+			surface.damage.xs = width;
+			surface.damage.ys = height;
 		}
 	}
 
