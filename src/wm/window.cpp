@@ -49,7 +49,7 @@ namespace Awning::WM
 		window = nullptr;
 	}
 
-	Texture::Data* Window::Texture()
+	WM::Texture* Window::Texture()
 	{
 		return texture;
 	}
@@ -144,7 +144,7 @@ namespace Awning::WM
 		return offset.x;
 	}
 
-	void Window::Texture(Texture::Data* texture)
+	void Window::Texture(WM::Texture* texture)
 	{
 		this->texture = texture;
 	}

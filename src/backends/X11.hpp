@@ -8,5 +8,5 @@ namespace Awning::Backend::X11
 	void Hand();
 	void Draw();
 	
-	Awning::WM::Texture::Data Data();
+	Awning::WM::Texture Data();
 }

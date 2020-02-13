@@ -44,6 +44,11 @@
 #include <EGL/eglext.h>
 #include <EGL/eglmesaext.h>
 
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
+
+#include <gbm.h>
+
 #include <iostream>
 #include <unordered_map>
 
@@ -70,11 +75,15 @@ namespace Awning
 			struct {
 				EGLDisplay display;
 				EGLint major, minor;
+				EGLContext context;
+				EGLSurface surface;
 			} egl;
 		};
 		Data data;
 	}
 };
+
+typedef void (*PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) (GLenum target, EGLImage image);
 
 PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXT;
 PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC eglCreatePlatformWindowSurfaceEXT;
@@ -90,6 +99,8 @@ PFNEGLEXPORTDMABUFIMAGEQUERYMESAPROC eglExportDMABUFImageQueryMESA;
 PFNEGLEXPORTDMABUFIMAGEMESAPROC eglExportDMABUFImageMESA;
 PFNEGLDEBUGMESSAGECONTROLKHRPROC eglDebugMessageControlKHR;
 
+PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES;
+
 extern int tty_fd;
 
 uint32_t lastSerialNum = 1;
@@ -100,10 +111,14 @@ uint32_t NextSerialNum()
 	return lastSerialNum;
 }
 
+static void eglLog(EGLenum error, const char *command, EGLint msg_type, EGLLabelKHR thread, EGLLabelKHR obj, const char *msg) {
+	std::cout << fmt::format("[EGL] command: {}, error: 0x{:X}, message: \"{}\"", command, error, msg);
+}
+
 int main(int argc, char* argv[])
 {
 	bool noX = true;
-	Awning::Backend::API api_output = Awning::Backend::API::DRM;
+	Awning::Backend::API api_output = Awning::Backend::API::FBDEV;
 	Awning::Backend::API api_input  = Awning::Backend::API::libinput;
 
 	for(int a = 0; a < argc; a++)
@@ -116,14 +131,14 @@ int main(int argc, char* argv[])
 		if (arg == "-fbdev")
 		{
 			api_output = Awning::Backend::API::FBDEV;
-			api_input  = Awning::Backend::API::EVDEV;
+			api_input  = Awning::Backend::API::libinput;
 		}
 		if (arg == "-x11")
 		{
 			api_output = Awning::Backend::API::X11;
 			api_input  = Awning::Backend::API::X11;
 		}
-		if (arg == "-x11")
+		if (arg == "-drm")
 		{
 			api_output = Awning::Backend::API::DRM;
 			api_input  = Awning::Backend::API::libinput;
@@ -162,19 +177,57 @@ int main(int argc, char* argv[])
 
 	loadEGLProc(&eglGetPlatformDisplayEXT , "eglGetPlatformDisplayEXT" );
 
-	eglBindAPI(EGL_OPENGL_ES_API);	
-	Awning::Server::data.egl.display = eglGetPlatformDisplayEXT(EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, NULL);
+	int32_t fd = open("/dev/dri/renderD128", O_RDWR);
+	struct gbm_device* gbm = gbm_create_device(fd);
+
+	//Awning::Server::data.egl.display = eglGetPlatformDisplay(EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, NULL);
+	Awning::Server::data.egl.display = eglGetPlatformDisplayEXT(EGL_PLATFORM_GBM_MESA, gbm, NULL);
 
 	eglInitialize(Awning::Server::data.egl.display, &Awning::Server::data.egl.major, &Awning::Server::data.egl.minor);
 
-	loadEGLProc(&eglBindWaylandDisplayWL  , "eglBindWaylandDisplayWL"  );
-	loadEGLProc(&eglUnbindWaylandDisplayWL, "eglUnbindWaylandDisplayWL");
-	loadEGLProc(&eglQueryWaylandBufferWL  , "eglQueryWaylandBufferWL"  );
+	loadEGLProc(&eglBindWaylandDisplayWL     , "eglBindWaylandDisplayWL"     );
+	loadEGLProc(&eglUnbindWaylandDisplayWL   , "eglUnbindWaylandDisplayWL"   );
+	loadEGLProc(&eglQueryWaylandBufferWL     , "eglQueryWaylandBufferWL"     );
+	loadEGLProc(&eglCreateImageKHR           , "eglCreateImageKHR"           );
+	loadEGLProc(&eglDestroyImageKHR          , "eglDestroyImageKHR"          );
+	loadEGLProc(&glEGLImageTargetTexture2DOES, "glEGLImageTargetTexture2DOES");
+	loadEGLProc(&eglDebugMessageControlKHR   , "eglDebugMessageControlKHR"   );
 
-	std::cout << "EGL Vendor    : " << eglQueryString(Awning::Server::data.egl.display, EGL_VENDOR) << "\n";
+	static const EGLAttrib debug_attribs[] = {
+		EGL_DEBUG_MSG_CRITICAL_KHR, EGL_TRUE,
+		EGL_DEBUG_MSG_ERROR_KHR   , EGL_TRUE,
+		EGL_DEBUG_MSG_WARN_KHR    , EGL_TRUE,
+		EGL_DEBUG_MSG_INFO_KHR    , EGL_TRUE,
+		EGL_NONE,
+	};
+
+	eglDebugMessageControlKHR(eglLog, debug_attribs);
+
+	eglBindWaylandDisplayWL(Awning::Server::data.egl.display, Awning::Server::data.display);
+
+	std::cout << "EGL Vendor    : " << eglQueryString(Awning::Server::data.egl.display, EGL_VENDOR ) << "\n";
 	std::cout << "EGL Version   : " << eglQueryString(Awning::Server::data.egl.display, EGL_VERSION) << "\n";
 
-	//eglBindWaylandDisplayWL(Awning::Server::data.egl.display, Awning::Server::data.display);
+	EGLint attribs[] = { 
+		EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+		EGL_NONE 
+	};
+	EGLConfig config;
+	EGLint num_configs_returned;
+	eglChooseConfig(Awning::Server::data.egl.display, attribs, &config, 1, &num_configs_returned);
+
+	eglBindAPI(EGL_OPENGL_ES_API);
+
+	EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE, EGL_NONE };
+
+	Awning::Server::data.egl.context = eglCreateContext(Awning::Server::data.egl.display, config, EGL_NO_CONTEXT, contextAttribs);
+	
+	eglMakeCurrent(Awning::Server::data.egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE, Awning::Server::data.egl.context);
+
+	std::cout << "GL Vendor     : " << glGetString(GL_VENDOR                  ) << "\n";
+	std::cout << "GL Renderer   : " << glGetString(GL_RENDERER                ) << "\n";
+	std::cout << "GL Version    : " << glGetString(GL_VERSION                 ) << "\n";
+	//std::cout << "GLSL Version  : " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
 	
 	Awning::Wayland::Compositor        ::Add(Awning::Server::data.display);
 	Awning::Wayland::Seat              ::Add(Awning::Server::data.display);
@@ -185,6 +238,8 @@ int main(int argc, char* argv[])
 
 	wl_display_init_shm(Awning::Server::data.display);
 
+	Awning::Renderers::Software::Init();
+
 	if (pid != 0)
 	{
 		kill(pid, SIGUSR2);
@@ -194,7 +249,7 @@ int main(int argc, char* argv[])
     const char* launchArgs2[] = { "weston-terminal", NULL };
 
 	launchApp(launchArgs1);
-	launchApp(launchArgs2);
+	//launchApp(launchArgs2);
 	
 	while(1)
 	{

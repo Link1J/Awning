@@ -12,10 +12,10 @@ namespace Awning::Backend
 
 	namespace Functions
 	{
-		typedef void                     (*Poll)();
-		typedef void                     (*Draw)();
-		typedef void                     (*Hand)();
-		typedef Awning::WM::Texture::Data(*Data)();
+		typedef void               (*Poll)();
+		typedef void               (*Draw)();
+		typedef void               (*Hand)();
+		typedef Awning::WM::Texture(*Data)();
 	};
 
 	struct Output

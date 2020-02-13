@@ -31,7 +31,7 @@ static GLXContext	             context;
 static GLuint		             texture;
              
 static bool 		             resized = false;
-static Awning::WM::Texture::Data framebuffer;
+static Awning::WM::Texture framebuffer;
 
 static int doubleBufferAttributes[] = {
     GLX_RGBA,
@@ -99,11 +99,11 @@ void Awning::Backend::X11::Start()
 	context = glXCreateContext(display, vi, NULL, true);
 	glXMakeCurrent(display, window, context);
 
-	fprintf(stdout, "GL Version    : %s\n", glGetString(GL_VERSION ));
-	fprintf(stdout, "GL Vendor     : %s\n", glGetString(GL_VENDOR  ));
-	fprintf(stdout, "GL Renderer   : %s\n", glGetString(GL_RENDERER));
+	//fprintf(stdout, "GL Version    : %s\n", glGetString(GL_VERSION ));
+	//fprintf(stdout, "GL Vendor     : %s\n", glGetString(GL_VENDOR  ));
+	//fprintf(stdout, "GL Renderer   : %s\n", glGetString(GL_RENDERER));
 
-	framebuffer = Awning::WM::Texture::Data {
+	framebuffer = Awning::WM::Texture {
         .size         = width * height * 4,
         .bitsPerPixel = 32,
         .bytesPerLine = width * 4,
@@ -277,7 +277,7 @@ void Awning::Backend::X11::Poll()
 {
 }
 
-Awning::WM::Texture::Data Awning::Backend::X11::Data()
+Awning::WM::Texture Awning::Backend::X11::Data()
 {
 	return framebuffer;
 }

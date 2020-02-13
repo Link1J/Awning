@@ -7,5 +7,5 @@ namespace Awning::Backend::FBDEV
 	void Poll();
 	void Draw();
 	
-	Awning::WM::Texture::Data Data();
+	Awning::WM::Texture Data();
 }

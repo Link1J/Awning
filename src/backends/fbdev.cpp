@@ -21,7 +21,7 @@
 #include "fbdev.hpp"
 #include "manager.hpp"
 
-static Awning::WM::Texture::Data framebuffer;
+static Awning::WM::Texture framebuffer;
 static uint8_t* framebufferMaped;
 static int fd;
 int tty_fd;
@@ -40,7 +40,7 @@ void Awning::Backend::FBDEV::Start()
 	ioctl(fd, FBIOGET_FSCREENINFO, &finf);
 	ioctl(fd, FBIOGET_VSCREENINFO, &vinf);
 
-	framebuffer = Awning::WM::Texture::Data {
+	framebuffer = Awning::WM::Texture {
         .size         = finf.line_length * vinf.yres,
         .bitsPerPixel = vinf.bits_per_pixel,
         .bytesPerLine = finf.line_length,
@@ -99,7 +99,7 @@ void Awning::Backend::FBDEV::Draw()
 	memcpy(framebufferMaped, framebuffer.buffer.u8, framebuffer.size);
 }
 
-Awning::WM::Texture::Data Awning::Backend::FBDEV::Data()
+Awning::WM::Texture Awning::Backend::FBDEV::Data()
 {
 	return framebuffer;
 }

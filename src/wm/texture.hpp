@@ -1,9 +1,9 @@
 #pragma once
 #include <stdint.h>
 
-namespace Awning::WM::Texture
+namespace Awning::WM
 {
-	struct Data
+	struct Texture
 	{
 		uintptr_t size;
 		uintptr_t bitsPerPixel;
@@ -25,4 +25,9 @@ namespace Awning::WM::Texture
 			uint32_t* u32;
 		} buffer;
 	};
+		
+	struct Damage
+	{ 
+		int xp, yp, xs, ys; 
+	} ;
 }

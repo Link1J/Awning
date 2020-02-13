@@ -38,7 +38,7 @@ namespace Awning::Wayland::Pointer
 				data.window->Texture(texture);
 				data.window->ConfigSize(texture->width, texture->height);
 
-				data.pointers[resource].inUse = false;	
+				data.pointers[resource].inUse = true;	
 				data.inUse = resource;
 			}
 		},

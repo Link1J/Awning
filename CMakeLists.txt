@@ -110,4 +110,6 @@ target_link_libraries(Awning PRIVATE
     UDev::UDev
     fmt::fmt
     EGL::EGL
+    gbm
+    GLESv2
 )

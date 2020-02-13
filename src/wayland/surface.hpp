@@ -11,14 +11,14 @@ namespace Awning::Wayland::Surface
 	{
 		struct Instance 
 		{
-			struct { int xp, yp, xs, ys; } damage;
+			WM::Damage damage;
 			char type = -1;
 			wl_resource* buffer;
 			wl_shm_buffer* shm_buffer;
 			wl_resource* shell;
 			wl_resource* toplevel;
 			wl_client* client;
-			WM::Texture::Data* texture;
+			WM::Texture* texture;
 			WM::Window* window;
 		};
 

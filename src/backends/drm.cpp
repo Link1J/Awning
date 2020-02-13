@@ -24,7 +24,7 @@
 struct Data
 {
 	uint32_t* memoryMappedBuffer;
-	Awning::WM::Texture::Data texture;
+	Awning::WM::Texture texture;
 };
 
 std::vector<Data> framebuffers;
@@ -35,7 +35,7 @@ void CreateDumbBuffer(int dri_fd, drm_mode_card_res* res, drm_mode_get_connector
 	struct drm_mode_map_dumb map_dumb={0};
 	struct drm_mode_fb_cmd cmd_dumb={0};
 
-	Awning::WM::Texture::Data framebuffer;
+	Awning::WM::Texture framebuffer;
 
 	drm_mode_modeinfo* mode_ptr = (drm_mode_modeinfo*)conn->modes_ptr;
 
@@ -192,7 +192,7 @@ void Awning::Backend::DRM::Draw()
 	memcpy(framebuffers[0].memoryMappedBuffer, framebuffers[0].texture.buffer.u8, framebuffers[0].texture.size);
 }
 
-Awning::WM::Texture::Data Awning::Backend::DRM::Data()
+Awning::WM::Texture Awning::Backend::DRM::Data()
 {
 	return framebuffers[0].texture;
 }

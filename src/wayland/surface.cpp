@@ -1,12 +1,15 @@
 #include "surface.hpp"
 #include "log.hpp"
 #include "protocols/xdg-shell-protocol.h"
+#include "renderers/software.hpp"
 
 #include <cstring>
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <EGL/eglmesaext.h>
+
+#include <GL/gl.h>
 
 #include <unordered_set>
 #include <chrono>
@@ -29,25 +32,15 @@ namespace Awning
 			struct {
 				EGLDisplay display;
 				EGLint major, minor;
+				EGLContext context;
+				EGLSurface surface;
 			} egl;
 		};
 		extern Data data;
 	}
 };
 
-extern PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXT;
-extern PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC eglCreatePlatformWindowSurfaceEXT;
-extern PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR;
-extern PFNEGLDESTROYIMAGEKHRPROC eglDestroyImageKHR;
 extern PFNEGLQUERYWAYLANDBUFFERWL eglQueryWaylandBufferWL;
-extern PFNEGLBINDWAYLANDDISPLAYWL eglBindWaylandDisplayWL;
-extern PFNEGLUNBINDWAYLANDDISPLAYWL eglUnbindWaylandDisplayWL;
-extern PFNEGLSWAPBUFFERSWITHDAMAGEEXTPROC eglSwapBuffersWithDamage; // KHR or EXT
-extern PFNEGLQUERYDMABUFFORMATSEXTPROC eglQueryDmaBufFormatsEXT;
-extern PFNEGLQUERYDMABUFMODIFIERSEXTPROC eglQueryDmaBufModifiersEXT;
-extern PFNEGLEXPORTDMABUFIMAGEQUERYMESAPROC eglExportDMABUFImageQueryMESA;
-extern PFNEGLEXPORTDMABUFIMAGEMESAPROC eglExportDMABUFImageMESA;
-extern PFNEGLDEBUGMESSAGECONTROLKHRPROC eglDebugMessageControlKHR;
 
 namespace Awning::Wayland::Surface
 {
@@ -161,42 +154,19 @@ namespace Awning::Wayland::Surface
 				}
 			}
 
-			//eglQueryWaylandBufferWL()
+			EGLint texture_format;
+			if (eglQueryWaylandBufferWL(Server::data.egl.display, surface.buffer, EGL_TEXTURE_FORMAT, &texture_format))
+				Renderers::Software::FillTextureFrom::EGLImage(surface.buffer, surface.texture, surface.damage);
+				
+			if (wl_shm_buffer_get(surface.buffer))
+				Renderers::Software::FillTextureFrom::SHMBuffer(surface.buffer, surface.texture, surface.damage);
 
-			auto shm_buffer = wl_shm_buffer_get(surface.buffer);
-
-			if (shm_buffer)
+			if (surface.window)
 			{
-				auto size = wl_shm_buffer_get_height(shm_buffer) * wl_shm_buffer_get_stride(shm_buffer);
-				if (surface.texture->size != size)
-				{
-					if (surface.texture->buffer.u8)
-						delete surface.texture->buffer.u8;
-					surface.texture->buffer.u8 = (uint8_t*)malloc(size);
-				}
-				memcpy(surface.texture->buffer.u8, wl_shm_buffer_get_data(shm_buffer), size);
+				if (surface.window->XSize() == 0 && surface.window->YSize() == 0)
+					surface.window->ConfigSize(surface.texture->width, surface.texture->height);
 
-				surface.texture->width        =           wl_shm_buffer_get_width (shm_buffer);
-				surface.texture->height       =           wl_shm_buffer_get_height(shm_buffer);
-				surface.texture->bitsPerPixel =           32;
-				surface.texture->bytesPerLine =           wl_shm_buffer_get_stride(shm_buffer);
-				surface.texture->size         =           surface.texture->bytesPerLine * surface.texture->height;
-				surface.texture->red          = { .size = 8, .offset = 16 };
-				surface.texture->green        = { .size = 8, .offset =  8 };
-				surface.texture->blue         = { .size = 8, .offset =  0 };
-				surface.texture->alpha        = { .size = 8, .offset = 24 };
-
-				//surface.texture->buffer.u8 = (uint8_t*)wl_shm_buffer_get_data(shm_buffer);
-
-				if (surface.window)
-				{
-					if (surface.window->XSize() == 0 && surface.window->YSize() == 0)
-					{
-						surface.window->ConfigSize(surface.texture->width, surface.texture->height);
-					}
-
-					surface.window->Mapped(true);
-				}
+				surface.window->Mapped(true);
 			}
 
 			//wl_buffer_send_release(surface.buffer);
@@ -231,7 +201,7 @@ namespace Awning::Wayland::Surface
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 		
 		data.surfaces[resource].client = wl_client;
-		data.surfaces[resource].texture = new WM::Texture::Data();
+		data.surfaces[resource].texture = new WM::Texture();
 	}
 
 	void Destroy(struct wl_resource* resource)

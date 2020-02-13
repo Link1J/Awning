@@ -35,7 +35,7 @@ namespace Awning::WM::X
 		XGetWindowAttributes(display, e.xconfigure.window, &attr);
 
 		if (!windows[e.xconfigure.window]->Texture())
-			windows[e.xconfigure.window]->Texture(new WM::Texture::Data());
+			windows[e.xconfigure.window]->Texture(new WM::Texture());
 
 		auto window = windows[e.xconfigure.window];
 		auto texture = window->Texture();
