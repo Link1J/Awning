@@ -69,6 +69,7 @@ namespace Awning::Wayland::Pointer
 		if (!data.window)
 		{
 			data.window = WM::Window::CreateUnmanged(0);
+			data.window->Mapped(true);
 			data.inUse = nullptr;
 		}
 	}

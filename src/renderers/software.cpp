@@ -105,7 +105,7 @@ namespace Awning::Renderers::Software
 {
 	WM::Texture data;
 
-	void RenderWindow(WM::Window* window)
+	void RenderWindow(WM::Window* window, int count = 2, int frame = 1)
 	{
 		auto texture = window->Texture();
 
@@ -121,8 +121,8 @@ namespace Awning::Renderers::Software
 		auto winOffX  = window->XOffset();
 		auto winOffY  = window->YOffset();
 
-		for (int x = -Frame::Size::left; x < winSizeX + winOffX + winOffX + Frame::Size::right; x++)
-			for (int y = -Frame::Size::top; y < winSizeY + winOffY + winOffY + Frame::Size::bottom; y++)
+		for (int x = (-Frame::Size::left * frame); x < winSizeX + (winOffX * count) + (Frame::Size::right * frame); x++)
+			for (int y = (-Frame::Size::top * frame); y < winSizeY + (winOffY * count) + (Frame::Size::bottom * frame); y++)
 			{
 				if ((winPosX + x - winOffX) <  0          )
 					continue;
@@ -247,9 +247,9 @@ namespace Awning::Renderers::Software
 
 			if (texture)
 			{
-				RenderWindow(Awning::Wayland::Pointer::data.window);
+				RenderWindow(Awning::Wayland::Pointer::data.window, 0, 0);
 			}
-			//else
+			else
 			{
 				auto winPosX  = Awning::Wayland::Pointer::data.window->XPos();
 				auto winPosY  = Awning::Wayland::Pointer::data.window->YPos();
@@ -346,10 +346,8 @@ namespace Awning::Renderers::Software
 			eglDestroyImageKHR(Server::data.egl.display, image);
 		}
 
-		void SHMBuffer(wl_resource* buffer, WM::Texture* texture, WM::Damage damage)
+		void SHMBuffer(wl_shm_buffer* shm_buffer, WM::Texture* texture, WM::Damage damage)
 		{
-			auto shm_buffer = wl_shm_buffer_get(buffer);
-
 			SizeTextureBuffer(texture, wl_shm_buffer_get_stride(shm_buffer), wl_shm_buffer_get_height(shm_buffer));
 
 			texture->width        = wl_shm_buffer_get_width (shm_buffer);
@@ -364,19 +362,20 @@ namespace Awning::Renderers::Software
 
 			auto shm_data = (uint8_t*)wl_shm_buffer_get_data(shm_buffer);
 
-			if (damage.xs > texture->bytesPerLine)
-				damage.xs = texture->bytesPerLine;
-			if (damage.ys > texture->height      )
-				damage.ys = texture->height      ;
+			if (damage.xs > texture->width )
+				damage.xs = texture->width ;
+			if (damage.ys > texture->height)
+				damage.ys = texture->height;
 				
 			for (int x = damage.xp; x < damage.xp + damage.xs; x++)
 				for (int y = damage.yp; y < damage.yp + damage.ys; y++)
-				{
-					uint32_t offs = x + y * texture->bytesPerLine;
+					for (int o = 0; o < texture->bitsPerPixel / 8; o++)
+					{
+						uint32_t offs = o + (x + y * texture->width) * texture->bitsPerPixel / 8;
 
-					if (offs < texture->size)
-						texture->buffer.u8[offs] = shm_data[offs];
-				}
+						if (offs < texture->size)
+							texture->buffer.u8[offs] = shm_data[offs];
+					}
 		}
 	}
 }

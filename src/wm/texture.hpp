@@ -28,6 +28,6 @@ namespace Awning::WM
 		
 	struct Damage
 	{ 
-		int xp, yp, xs, ys; 
+		uint32_t xp, yp, xs, ys; 
 	} ;
 }

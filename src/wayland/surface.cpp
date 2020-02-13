@@ -157,9 +157,10 @@ namespace Awning::Wayland::Surface
 			EGLint texture_format;
 			if (eglQueryWaylandBufferWL(Server::data.egl.display, surface.buffer, EGL_TEXTURE_FORMAT, &texture_format))
 				Renderers::Software::FillTextureFrom::EGLImage(surface.buffer, surface.texture, surface.damage);
-				
-			if (wl_shm_buffer_get(surface.buffer))
-				Renderers::Software::FillTextureFrom::SHMBuffer(surface.buffer, surface.texture, surface.damage);
+
+			auto shm_buffer = wl_shm_buffer_get(surface.buffer);
+			if (shm_buffer)
+				Renderers::Software::FillTextureFrom::SHMBuffer(shm_buffer, surface.texture, surface.damage);
 
 			if (surface.window)
 			{
@@ -202,6 +203,7 @@ namespace Awning::Wayland::Surface
 		
 		data.surfaces[resource].client = wl_client;
 		data.surfaces[resource].texture = new WM::Texture();
+		memset(data.surfaces[resource].texture, 0, sizeof(WM::Texture));
 	}
 
 	void Destroy(struct wl_resource* resource)

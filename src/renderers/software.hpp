@@ -11,7 +11,7 @@ namespace Awning::Renderers::Software
 
 	namespace FillTextureFrom
 	{
-		void EGLImage (wl_resource* buffer, WM::Texture* texture, WM::Damage damage);
-		void SHMBuffer(wl_resource* buffer, WM::Texture* texture, WM::Damage damage);
+		void EGLImage (wl_resource  * buffer, WM::Texture* texture, WM::Damage damage);
+		void SHMBuffer(wl_shm_buffer* buffer, WM::Texture* texture, WM::Damage damage);
 	}
 }
