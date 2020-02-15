@@ -154,7 +154,7 @@ namespace Awning::Renderers::GLES2
 		auto winOffX  = window->XOffset();
 		auto winOffY  = window->YOffset();
 
-		glViewport(winPosX - winOffX, winPosY - winOffX, winSizeX, winSizeY);
+		glViewport(winPosX - winOffX, winPosY - winOffY, winSizeX, winSizeY);
 
 		if (texture->buffer.offscreen)
 		{
