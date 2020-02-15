@@ -64,7 +64,7 @@ void Awning::Backend::FBDEV::Start()
         .height       = vinf.yres
     };
 
-	framebuffer.buffer.u8 = new uint8_t[framebuffer.size];
+	framebuffer.buffer.pointer = new uint8_t[framebuffer.size];
 	framebufferMaped = (uint8_t*)mmap(0, framebuffer.size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, (off_t)0);
 
 	Output output {
@@ -91,12 +91,12 @@ void Awning::Backend::FBDEV::Start()
 
 void Awning::Backend::FBDEV::Poll()
 {
-	memset(framebuffer.buffer.u8, 0xEE, framebuffer.size);
+	memset(framebuffer.buffer.pointer, 0xEE, framebuffer.size);
 }
 
 void Awning::Backend::FBDEV::Draw()
 {
-	memcpy(framebufferMaped, framebuffer.buffer.u8, framebuffer.size);
+	memcpy(framebufferMaped, framebuffer.buffer.pointer, framebuffer.size);
 }
 
 Awning::WM::Texture Awning::Backend::FBDEV::Data()

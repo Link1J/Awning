@@ -1,7 +1,7 @@
 #include "surface.hpp"
 #include "log.hpp"
 #include "protocols/xdg-shell-protocol.h"
-#include "renderers/software.hpp"
+#include "renderers/manager.hpp"
 
 #include <cstring>
 
@@ -156,11 +156,11 @@ namespace Awning::Wayland::Surface
 
 			EGLint texture_format;
 			if (eglQueryWaylandBufferWL(Server::data.egl.display, surface.buffer, EGL_TEXTURE_FORMAT, &texture_format))
-				Renderers::Software::FillTextureFrom::EGLImage(surface.buffer, surface.texture, surface.damage);
+				Renderers::FillTextureFrom::EGLImage(surface.buffer, surface.texture, surface.damage);
 
 			auto shm_buffer = wl_shm_buffer_get(surface.buffer);
 			if (shm_buffer)
-				Renderers::Software::FillTextureFrom::SHMBuffer(shm_buffer, surface.texture, surface.damage);
+				Renderers::FillTextureFrom::SHMBuffer(shm_buffer, surface.texture, surface.damage);
 
 			if (surface.window)
 			{

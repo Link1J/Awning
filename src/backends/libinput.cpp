@@ -71,7 +71,6 @@ void Awning::Backend::libinput::Hand()
  
     while ((eventBase = libinput_get_event(li)) != NULL) 
     {
- 
         // handle the event here
 
 		//auto event = libinput_event_get_keyboard_event(eventBase);

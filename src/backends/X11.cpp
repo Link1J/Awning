@@ -1,4 +1,5 @@
 #include <GL/gl.h>
+#include <GL/glext.h>
 #include <GL/glx.h>
 #include <X11/X.h>
 #include <X11/Xlib.h>
@@ -42,7 +43,20 @@ static int doubleBufferAttributes[] = {
     None
 };
 
-using namespace std::chrono_literals;
+int contextAttribs[] =
+{
+	GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
+	GLX_CONTEXT_MINOR_VERSION_ARB, 3,
+	GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
+#ifdef _DEBUG
+	GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB | GLX_CONTEXT_DEBUG_BIT_ARB,
+#else
+	GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+#endif
+	0
+};
+
+//using namespace std::chrono_literals;
 
 namespace Awning::Backend::X11
 {
@@ -57,17 +71,17 @@ namespace Awning::Backend::X11
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, framebuffer.width, framebuffer.height, 
 			0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
-		framebuffer.buffer.u8 = new uint8_t[framebuffer.size];
+		framebuffer.buffer.pointer = new uint8_t[framebuffer.size];
 	}
 
 	void ReleaseBackingTexture()
 	{
 		glDeleteTextures(1, &texture);
 
-		if (framebuffer.buffer.u8)
+		if (framebuffer.buffer.pointer)
 		{
-			delete framebuffer.buffer.u8;
-			framebuffer.buffer.u8 = nullptr;
+			delete framebuffer.buffer.pointer;
+			framebuffer.buffer.pointer = nullptr;
 		}
 	}
 }
@@ -88,7 +102,22 @@ void Awning::Backend::X11::Start()
 	screen = DefaultScreen(display);
 	auto root = RootWindow(display, screen);
 
-	auto vi = glXChooseVisual(display, screen, doubleBufferAttributes);
+	int numReturned;
+	auto fbConfigs = glXChooseFBConfig(display, screen, doubleBufferAttributes, &numReturned);
+	XVisualInfo* vi;
+	GLXFBConfig fbConfig;
+
+  	for(int i = 0; i < numReturned; i++) {
+		vi = glXGetVisualFromFBConfig(display, fbConfigs[i]);
+		if(!vi) continue;
+
+		auto pict_format = XRenderFindVisualFormat(display, vi->visual);
+		if(!pict_format) continue;
+
+		fbConfig = fbConfigs[i];
+		break;
+  	}
+
 	attribs.colormap = XCreateColormap(display, root, vi->visual, AllocNone);
 	attribs.event_mask = StructureNotifyMask|ButtonPressMask|KeyPressMask|PointerMotionMask|ButtonReleaseMask|KeyReleaseMask;
 	
@@ -96,7 +125,9 @@ void Awning::Backend::X11::Start()
 	XStoreName(display, window, "Awning (X11 Backend)");
 	XMapWindow(display, window);
 
-	context = glXCreateContext(display, vi, NULL, true);
+	PFNGLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = (PFNGLXCREATECONTEXTATTRIBSARBPROC)glXGetProcAddress((uint8_t*)"glXCreateContextAttribsARB");
+
+	context = glXCreateContextAttribsARB(display, fbConfig, 0, true, contextAttribs);
 	glXMakeCurrent(display, window, context);
 
 	//fprintf(stdout, "GL Version    : %s\n", glGetString(GL_VERSION ));
@@ -129,6 +160,13 @@ void Awning::Backend::X11::Start()
 
 	CreateBackingTexture();
 	glClearColor(1, 1, 1, 1);
+
+	PFNGLGENVERTEXARRAYSPROC glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC)glXGetProcAddressARB((uint8_t*)"glGenVertexArrays");
+	PFNGLBINDVERTEXARRAYPROC glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)glXGetProcAddressARB((uint8_t*)"glBindVertexArray");
+
+	GLuint VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
 
 	Output output {
 		.manufacturer = "X.Org Foundation",
@@ -257,13 +295,12 @@ void Awning::Backend::X11::Hand()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glViewport(0, 0, framebuffer.width, framebuffer.height);
 
-	memset(framebuffer.buffer.u8, 0xEE, framebuffer.size);
+	memset(framebuffer.buffer.pointer, 0xEE, framebuffer.size);
 }
 
 void Awning::Backend::X11::Draw()
 {
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer.width, framebuffer.height, 
-		GL_RGBA, GL_UNSIGNED_BYTE, framebuffer.buffer.u8);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer.width, framebuffer.height, GL_RGBA, GL_UNSIGNED_BYTE, framebuffer.buffer.pointer);
 	glBegin(GL_QUADS);
 		glTexCoord2f(0.0, 1.0); glVertex3f(-1.0f, -1.0f, 0.0f);
 		glTexCoord2f(0.0, 0.0); glVertex3f(-1.0f,  1.0f, 0.0f);

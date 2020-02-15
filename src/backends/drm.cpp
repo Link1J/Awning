@@ -63,7 +63,7 @@ void CreateDumbBuffer(int dri_fd, drm_mode_card_res* res, drm_mode_get_connector
 
 	data.memoryMappedBuffer   = (uint32_t*)mmap(0, create_dumb.size, PROT_READ | PROT_WRITE, MAP_SHARED, dri_fd, map_dumb.offset);
 
-	data.texture.buffer.u8    = (uint8_t*)malloc(create_dumb.size);
+	data.texture.buffer.pointer    = (uint8_t*)malloc(create_dumb.size);
 	data.texture.width        = create_dumb.width ;
 	data.texture.height       = create_dumb.height;
 	data.texture.bytesPerLine = create_dumb.pitch ;
@@ -169,6 +169,8 @@ void Awning::Backend::DRM::Start()
 				free((void*)conn.props_ptr      );
 				free((void*)conn.prop_values_ptr);
 				free((void*)conn.encoders_ptr   );
+
+				break;
 			}
 
 			free((void*)res.fb_id_ptr       );
@@ -177,19 +179,20 @@ void Awning::Backend::DRM::Start()
 			free((void*)res.encoder_id_ptr  );
 
 			ioctl(dri_fd, DRM_IOCTL_DROP_MASTER, 0);
-			std::cout << "\n";
+						
+			break;
 		}
 	}
 }
 
 void Awning::Backend::DRM::Poll()
 {
-	memset(framebuffers[0].texture.buffer.u8, 0xEE, framebuffers[0].texture.size);
+	memset(framebuffers[0].texture.buffer.pointer, 0xEE, framebuffers[0].texture.size);
 }
 
 void Awning::Backend::DRM::Draw()
 {
-	memcpy(framebuffers[0].memoryMappedBuffer, framebuffers[0].texture.buffer.u8, framebuffers[0].texture.size);
+	memcpy(framebuffers[0].memoryMappedBuffer, framebuffers[0].texture.buffer.pointer, framebuffers[0].texture.size);
 }
 
 Awning::WM::Texture Awning::Backend::DRM::Data()

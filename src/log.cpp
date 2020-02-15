@@ -9,12 +9,12 @@ namespace Log
 	{
 		void Called(std::string from, source_location function)
 		{
-			std::cout << "[CALLED ] " << from << "::" << function.function_name() << "\n";
+			//std::cout << "[CALLED ] " << from << "::" << function.function_name() << "\n";
 		}
 
 		void Locate(std::string from, std::string location, source_location function)
 		{
-			std::cout << "[LOCATE ] " << from << "::" << function.function_name() << "." << location << "\n";
+			//std::cout << "[LOCATE ] " << from << "::" << function.function_name() << "." << location << "\n";
 		}
 	}
 	namespace Report 

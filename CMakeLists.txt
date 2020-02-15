@@ -38,6 +38,8 @@ set(SOURCES
     src/wm/x/wm.cpp
 
     src/renderers/software.cpp
+    src/renderers/gles2.cpp
+    src/renderers/manager.cpp
 )
 
 set(SOURCE_WAYLAND

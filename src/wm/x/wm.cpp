@@ -53,7 +53,7 @@ namespace Awning::WM::X
 		Picture picture = XRenderCreatePicture(display, e.xconfigure.window, format, CPSubwindowMode, &pa);
 		XImage* image = XGetImage(display, e.xconfigure.window, 0, 0, width, height, AllPlanes, ZPixmap);
 
-		texture->buffer.u8 = (uint8_t*)image->data;
+		texture->buffer.pointer = (uint8_t*)image->data;
 		texture->width  = image->width ;
 		texture->height = image->height;
 		texture->bitsPerPixel = image->bits_per_pixel;

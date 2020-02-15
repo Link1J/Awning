@@ -18,11 +18,14 @@ namespace Awning::WM
 		uintptr_t width;
 		uintptr_t height;
 
-		union
+		struct
 		{
-			uint8_t * u8 ;
-			uint16_t* u16;
-			uint32_t* u32;
+			union
+			{
+				uint8_t* pointer = nullptr;
+				uint32_t number;
+			};
+			bool offscreen;
 		} buffer;
 	};
 		

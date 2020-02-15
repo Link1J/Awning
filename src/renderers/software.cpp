@@ -1,4 +1,5 @@
 #include "software.hpp"
+#include "log.hpp"
 
 #include "backends/manager.hpp"
 
@@ -68,7 +69,9 @@ extern PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES;
 
 #define GL_TEXTURE_EXTERNAL_OES 0x8D65
 
-const char* vertexShaderCode = R"(
+int LoadOpenGLES2();
+
+static const char* vertexShaderCode = R"(
 #version 300 es
 precision mediump float;
 
@@ -84,7 +87,7 @@ void main()
 }
 )";
 
-const char* pixelShaderCode = R"(
+static const char* pixelShaderCode = R"(
 #version 300 es
 #extension GL_OES_EGL_image_external : require
 
@@ -143,12 +146,12 @@ namespace Awning::Renderers::Software
 
 				if (x < winSizeX + winOffX && y < winSizeY + winOffY && x >= 0 && y >= 0)
 				{
-					if (texture->buffer.u8 != nullptr && windowOffset < texture->size)
+					if (texture->buffer.pointer != nullptr && windowOffset < texture->size)
 					{
-						red   = texture->buffer.u8[windowOffset + (texture->red  .offset / 8)];
-						green = texture->buffer.u8[windowOffset + (texture->green.offset / 8)];
-						blue  = texture->buffer.u8[windowOffset + (texture->blue .offset / 8)];
-						alpha = texture->buffer.u8[windowOffset + (texture->alpha.offset / 8)];
+						red   = texture->buffer.pointer[windowOffset + (texture->red  .offset / 8)];
+						green = texture->buffer.pointer[windowOffset + (texture->green.offset / 8)];
+						blue  = texture->buffer.pointer[windowOffset + (texture->blue .offset / 8)];
+						alpha = texture->buffer.pointer[windowOffset + (texture->alpha.offset / 8)];
 					}
 					else
 					{
@@ -178,9 +181,9 @@ namespace Awning::Renderers::Software
 
 				if (alpha > 0)
 				{
-					uint8_t& buffer_red   = data.buffer.u8[framebOffset + (data.red  .offset / 8)];
-					uint8_t& buffer_green = data.buffer.u8[framebOffset + (data.green.offset / 8)];
-					uint8_t& buffer_blue  = data.buffer.u8[framebOffset + (data.blue .offset / 8)];
+					uint8_t& buffer_red   = data.buffer.pointer[framebOffset + (data.red  .offset / 8)];
+					uint8_t& buffer_green = data.buffer.pointer[framebOffset + (data.green.offset / 8)];
+					uint8_t& buffer_blue  = data.buffer.pointer[framebOffset + (data.blue .offset / 8)];
 
 					buffer_red   = red   * (alpha / 256.) + buffer_red   * (1 - alpha / 256.);
 					buffer_green = green * (alpha / 256.) + buffer_green * (1 - alpha / 256.);
@@ -191,6 +194,11 @@ namespace Awning::Renderers::Software
 
 	void Init()
 	{
+		if (LoadOpenGLES2() != 0)
+			return;
+		
+		eglBindWaylandDisplayWL(Awning::Server::data.egl.display, Awning::Server::data.display);
+		
 		auto vertexShader = glCreateShader(GL_VERTEX_SHADER);
 		auto pixelShader = glCreateShader(GL_FRAGMENT_SHADER);
 
@@ -234,7 +242,7 @@ namespace Awning::Renderers::Software
 	void Draw()
 	{
 		data = Backend::Data();
-		memset(data.buffer.u8, 0xEE, data.size);
+		memset(data.buffer.pointer, 0xEE, data.size);
 		
 		auto list = WM::Manager::Window::Get();
 
@@ -269,9 +277,9 @@ namespace Awning::Renderers::Software
 						int framebOffset = (winPosX + x) * (data.bitsPerPixel / 8)
 										 + (winPosY + y) *  data.bytesPerLine    ;
 
-						data.buffer.u8[framebOffset + (data.red  .offset / 8)] = 0x00;
-						data.buffer.u8[framebOffset + (data.green.offset / 8)] = 0xFF;
-						data.buffer.u8[framebOffset + (data.blue .offset / 8)] = 0x00;
+						data.buffer.pointer[framebOffset + (data.red  .offset / 8)] = 0x00;
+						data.buffer.pointer[framebOffset + (data.green.offset / 8)] = 0xFF;
+						data.buffer.pointer[framebOffset + (data.blue .offset / 8)] = 0x00;
 					}
 			}			
 		}
@@ -284,9 +292,9 @@ namespace Awning::Renderers::Software
 			auto size = pitch * height;
 			if (texture->size != size)
 			{
-				if (texture->buffer.u8)
-					delete texture->buffer.u8;
-				texture->buffer.u8 = (uint8_t*)malloc(size);
+				if (texture->buffer.pointer)
+					delete texture->buffer.pointer;
+				texture->buffer.pointer = (uint8_t*)malloc(size);
 			}
 		}
 
@@ -335,7 +343,7 @@ namespace Awning::Renderers::Software
 			glViewport(0, 0, width, height);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 
-			glReadPixels(0, 0, texture->width, texture->height, GL_RGBA, GL_UNSIGNED_BYTE, texture->buffer.u8);
+			glReadPixels(0, 0, texture->width, texture->height, GL_RGBA, GL_UNSIGNED_BYTE, texture->buffer.pointer);
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 			glBindTexture(GL_TEXTURE_2D, 0);
@@ -374,7 +382,7 @@ namespace Awning::Renderers::Software
 						uint32_t offs = o + (x + y * texture->width) * texture->bitsPerPixel / 8;
 
 						if (offs < texture->size)
-							texture->buffer.u8[offs] = shm_data[offs];
+							texture->buffer.pointer[offs] = shm_data[offs];
 					}
 		}
 	}
