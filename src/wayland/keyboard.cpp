@@ -131,6 +131,9 @@ namespace Awning::Wayland::Keyboard
 
 	void Button(wl_client* client, uint32_t button, bool released)
 	{
+		if (state == nullptr)
+			return;
+
 		auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
 		auto stateKey = released ? WL_KEYBOARD_KEY_STATE_PRESSED : WL_KEYBOARD_KEY_STATE_RELEASED;
 
@@ -146,10 +149,8 @@ namespace Awning::Wayland::Keyboard
 
 		for (auto resource : WM::Client::Get::All::Keyboards(client))
 		{
-			wl_keyboard_send_enter((wl_resource*)resource, NextSerialNum(), surface, states);
 			wl_keyboard_send_modifiers((wl_resource*)resource, NextSerialNum(), depressed, latched, locked, group);
 			wl_keyboard_send_key((wl_resource*)resource, NextSerialNum(), time, button, stateKey);
-			wl_keyboard_send_leave((wl_resource*)resource, NextSerialNum(), surface);
 		}
 		
 		wl_array_release(states);
@@ -158,23 +159,23 @@ namespace Awning::Wayland::Keyboard
 
 	void ChangeWindow(wl_client* client1, wl_resource* surface1, wl_client* client2, wl_resource* surface2)
 	{
-		//auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
-//
-		//for (auto resource : WM::Client::Get::All::Keyboards(client1))
-		//{
-		//	wl_keyboard_send_leave((wl_resource*)resource, NextSerialNum(), surface1);
-		//}
-//
-		//for (auto resource : WM::Client::Get::All::Keyboards(client2))
-		//{
-		//	wl_array* states = new wl_array();
-		//	wl_array_init(states);
-//
-		//	wl_keyboard_send_enter((wl_resource*)resource, NextSerialNum(), surface2, states);
-//
-		//	wl_array_release(states);
-		//	delete states;
-		//}
+		auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
+
+		for (auto resource : WM::Client::Get::All::Keyboards(client1))
+		{
+			wl_keyboard_send_leave((wl_resource*)resource, NextSerialNum(), surface1);
+		}
+
+		for (auto resource : WM::Client::Get::All::Keyboards(client2))
+		{
+			wl_array* states = new wl_array();
+			wl_array_init(states);
+
+			wl_keyboard_send_enter((wl_resource*)resource, NextSerialNum(), surface2, states);
+
+			wl_array_release(states);
+			delete states;
+		}
 
 		surface = surface2;
 	}

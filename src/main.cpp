@@ -91,7 +91,7 @@ uint32_t NextSerialNum()
 
 int main(int argc, char* argv[])
 {
-	bool noX = true;
+	bool noX = false;
 	Awning::Backend::API api_output = Awning::Backend::API::X11; //FBDEV;
 	Awning::Backend::API api_input  = Awning::Backend::API::X11; //libinput;
 
@@ -159,14 +159,14 @@ int main(int argc, char* argv[])
 
 	wl_display_init_shm(Awning::Server::data.display);
 
-	Awning::Renderers::Init(Awning::Renderers::API::Software);
+	Awning::Renderers::Init(Awning::Renderers::API::OpenGL_ES_2);
 
 	if (pid != 0)
 	{
 		kill(pid, SIGUSR2);
 	}
 
-    const char* launchArgs1[] = { "falkon", "-platform", "wayland", NULL };
+	const char* launchArgs1[] = { "falkon", "-platform", "wayland", NULL };
     const char* launchArgs2[] = { "weston-terminal", NULL };
     const char* launchArgs3[] = { "env", "MOZ_ENABLE_WAYLAND=1", "firefox", NULL };
     const char* launchArgs4[] = { "ksysguard", "-platform", "wayland", NULL };
@@ -178,7 +178,7 @@ int main(int argc, char* argv[])
 	//launchApp(launchArgs3);
 	//launchApp(launchArgs4);
 	//launchApp(launchArgs5);
-	launchApp(launchArgs6);
+	//launchApp(launchArgs6);
 	
 	while(1)
 	{
@@ -209,7 +209,7 @@ void on_term_signal(int signal_number)
 int XWM_Start(int signal_number, void *data)
 {
 	Log::Function::Called("");
-	//Awning::WM::X::Init();
+	Awning::WM::X::Init();
 	signal(SIGUSR1, on_term_signal);
 	return 0;
 }

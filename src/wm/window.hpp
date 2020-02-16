@@ -11,6 +11,7 @@ namespace Awning::WM
 		friend void  Client::Bind::Window(void* id, Awning::WM::Window* window        );
 		friend void  Client::Unbind::Window(        Awning::WM::Window* window        );
 		friend void* Client::Get::Surface(          Awning::WM::Window* window        );
+		friend void  Client::Bind::Surface(         Awning::WM::Window* window, void* );
 
 		Manager::Functions::Window::Resized Resized;
 		Manager::Functions::Window::Raised  Raised ;

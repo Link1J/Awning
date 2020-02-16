@@ -19,14 +19,18 @@ std::unordered_map<Window, Awning::WM::Window*> windows;
 namespace Awning::WM::X
 {
 	wl_client* xWaylandClient = nullptr;
+	void* surface;
 
 	void Init()
 	{
 		display = XOpenDisplay(":1");
 		root = DefaultRootWindow(display);
-		XSelectInput(display, root, StructureNotifyMask|SubstructureRedirectMask|SubstructureNotifyMask);
+		//XSelectInput(display, root, StructureNotifyMask|SubstructureRedirectMask|SubstructureNotifyMask);
     	//XCompositeRedirectSubwindows(display, root, CompositeRedirectAutomatic);
-		//surfaceID = XInternAtom(display, "WL_SURFACE_ID", True);
+		surfaceID = XInternAtom(display, "WL_SURFACE_ID", True);
+
+		auto windows = Client::Get::All::Windows(xWaylandClient);
+		surface = Client::Get::Surface(windows[0]);
 	}
 
 	void UpdateTexture(XEvent e)
@@ -124,6 +128,7 @@ namespace Awning::WM::X
 					Log::Function::Locate("WM::X", "CreateNotify");
 					windows[e.xcreatewindow.window] = Window::Create(xWaylandClient);
 					windows[e.xcreatewindow.window]->Frame(true);
+					Client::Bind::Surface(windows[e.xcreatewindow.window], surface);
 					break;
 				case DestroyNotify:
 					Log::Function::Locate("WM::X", "DestroyNotify");

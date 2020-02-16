@@ -4,6 +4,7 @@
 #include "wayland/surface.hpp"
 
 #include <unordered_map>
+#include <algorithm>
 
 namespace Awning::WM::Client
 {
@@ -88,7 +89,7 @@ namespace Awning::WM::Client
 	std::vector<void*> Get::All::Client()
 	{
 		std::vector<void*> keys(clients.size());
-		transform(clients.begin(), clients.end(), keys.begin(), [](auto pair){return pair.first;});
+		std::transform(clients.begin(), clients.end(), keys.begin(), [](auto pair){return pair.first;});
 		return keys;
 	}
 
@@ -100,5 +101,17 @@ namespace Awning::WM::Client
 	std::unordered_set<void*> Get::All::Keyboards(void* id)
 	{
 		return clients[id].keyboards;
+	}
+
+	std::vector<WM::Window*> Get::All::Windows(void* id)
+	{
+		std::vector<WM::Window*> keys(clients[id].windows.size());
+		std::transform(clients[id].windows.begin(), clients[id].windows.end(), keys.begin(), [](auto pair){return pair.first;});
+		return keys;
+	}
+
+	void Bind::Surface(WM::Window* window, void* pointer)
+	{
+		clients[window->client].windows[window].surface = pointer;
 	}
 }

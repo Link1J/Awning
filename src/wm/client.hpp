@@ -11,9 +11,10 @@ namespace Awning::WM::Client
 
 	namespace Bind 
 	{
-		void Window  (void* id, WM::Window* window );
-		void Pointer (void* id, void      * pointer);
-		void Keyboard(void* id, void      * pointer);
+		void Window  (void      * id    , WM::Window* window );
+		void Pointer (void      * id    , void      * pointer);
+		void Keyboard(void      * id    , void      * pointer);
+		void Surface (WM::Window* window, void      * pointer);
 	}
 
 	namespace Unbind 
@@ -27,9 +28,10 @@ namespace Awning::WM::Client
 	{
 		namespace All 
 		{ 
-			std::vector       <void*> Client   (        );
-			std::unordered_set<void*> Pointers (void* id);
-			std::unordered_set<void*> Keyboards(void* id);
+			std::vector       <void      *> Client   (        );
+			std::unordered_set<void      *> Pointers (void* id);
+			std::unordered_set<void      *> Keyboards(void* id);
+			std::vector       <WM::Window*> Windows  (void* id);
 		}
 
 		void* Surface(Window* window);
