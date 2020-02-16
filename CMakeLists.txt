@@ -50,7 +50,7 @@ set(SOURCE_WAYLAND
 
 #------------------------------------------------------------------------------
 
-#add_subdirectory(extern/fmt)
+add_subdirectory(external/fmt-6.1.2)
 
 #------------------------------------------------------------------------------
 
@@ -63,7 +63,7 @@ find_package(Wayland COMPONENTS Client Server Cursor Egl REQUIRED)
 find_package(UDev REQUIRED)
 find_package(Libinput REQUIRED)
 find_package(OpenGL REQUIRED)
-find_package(fmt REQUIRED)
+#find_package(fmt REQUIRED)
 find_package(EGL REQUIRED)
 
 find_package(WaylandScanner REQUIRED)

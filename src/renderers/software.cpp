@@ -104,6 +104,9 @@ void main()
 }
 )";
 
+void CreateShader(GLuint& shader, GLenum type, const char* code, std::experimental::fundamentals_v2::source_location function = std::experimental::fundamentals_v2::source_location::current());
+void CreateProgram(GLuint& program, GLuint vertexShader, GLuint pixelShader, std::experimental::fundamentals_v2::source_location function = std::experimental::fundamentals_v2::source_location::current());
+
 namespace Awning::Renderers::Software
 {
 	WM::Texture data;
@@ -192,51 +195,19 @@ namespace Awning::Renderers::Software
 			}
 	}
 
+	GLuint vertexShader, pixelShader, program;
+
 	void Init()
 	{
 		if (LoadOpenGLES2() != 0)
 			return;
 		
 		eglBindWaylandDisplayWL(Awning::Server::data.egl.display, Awning::Server::data.display);
-		
-		auto vertexShader = glCreateShader(GL_VERTEX_SHADER);
-		auto pixelShader = glCreateShader(GL_FRAGMENT_SHADER);
 
-		int  success;
-		char infoLog[512];
-
-		glShaderSource(vertexShader, 1, &vertexShaderCode, NULL);
-		glShaderSource(pixelShader, 1, &pixelShaderCode, NULL);
-
-		glCompileShader(vertexShader);
-		glCompileShader(pixelShader);
-
-		glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-		if(!success)
-		{
-		    glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-		    std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog;
-		}
-
-		glGetShaderiv(pixelShader, GL_COMPILE_STATUS, &success);
-		if(!success)
-		{
-		    glGetShaderInfoLog(pixelShader, 512, NULL, infoLog);
-		    std::cout << "ERROR::SHADER::PIXEL::COMPILATION_FAILED\n" << infoLog;
-		}
-
-		auto program = glCreateProgram();
-		glAttachShader(program, vertexShader);
-		glAttachShader(program, pixelShader);
-		glLinkProgram(program);
+		CreateShader(vertexShader, GL_VERTEX_SHADER, vertexShaderCode);
+		CreateShader(pixelShader, GL_FRAGMENT_SHADER, pixelShaderCode);
+		CreateProgram(program, vertexShader, pixelShader);
 		glUseProgram(program);
-
-		glGetShaderiv(program, GL_LINK_STATUS, &success);
-		if(!success)
-		{
-		    glGetShaderInfoLog(program, 512, NULL, infoLog);
-		    std::cout << "ERROR::PROGRAM::LINK::COMPILATION_FAILED\n" << infoLog;
-		}
 	}
 
 	void Draw()

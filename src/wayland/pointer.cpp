@@ -154,7 +154,7 @@ namespace Awning::Wayland::Pointer
 
 	void Frame(wl_client* client)
 	{
-		for (auto resource : WM::Client::Get::All::Pointers(client))
-			wl_pointer_send_frame((wl_resource*)resource);
+		//for (auto resource : WM::Client::Get::All::Pointers(client))
+			//wl_pointer_send_frame((wl_resource*)resource);
 	}
 }

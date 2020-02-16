@@ -38,7 +38,7 @@
 
 #include "renderers/manager.hpp"
 
-#include <fmt/printf.h>
+#include <fmt/format.h>
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
 	//launchApp(launchArgs2);
 	//launchApp(launchArgs3);
 	//launchApp(launchArgs4);
-	launchApp(launchArgs5);
+	//launchApp(launchArgs5);
 	
 	while(1)
 	{
@@ -232,10 +232,10 @@ void ProtocolLogger(void* user_data, wl_protocol_logger_type direction, const wl
 		"EVENT  "
 	};
 
-	if (direction == 1)
-		return;
+	//if (direction == 1)
+	//	return;
 
-	//std::cout << "[" << direction_strings[direction] << "] " << message->resource->object.interface->name << ": " << message->message->name << "\n";
+	std::cout << "[" << direction_strings[direction] << "] " << message->resource->object.interface->name << ": " << message->message->name << "\n";
 }
 
 void client_created(struct wl_listener* listener, void* data)

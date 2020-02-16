@@ -20,43 +20,62 @@
 
 #include <chrono>
 #include <thread>
+#include <iostream>
 
 #include <fmt/format.h>
 
 #include "X11.hpp"
 #include "manager.hpp"
 
+#include  <GLES2/gl2.h>
+#include  <EGL/egl.h>
+
 static Display*		             display;
 static Window		             window;
 static GLXContext	             context;
 static GLuint		             texture;
+static EGLDisplay                egl_display;
+static EGLContext                egl_context;
+static EGLSurface                egl_surface;
              
 static bool 		             resized = false;
 static Awning::WM::Texture framebuffer;
 
-static int doubleBufferAttributes[] = {
-    GLX_RGBA,
-	GLX_DOUBLEBUFFER,
-	GLX_RED_SIZE,      8,     /* the maximum number of bits per component    */
-    GLX_GREEN_SIZE,    8, 
-    GLX_BLUE_SIZE,     8,
-    None
-};
+void CreateShader(GLuint& shader, GLenum type, const char* code, std::experimental::fundamentals_v2::source_location function = std::experimental::fundamentals_v2::source_location::current());
+void CreateProgram(GLuint& program, GLuint vertexShader, GLuint pixelShader, std::experimental::fundamentals_v2::source_location function = std::experimental::fundamentals_v2::source_location::current());
 
-int contextAttribs[] =
+static const char* vertexShaderCode = R"(
+#version 300 es
+precision mediump float;
+
+out vec4 color;
+
+void main()
 {
-	GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
-	GLX_CONTEXT_MINOR_VERSION_ARB, 3,
-	GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
-#ifdef _DEBUG
-	GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB | GLX_CONTEXT_DEBUG_BIT_ARB,
-#else
-	GLX_CONTEXT_FLAGS_ARB, GLX_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
-#endif
-	0
-};
+	float x = float(((uint(gl_VertexID) + 2u) / 3u) % 2u);
+	float y = float(((uint(gl_VertexID) + 1u) / 3u) % 2u);
 
-//using namespace std::chrono_literals;
+	gl_Position = vec4(-1.0+x*2.0,-1.0+y*2.0,0.0,1.0);
+	color       = vec4(     x    , 1.0-y    ,0.0,1.0);
+}
+)";
+
+static const char* pixelShaderCode = R"(
+#version 300 es
+#extension GL_OES_EGL_image_external : require
+
+precision mediump float;
+
+uniform sampler2D texture0;
+
+in vec4 color;
+out vec4 FragColor;
+
+void main()
+{
+	FragColor = texture2D(texture0, color.xy);
+}
+)";
 
 namespace Awning::Backend::X11
 {
@@ -86,6 +105,8 @@ namespace Awning::Backend::X11
 	}
 }
 
+GLuint vertexShader, pixelShader, program;
+
 void Awning::Backend::X11::Start()
 {
 	int width = 1024, height = 576;
@@ -102,37 +123,39 @@ void Awning::Backend::X11::Start()
 	screen = DefaultScreen(display);
 	auto root = RootWindow(display, screen);
 
-	int numReturned;
-	auto fbConfigs = glXChooseFBConfig(display, screen, doubleBufferAttributes, &numReturned);
-	XVisualInfo* vi;
-	GLXFBConfig fbConfig;
-
-  	for(int i = 0; i < numReturned; i++) {
-		vi = glXGetVisualFromFBConfig(display, fbConfigs[i]);
-		if(!vi) continue;
-
-		auto pict_format = XRenderFindVisualFormat(display, vi->visual);
-		if(!pict_format) continue;
-
-		fbConfig = fbConfigs[i];
-		break;
-  	}
-
-	attribs.colormap = XCreateColormap(display, root, vi->visual, AllocNone);
 	attribs.event_mask = StructureNotifyMask|ButtonPressMask|KeyPressMask|PointerMotionMask|ButtonReleaseMask|KeyReleaseMask;
 	
-	window = XCreateWindow(display, root, 0, 0, width, height, 0, vi->depth, InputOutput, vi->visual, CWColormap | CWEventMask, &attribs);
+	window = XCreateWindow(display, root, 0, 0, width, height, 0, CopyFromParent, InputOutput, CopyFromParent, CWColormap | CWEventMask, &attribs);
 	XStoreName(display, window, "Awning (X11 Backend)");
 	XMapWindow(display, window);
+	
+	EGLint attr[] = {
+		EGL_BUFFER_SIZE, 16,
+		EGL_RENDERABLE_TYPE,
+		EGL_OPENGL_ES2_BIT,
+		EGL_NONE
+	};
+	EGLint ctxattr[] = {
+		EGL_CONTEXT_CLIENT_VERSION, 2,
+		EGL_NONE
+	};
 
-	PFNGLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = (PFNGLXCREATECONTEXTATTRIBSARBPROC)glXGetProcAddress((uint8_t*)"glXCreateContextAttribsARB");
+	EGLConfig  ecfg;
+	EGLint     num_config;
 
-	context = glXCreateContextAttribsARB(display, fbConfig, 0, true, contextAttribs);
-	glXMakeCurrent(display, window, context);
+	egl_display = eglGetDisplay((EGLNativeDisplayType)display);
+	eglInitialize(egl_display, NULL, NULL);
+	eglChooseConfig(egl_display, attr, &ecfg, 1, &num_config);
+	egl_surface = eglCreateWindowSurface(egl_display, ecfg, window, NULL);
+	egl_context = eglCreateContext(egl_display, ecfg, EGL_NO_CONTEXT, ctxattr);
+	eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
 
-	//fprintf(stdout, "GL Version    : %s\n", glGetString(GL_VERSION ));
-	//fprintf(stdout, "GL Vendor     : %s\n", glGetString(GL_VENDOR  ));
-	//fprintf(stdout, "GL Renderer   : %s\n", glGetString(GL_RENDERER));
+	std::cout << "X EGL Vendor  : " << eglQueryString(egl_display, EGL_VENDOR ) << "\n";
+	std::cout << "X EGL Version : " << eglQueryString(egl_display, EGL_VERSION) << "\n";
+	std::cout << "X GL Vendor   : " << glGetString(GL_VENDOR                  ) << "\n";
+	std::cout << "X GL Renderer : " << glGetString(GL_RENDERER                ) << "\n";
+	std::cout << "X GL Version  : " << glGetString(GL_VERSION                 ) << "\n";
+	std::cout << "X GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
 
 	framebuffer = Awning::WM::Texture {
         .size         = width * height * 4,
@@ -160,13 +183,10 @@ void Awning::Backend::X11::Start()
 
 	CreateBackingTexture();
 	glClearColor(1, 1, 1, 1);
-
-	PFNGLGENVERTEXARRAYSPROC glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC)glXGetProcAddressARB((uint8_t*)"glGenVertexArrays");
-	PFNGLBINDVERTEXARRAYPROC glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC)glXGetProcAddressARB((uint8_t*)"glBindVertexArray");
-
-	GLuint VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
+	CreateShader(vertexShader, GL_VERTEX_SHADER, vertexShaderCode);
+	CreateShader(pixelShader, GL_FRAGMENT_SHADER, pixelShaderCode);
+	CreateProgram(program, vertexShader, pixelShader);
+	glUseProgram(program);
 
 	Output output {
 		.manufacturer = "X.Org Foundation",
@@ -204,6 +224,8 @@ uint32_t XorgKeyboardToLinuxInputKeyboard(uint32_t button)
 
 void Awning::Backend::X11::Hand()
 {
+	eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
+
 	XEvent event;
 	int preWidth = framebuffer.width, preHeight = framebuffer.height;
 
@@ -292,22 +314,22 @@ void Awning::Backend::X11::Hand()
 		resized = false;
 	}
 
-	glClear(GL_COLOR_BUFFER_BIT);
-	glViewport(0, 0, framebuffer.width, framebuffer.height);
-
 	memset(framebuffer.buffer.pointer, 0xEE, framebuffer.size);
 }
 
 void Awning::Backend::X11::Draw()
 {
+	eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
+
+	glClear(GL_COLOR_BUFFER_BIT);
+	glViewport(0, 0, framebuffer.width, framebuffer.height);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer.width, framebuffer.height, GL_RGBA, GL_UNSIGNED_BYTE, framebuffer.buffer.pointer);
-	glBegin(GL_QUADS);
-		glTexCoord2f(0.0, 1.0); glVertex3f(-1.0f, -1.0f, 0.0f);
-		glTexCoord2f(0.0, 0.0); glVertex3f(-1.0f,  1.0f, 0.0f);
-		glTexCoord2f(1.0, 0.0); glVertex3f( 1.0f,  1.0f, 0.0f);
-		glTexCoord2f(1.0, 1.0); glVertex3f( 1.0f, -1.0f, 0.0f);
-	glEnd();
-	glXSwapBuffers(display, window);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	eglSwapBuffers(egl_display, egl_surface);
 }
 
 void Awning::Backend::X11::Poll()

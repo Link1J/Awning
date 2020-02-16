@@ -84,15 +84,15 @@ void CreateProgram(GLuint& program, GLuint vertexShader, GLuint pixelShader, std
 int LoadOpenGLES2();
 
 static const char* vertexShaderCode = R"(
+#version 300 es
 precision mediump float;
 
-attribute float VertexID;
-varying vec4 color;
+out vec4 color;
 
 void main()
 {
-	float x = mod(((VertexID + 2.0) / 3.0), 2.0);
-	float y = 0.0; //mod(((VertexID + 1.0) / 3.0), 2.0);
+	float x = float(((uint(gl_VertexID) + 2u) / 3u) % 2u);
+	float y = float(((uint(gl_VertexID) + 1u) / 3u) % 2u);
 
 	gl_Position = vec4(-1.0+x*2.0,-1.0+y*2.0,0.0,1.0);
 	color       = vec4(     x    ,     y    ,0.0,1.0);
@@ -100,30 +100,35 @@ void main()
 )";
 
 static const char* pixelShaderCode2D = R"(
+#version 300 es
+
 precision mediump float;
 
 uniform sampler2D texture0;
 
-varying vec4 color;
+in vec4 color;
+out vec4 FragColor;
 
 void main()
 {
-	gl_FragColor = texture2D(texture0, color.xy);
+	FragColor = texture2D(texture0, color.xy);
 }
 )";
 
 static const char* pixelShaderCodeOES = R"(
+#version 300 es
 #extension GL_OES_EGL_image_external : require
 
 precision mediump float;
 
 uniform samplerExternalOES texture0;
 
-varying vec4 color;
+in vec4 color;
+out vec4 FragColor;
 
 void main()
 {
-	gl_FragColor = texture2D(texture0, color.xy).bgra;
+	FragColor = texture2D(texture0, color.xy).bgra;
 }
 )";
 

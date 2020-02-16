@@ -203,10 +203,10 @@ void Awning::Backend::libinput::Hand()
         {
             break;
         }
-        case LIBINPUT_EVENT_TABLET_PAD_KEY:
-        {
-            break;
-        }
+        //case LIBINPUT_EVENT_TABLET_PAD_KEY:
+        //{
+        //    break;
+        //}
         case LIBINPUT_EVENT_GESTURE_SWIPE_BEGIN:
         {
             break;
