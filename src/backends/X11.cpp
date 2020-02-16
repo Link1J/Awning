@@ -73,7 +73,7 @@ out vec4 FragColor;
 
 void main()
 {
-	FragColor = texture2D(texture0, color.xy);
+	FragColor = texture2D(texture0, color.xy).bgra;
 }
 )";
 
@@ -125,7 +125,7 @@ void Awning::Backend::X11::Start()
 
 	attribs.event_mask = StructureNotifyMask|ButtonPressMask|KeyPressMask|PointerMotionMask|ButtonReleaseMask|KeyReleaseMask;
 	
-	window = XCreateWindow(display, root, 0, 0, width, height, 0, CopyFromParent, InputOutput, CopyFromParent, CWColormap | CWEventMask, &attribs);
+	window = XCreateWindow(display, root, 0, 0, width, height, 0, CopyFromParent, InputOutput, CopyFromParent, CWEventMask, &attribs);
 	XStoreName(display, window, "Awning (X11 Backend)");
 	XMapWindow(display, window);
 	
@@ -163,7 +163,7 @@ void Awning::Backend::X11::Start()
         .bytesPerLine = width * 4,
         .red          = { 
 			.size   = 8,
-			.offset = 0
+			.offset = 16
 		},
         .green        = { 
 			.size   = 8,
@@ -171,7 +171,7 @@ void Awning::Backend::X11::Start()
 		},
         .blue         = { 
 			.size   = 8,
-			.offset = 16
+			.offset = 0
 		},
         .alpha        = { 
 			.size   = 8,

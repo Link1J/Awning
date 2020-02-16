@@ -25,6 +25,7 @@
 #include "wayland/surface.hpp"
 #include "wayland/shell_surface.hpp"
 #include "wayland/pointer.hpp"
+#include "wayland/data_device_manager.hpp"
 
 #include "xdg/wm_base.hpp"
 #include "xdg/decoration.hpp"
@@ -91,8 +92,8 @@ uint32_t NextSerialNum()
 int main(int argc, char* argv[])
 {
 	bool noX = true;
-	Awning::Backend::API api_output = Awning::Backend::API::FBDEV;
-	Awning::Backend::API api_input  = Awning::Backend::API::libinput;
+	Awning::Backend::API api_output = Awning::Backend::API::X11; //FBDEV;
+	Awning::Backend::API api_input  = Awning::Backend::API::X11; //libinput;
 
 	for(int a = 0; a < argc; a++)
 	{
@@ -148,16 +149,17 @@ int main(int argc, char* argv[])
 
 	Awning::Server::data.sigusr1 = wl_event_loop_add_signal(Awning::Server::data.event_loop, SIGUSR1, XWM_Start, nullptr);
 	
-	Awning::Wayland::Compositor        ::Add(Awning::Server::data.display);
-	Awning::Wayland::Seat              ::Add(Awning::Server::data.display);
-	Awning::Wayland::Output            ::Add(Awning::Server::data.display);
-	Awning::Wayland::Shell             ::Add(Awning::Server::data.display);
-	Awning::XDG    ::WM_Base           ::Add(Awning::Server::data.display);
-	//Awning::ZXDG   ::Decoration_Manager::Add(Awning::Server::data.display);
+	Awning::Wayland::Compositor         ::Add(Awning::Server::data.display);
+	Awning::Wayland::Seat               ::Add(Awning::Server::data.display);
+	Awning::Wayland::Output             ::Add(Awning::Server::data.display);
+	Awning::Wayland::Shell              ::Add(Awning::Server::data.display);
+	Awning::XDG    ::WM_Base            ::Add(Awning::Server::data.display);
+	//Awning::ZXDG   ::Decoration_Manager ::Add(Awning::Server::data.display);
+	Awning::Wayland::Data_Device_Manager::Add(Awning::Server::data.display);
 
 	wl_display_init_shm(Awning::Server::data.display);
 
-	Awning::Renderers::Init(Awning::Renderers::API::OpenGL_ES_2);
+	Awning::Renderers::Init(Awning::Renderers::API::Software);
 
 	if (pid != 0)
 	{
@@ -169,12 +171,14 @@ int main(int argc, char* argv[])
     const char* launchArgs3[] = { "env", "MOZ_ENABLE_WAYLAND=1", "firefox", NULL };
     const char* launchArgs4[] = { "ksysguard", "-platform", "wayland", NULL };
     const char* launchArgs5[] = { "konsole", "-platform", "wayland", NULL };
+    const char* launchArgs6[] = { "termite", NULL };
 
 	//launchApp(launchArgs1);
 	//launchApp(launchArgs2);
 	//launchApp(launchArgs3);
 	//launchApp(launchArgs4);
 	//launchApp(launchArgs5);
+	launchApp(launchArgs6);
 	
 	while(1)
 	{

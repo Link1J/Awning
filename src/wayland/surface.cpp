@@ -233,10 +233,7 @@ namespace Awning::Wayland::Surface
 				wl_callback_send_done(i, time);
 				wl_resource_destroy(i);
 			}
-			else
-			{
-				frameCallbacks.erase(i);
-			}
+			frameCallbacks.erase(i);
 		}
 		frameCallbacks.clear();
 	}

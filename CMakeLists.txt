@@ -23,6 +23,7 @@ set(SOURCES
     src/wayland/region.cpp
     src/wayland/pointer.cpp
     src/wayland/keyboard.cpp
+    src/wayland/data_device_manager.cpp
 
     src/xdg/wm_base.cpp
     src/xdg/surface.cpp

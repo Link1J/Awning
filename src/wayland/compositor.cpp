@@ -41,6 +41,6 @@ namespace Awning::Wayland::Compositor
 
 	void Add(struct wl_display* display)
 	{
-		data.global = wl_global_create(display, &wl_compositor_interface, 3, nullptr, Bind);
+		data.global = wl_global_create(display, &wl_compositor_interface, 4, nullptr, Bind);
 	}
 }

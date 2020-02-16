@@ -271,6 +271,8 @@ namespace Awning::Renderers::Software
 
 		void EGLImage(wl_resource* buffer, WM::Texture* texture, WM::Damage damage)
 		{
+			eglMakeCurrent(Awning::Server::data.egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE, Awning::Server::data.egl.context);
+		
 			EGLint width, height;
 			eglQueryWaylandBufferWL(Server::data.egl.display, buffer, EGL_WIDTH , &width );
 			eglQueryWaylandBufferWL(Server::data.egl.display, buffer, EGL_HEIGHT, &height);
