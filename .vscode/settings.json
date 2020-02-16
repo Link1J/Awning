@@ -68,6 +68,5 @@
 		"codecvt": "cpp",
 		"filesystem": "cpp",
 		"*.rh": "cpp"
-	},
-	"C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools"
+	}
 }
