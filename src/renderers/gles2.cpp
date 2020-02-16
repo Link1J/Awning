@@ -78,18 +78,21 @@ PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES;
 
 #define GL_TEXTURE_EXTERNAL_OES 0x8D65
 
+void CreateShader(GLuint& shader, GLenum type, const char* code, std::experimental::fundamentals_v2::source_location function = std::experimental::fundamentals_v2::source_location::current());
+void CreateProgram(GLuint& program, GLuint vertexShader, GLuint pixelShader, std::experimental::fundamentals_v2::source_location function = std::experimental::fundamentals_v2::source_location::current());
+
 int LoadOpenGLES2();
 
 static const char* vertexShaderCode = R"(
-#version 300 es
 precision mediump float;
 
-out vec4 color;
+attribute float VertexID;
+varying vec4 color;
 
 void main()
 {
-	float x = float(((uint(gl_VertexID) + 2u) / 3u) % 2u);
-	float y = float(((uint(gl_VertexID) + 1u) / 3u) % 2u);
+	float x = mod(((VertexID + 2.0) / 3.0), 2.0);
+	float y = 0.0; //mod(((VertexID + 1.0) / 3.0), 2.0);
 
 	gl_Position = vec4(-1.0+x*2.0,-1.0+y*2.0,0.0,1.0);
 	color       = vec4(     x    ,     y    ,0.0,1.0);
@@ -97,35 +100,30 @@ void main()
 )";
 
 static const char* pixelShaderCode2D = R"(
-#version 300 es
-
 precision mediump float;
 
 uniform sampler2D texture0;
 
-in vec4 color;
-out vec4 FragColor;
+varying vec4 color;
 
 void main()
 {
-	FragColor = texture2D(texture0, color.xy);
+	gl_FragColor = texture2D(texture0, color.xy);
 }
 )";
 
 static const char* pixelShaderCodeOES = R"(
-#version 300 es
 #extension GL_OES_EGL_image_external : require
 
 precision mediump float;
 
 uniform samplerExternalOES texture0;
 
-in vec4 color;
-out vec4 FragColor;
+varying vec4 color;
 
 void main()
 {
-	FragColor = texture2D(texture0, color.xy).bgra;
+	gl_FragColor = texture2D(texture0, color.xy).bgra;
 }
 )";
 
@@ -172,43 +170,6 @@ namespace Awning::Renderers::GLES2
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 
-	void CreateShader(GLuint& shader, GLenum type, const char* code, std::experimental::fundamentals_v2::source_location function = std::experimental::fundamentals_v2::source_location::current())
-	{
-		int  success;
-		char infoLog[512];
-
-		shader = glCreateShader(type);
-		glShaderSource(shader, 1, &code, NULL);
-		glCompileShader(shader);
-
-		glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-		if(!success)
-		{
-		    glGetShaderInfoLog(shader, 512, NULL, infoLog);
-
-		    Log::Report::Error(fmt::format("Shader Compilation Failed {}", infoLog), function);
-		}
-	}
-
-	void CreateProgram(GLuint& program, GLuint vertexShader, GLuint pixelShader, std::experimental::fundamentals_v2::source_location function = std::experimental::fundamentals_v2::source_location::current())
-	{
-		int  success;
-		char infoLog[512];
-
-		program = glCreateProgram();
-		glAttachShader(program, vertexShader);
-		glAttachShader(program, pixelShader);
-		glLinkProgram(program);
-
-		glGetShaderiv(program, GL_LINK_STATUS, &success);
-		if(!success)
-		{
-		    glGetShaderInfoLog(program, 512, NULL, infoLog);
-
-		    Log::Report::Error(fmt::format("Program Linking Failed {}", infoLog), function);
-		}
-	}
-
 	void Init()
 	{
 		LoadOpenGLES2();
@@ -248,6 +209,8 @@ namespace Awning::Renderers::GLES2
 
 	void Draw()
 	{
+		eglMakeCurrent(Awning::Server::data.egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE, Awning::Server::data.egl.context);
+		
 		data = Backend::Data();
 
 		auto width = data.bytesPerLine / (data.bitsPerPixel / 8);
@@ -274,6 +237,8 @@ namespace Awning::Renderers::GLES2
 	{
 		void EGLImage(wl_resource* buffer, WM::Texture* texture, WM::Damage damage)
 		{
+			eglMakeCurrent(Awning::Server::data.egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE, Awning::Server::data.egl.context);
+
 			EGLint width, height;
 			eglQueryWaylandBufferWL(Server::data.egl.display, buffer, EGL_WIDTH , &width );
 			eglQueryWaylandBufferWL(Server::data.egl.display, buffer, EGL_HEIGHT, &height);
@@ -308,6 +273,8 @@ namespace Awning::Renderers::GLES2
 
 		void SHMBuffer(wl_shm_buffer* shm_buffer, WM::Texture* texture, WM::Damage damage)
 		{
+			eglMakeCurrent(Awning::Server::data.egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE, Awning::Server::data.egl.context);
+
 			texture->width            = wl_shm_buffer_get_width (shm_buffer);
 			texture->height           = wl_shm_buffer_get_height(shm_buffer);
 			texture->bitsPerPixel     = 32;
@@ -413,4 +380,41 @@ int LoadOpenGLES2()
 	std::cout << "GLSL Version  : " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
 
 	return error;
+}
+
+void CreateShader(GLuint& shader, GLenum type, const char* code, std::experimental::fundamentals_v2::source_location function)
+{
+	int  success;
+	char infoLog[512];
+
+	shader = glCreateShader(type);
+	glShaderSource(shader, 1, &code, NULL);
+	glCompileShader(shader);
+
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+	if(!success)
+	{
+	    glGetShaderInfoLog(shader, 512, NULL, infoLog);
+
+	    Log::Report::Error(fmt::format("Shader Compilation Failed {}", infoLog), function);
+	}
+}	
+
+void CreateProgram(GLuint& program, GLuint vertexShader, GLuint pixelShader, std::experimental::fundamentals_v2::source_location function)
+{	
+	int  success;
+	char infoLog[512];
+
+	program = glCreateProgram();
+	glAttachShader(program, vertexShader);
+	glAttachShader(program, pixelShader);
+	glLinkProgram(program);
+
+	glGetShaderiv(program, GL_LINK_STATUS, &success);
+	if(!success)
+	{
+	    glGetShaderInfoLog(program, 512, NULL, infoLog);
+
+	    Log::Report::Error(fmt::format("Program Linking Failed {}", infoLog), function);
+	}
 }
