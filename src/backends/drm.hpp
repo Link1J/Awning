@@ -1,5 +1,6 @@
 #pragma once
 #include "wm/texture.hpp"
+#include "manager.hpp"
 
 namespace Awning::Backend::DRM 
 {
@@ -7,5 +8,5 @@ namespace Awning::Backend::DRM
 	void Poll();
 	void Draw();
 	
-	Awning::WM::Texture Data();
+	Displays GetDisplays();
 }

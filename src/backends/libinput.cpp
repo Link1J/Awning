@@ -114,11 +114,11 @@ void Awning::Backend::libinput::Hand()
 	        auto x = libinput_event_pointer_get_dx(event);
             auto y = libinput_event_pointer_get_dy(event);
 
-            auto data = Backend::Data();
+            auto [width, height] = Backend::Size(Backend::GetDisplays());
 
-            if (cursor.x + x < 0 || cursor.x + x > data.width )
+            if (cursor.x + x < 0 || cursor.x + x > width )
                 x = 0;
-            if (cursor.y + y < 0 || cursor.y + y > data.height)
+            if (cursor.y + y < 0 || cursor.y + y > height)
                 y = 0;
 
             cursor.x += x;

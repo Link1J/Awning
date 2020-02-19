@@ -35,6 +35,7 @@ set(SOURCES
     src/wm/manager.cpp
     src/wm/window.cpp
     src/wm/client.cpp
+    src/wm/output.cpp
 
     src/wm/x/wm.cpp
 

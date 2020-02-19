@@ -2,6 +2,7 @@
 #include <vector>
 #include <string>
 #include "wm/texture.hpp"
+#include "wm/output.hpp"
 
 namespace Awning::Backend
 {
@@ -10,45 +11,27 @@ namespace Awning::Backend
 		NONE, X11, FBDEV, EVDEV, libinput, DRM
 	};
 
+	struct Display
+	{
+		WM::Output::ID output ;
+		WM::Texture    texture;
+		int            mode   ;
+	};
+	typedef std::vector<Display> Displays;
+
 	namespace Functions
 	{
-		typedef void               (*Poll)();
-		typedef void               (*Draw)();
-		typedef void               (*Hand)();
-		typedef Awning::WM::Texture(*Data)();
+		typedef void    (*Poll       )();
+		typedef void    (*Draw       )();
+		typedef void    (*Hand       )();
+		typedef Displays(*GetDisplays)();
 	};
 
-	struct Output
-	{
-		struct Size
-		{
-			int width, height;
-		};
-		struct Mode
-		{
-			Size resolution;
-			int refresh_rate;
-			bool prefered;
-			bool current;
-		};
+	void                 Init(API output, API input);
+	std::tuple<int, int> Size(Displays displays    );
 
-		std::string manufacturer;
-		std::string model;
-		Size physical;
-		std::vector<Mode> modes;
-	};
-
-	void Init(API output, API input);
-
-	extern Functions::Poll Poll;
-	extern Functions::Draw Draw;
-	extern Functions::Data Data;
-	extern Functions::Hand Hand;
-
-	namespace Outputs
-	{
-		std::vector<Output> Get();
-		void Add   (       Output output);
-		void Update(int a, Output output);
-	}
+	extern Functions::Poll        Poll       ;
+	extern Functions::Draw        Draw       ;
+	extern Functions::Hand        Hand       ;
+	extern Functions::GetDisplays GetDisplays;
 }

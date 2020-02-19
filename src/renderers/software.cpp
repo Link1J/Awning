@@ -109,7 +109,12 @@ void CreateProgram(GLuint& program, GLuint vertexShader, GLuint pixelShader, std
 
 namespace Awning::Renderers::Software
 {
-	WM::Texture data;
+	uint8_t* buffer = nullptr;
+	int bitsPerPixel;
+	int bytesPerLine;
+	int width  = 0;
+	int height = 0;
+	int size;
 
 	void RenderWindow(WM::Window* window, int count = 2, int frame = 1)
 	{
@@ -130,20 +135,20 @@ namespace Awning::Renderers::Software
 		for (int x = (-Frame::Size::left * frame); x < winSizeX + (winOffX * count) + (Frame::Size::right * frame); x++)
 			for (int y = (-Frame::Size::top * frame); y < winSizeY + (winOffY * count) + (Frame::Size::bottom * frame); y++)
 			{
-				if ((winPosX + x - winOffX) <  0          )
+				if ((winPosX + x - winOffX) <  0     )
 					continue;
-				if ((winPosY + y - winOffY) <  0          )
+				if ((winPosY + y - winOffY) <  0     )
 					continue;
-				if ((winPosX + x - winOffX) >= data.width )
+				if ((winPosX + x - winOffX) >= width )
 					continue;
-				if ((winPosY + y - winOffY) >= data.height)
+				if ((winPosY + y - winOffY) >= height)
 					continue;
 
 				int windowOffset = (x) * (texture->bitsPerPixel / 8)
 								 + (y) *  texture->bytesPerLine    ;
 
-				int framebOffset = (winPosX + x - winOffX) * (data.bitsPerPixel / 8)
-								 + (winPosY + y - winOffY) *  data.bytesPerLine    ;
+				int framebOffset = (winPosX + x - winOffX) * (bitsPerPixel / 8)
+								 + (winPosY + y - winOffY) *  bytesPerLine    ;
 
 				uint8_t red, green, blue, alpha;
 
@@ -182,11 +187,11 @@ namespace Awning::Renderers::Software
 					}
 				}
 
-				if (alpha > 0)
+				if (alpha > 0 && framebOffset < size)
 				{
-					uint8_t& buffer_red   = data.buffer.pointer[framebOffset + (data.red  .offset / 8)];
-					uint8_t& buffer_green = data.buffer.pointer[framebOffset + (data.green.offset / 8)];
-					uint8_t& buffer_blue  = data.buffer.pointer[framebOffset + (data.blue .offset / 8)];
+					uint8_t& buffer_red   = buffer[framebOffset + 2];
+					uint8_t& buffer_green = buffer[framebOffset + 1];
+					uint8_t& buffer_blue  = buffer[framebOffset + 0];
 
 					buffer_red   = red   * (alpha / 256.) + buffer_red   * (1 - alpha / 256.);
 					buffer_green = green * (alpha / 256.) + buffer_green * (1 - alpha / 256.);
@@ -212,10 +217,26 @@ namespace Awning::Renderers::Software
 
 	void Draw()
 	{
-		data = Backend::Data();
-		memset(data.buffer.pointer, 0xEE, data.size);
-		
-		auto list = WM::Manager::Window::Get();
+		auto list     = WM::Manager::Window::Get();
+		auto displays = Backend::GetDisplays();
+		auto [nW, nH] = Backend::Size(displays);
+
+		if (nW != width || nH != height)
+		{
+			if (buffer)
+				delete buffer;
+
+			width  = nW;
+			height = nH;
+
+			bitsPerPixel = 32;
+			bytesPerLine = width * 4;
+			size = width * 4 * height;
+
+			buffer = new uint8_t[size];	
+		}
+
+		memset(buffer, 0xEE, size);
 
 		for (auto& window : reverse(list))
 			RenderWindow(window);
@@ -236,23 +257,51 @@ namespace Awning::Renderers::Software
 				for (int x = 0; x < 5; x++)
 					for (int y = 0; y < 5; y++)
 					{
-						if ((winPosX + x) <  0          )
+						if ((winPosX + x) <  0     )
 							continue;
-						if ((winPosY + y) <  0          )
+						if ((winPosY + y) <  0     )
 							continue;
-						if ((winPosX + x) >= data.width )
+						if ((winPosX + x) >= width )
 							continue;
-						if ((winPosY + y) >= data.height)
+						if ((winPosY + y) >= height)
 							continue;
 
-						int framebOffset = (winPosX + x) * (data.bitsPerPixel / 8)
-										 + (winPosY + y) *  data.bytesPerLine    ;
+						int framebOffset = (winPosX + x) * (bitsPerPixel / 8)
+										 + (winPosY + y) *  bytesPerLine    ;
 
-						data.buffer.pointer[framebOffset + (data.red  .offset / 8)] = 0x00;
-						data.buffer.pointer[framebOffset + (data.green.offset / 8)] = 0xFF;
-						data.buffer.pointer[framebOffset + (data.blue .offset / 8)] = 0x00;
+						buffer[framebOffset + 2] = 0x00;
+						buffer[framebOffset + 1] = 0xFF;
+						buffer[framebOffset + 0] = 0x00;
 					}
 			}			
+		}
+
+		for (auto& display : displays)
+		{
+			auto [px, py] = WM::Output::Get::      Position  (display.output              );
+			auto [sx, sy] = WM::Output::Get::Mode::Resolution(display.output, display.mode);
+
+			for (int x = 0; x < sx; x++)
+				for (int y = 0; y < sy; y++)
+				{
+					if ((px + x) <  0     )
+						continue;
+					if ((py + y) <  0     )
+						continue;
+					if ((px + x) >= width )
+						continue;
+					if ((py + y) >= height)
+						continue;
+
+					int framebOffset = (px + x) * (bitsPerPixel / 8)
+									 + (py + y) *  bytesPerLine    ;
+					int windowOffset = (x) * (display.texture.bitsPerPixel / 8)
+									 + (y) *  display.texture.bytesPerLine    ;
+
+					display.texture.buffer.pointer[windowOffset + (display.texture.red  .offset / 8)] = buffer[framebOffset + 2];
+					display.texture.buffer.pointer[windowOffset + (display.texture.green.offset / 8)] = buffer[framebOffset + 1];
+					display.texture.buffer.pointer[windowOffset + (display.texture.blue .offset / 8)] = buffer[framebOffset + 0];
+				}
 		}
 	}
 

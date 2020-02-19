@@ -1,5 +1,6 @@
 #pragma once
 #include "wm/texture.hpp"
+#include "manager.hpp"
 
 namespace Awning::Backend::X11 
 {
@@ -8,5 +9,5 @@ namespace Awning::Backend::X11
 	void Hand();
 	void Draw();
 	
-	Awning::WM::Texture Data();
+	Displays GetDisplays();
 }

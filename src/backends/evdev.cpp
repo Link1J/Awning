@@ -144,23 +144,23 @@ void Awning::Backend::EVDEV::Hand()
 			{
 				if (!scrolling)
 				{
-					auto data = Awning::Backend::Data();
+					auto [width, height] = Backend::Size(Backend::GetDisplays());
 
 					if (event.code == 0)
 					{
 						cursor.x += (int)event.value;
 						if (cursor.x < 0)
 							cursor.x = 0;
-						if (cursor.x > data.width)
-							cursor.x = data.width;
+						if (cursor.x > width)
+							cursor.x = width;
 					}
 					else 
 					{
 						cursor.y += (int)event.value;
 						if (cursor.y < 0)
 							cursor.y = 0;
-						if (cursor.y > data.height)
-							cursor.y = data.height;
+						if (cursor.y > height)
+							cursor.y = height;
 					}
 					mouseMoved = true;
 				}

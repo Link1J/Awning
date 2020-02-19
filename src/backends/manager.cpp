@@ -8,12 +8,10 @@
 
 namespace Awning::Backend
 {
-	Functions::Poll Poll;
-	Functions::Draw Draw;
-	Functions::Data Data;
-	Functions::Hand Hand;
-
-	std::vector<Output> outputs;
+	Functions::Poll        Poll       ;
+	Functions::Draw        Draw       ;
+	Functions::Hand        Hand       ;
+	Functions::GetDisplays GetDisplays;
 
 	void Init(API output, API input)
 	{
@@ -21,21 +19,21 @@ namespace Awning::Backend
 		{
 		case API::X11:
 			X11::Start();
-			Poll = X11::Poll;
-			Draw = X11::Draw;
-			Data = X11::Data;
+			Poll        = X11  ::Poll       ;
+			Draw        = X11  ::Draw       ;
+			GetDisplays = X11  ::GetDisplays;
 			break;
-		case API::FBDEV:
-			FBDEV::Start();
-			Poll = FBDEV::Poll;
-			Draw = FBDEV::Draw;
-			Data = FBDEV::Data;
-			break;
+		//case API::FBDEV:
+		//	FBDEV::Start();
+		//	Poll        = FBDEV::Poll       ;
+		//	Draw        = FBDEV::Draw       ;
+		//	GetDisplays = FBDEV::GetDisplays;
+		//	break;
 		case API::DRM:
 			DRM::Start();
-			Poll = DRM::Poll;
-			Draw = DRM::Draw;
-			Data = DRM::Data;
+			Poll        = DRM  ::Poll       ;
+			Draw        = DRM  ::Draw       ;
+			GetDisplays = DRM  ::GetDisplays;
 			break;
 		
 		default:
@@ -61,18 +59,19 @@ namespace Awning::Backend
 		}
 	}
 
-	std::vector<Output> Outputs::Get()
+	std::tuple<int, int> Size(Displays displays)
 	{
-		return outputs;
-	}
+		int width = 0, height = 0;
+		for (auto display : displays)
+		{
+			auto [px, py] = WM::Output::Get::Position(display.output);
+			auto [sx, sy] = WM::Output::Get::Mode::Resolution(display.output, display.mode);
 
-	void Outputs::Add(Output output)
-	{
-		outputs.push_back(output);
-	}
-
-	void Outputs::Update(int a, Output output)
-	{
-		outputs[a] = output;
+			if (width  < px + sx)
+				width  = px + sx;
+			if (height < py + sy)
+				height = py + sy;
+		}
+		return {width, height};
 	}
 }

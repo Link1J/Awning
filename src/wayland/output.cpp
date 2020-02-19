@@ -13,10 +13,10 @@ namespace Awning::Wayland::Output
 
 	namespace Interface
 	{
-		void Release(struct wl_client *client, struct wl_resource *resource)
+		void Release(struct wl_client* client, struct wl_resource* resource)
 		{
 			Log::Function::Called("Wayland::Output::Interface");
-			wl_resource_destroy(resource);
+			Output::Destroy(resource);
 		}
 	}
 
@@ -29,39 +29,55 @@ namespace Awning::Wayland::Output
 			wl_client_post_no_memory(wl_client);
 			return;
 		}
-		wl_resource_set_implementation(resource, &interface, data, nullptr);
+		wl_resource_set_implementation(resource, &interface, data, Destroy);
 
-		for (auto& output : Backend::Outputs::Get())
-		{
-			wl_output_send_geometry(resource, 
-				0, 
-				0, 
-				output.physical.width, 
-				output.physical.height, 
-				WL_OUTPUT_SUBPIXEL_NONE, 
-				output.manufacturer.c_str(), 
-				output.model.c_str(), 
-				WL_OUTPUT_TRANSFORM_NORMAL
+		WM::Output::ID outputId = (WM::Output::ID)data;
+
+		auto [mX, mY] = WM::Output::Get::Size        (outputId);
+		auto [pX, pY] = WM::Output::Get::Position    (outputId);
+		auto manuf    = WM::Output::Get::Manufacturer(outputId);
+		auto model    = WM::Output::Get::Model       (outputId);
+
+		wl_output_send_geometry(resource, 
+			pX, pY, mX, mY,
+			WL_OUTPUT_SUBPIXEL_NONE, 
+			manuf.c_str(), 
+			model.c_str(), 
+			WL_OUTPUT_TRANSFORM_NORMAL
+		);
+
+		wl_output_send_scale(resource, 1);
+
+		for (int a = 0; a < WM::Output::Get::NumberOfModes(outputId); a++)
+		{		
+			auto [sX, sY] = WM::Output::Get::Mode::Resolution (outputId, a);
+			auto refresh  = WM::Output::Get::Mode::RefreshRate(outputId, a);
+			auto prefered = WM::Output::Get::Mode::Prefered   (outputId, a);
+			auto current  = WM::Output::Get::Mode::Current    (outputId, a);
+
+			wl_output_send_mode(resource, 
+				(current  ? WL_OUTPUT_MODE_CURRENT   : 0) | 
+				(prefered ? WL_OUTPUT_MODE_PREFERRED : 0) , 
+				sX, sY, refresh
 			);
-
-			wl_output_send_scale(resource, 1);
-
-			for (auto& mode : output.modes)
-			{
-				wl_output_send_mode(resource, 
-					(mode.current  ? WL_OUTPUT_MODE_CURRENT   : 0) | 
-					(mode.prefered ? WL_OUTPUT_MODE_PREFERRED : 0) , 
-					mode.resolution.width, 
-					mode.resolution.height, 
-					mode.refresh_rate
-				);
-			}
 		}
+
 		wl_output_send_done(resource);
 	}
 
 	wl_global* Add(struct wl_display* display, void* data)
 	{
-		return wl_global_create(display, &wl_output_interface, 2, data, Bind);
+		return wl_global_create(display, &wl_output_interface, 3, data, Bind);
+	}
+
+	void Destroy(struct wl_resource* resource)
+	{
+		if (!data.resource_to_outputId.contains(resource))
+			return;
+
+		auto id = data.resource_to_outputId[resource];
+		data.outputId_to_resource[id].erase(resource);
+		data.resource_to_outputId    .erase(resource);
+		wl_resource_destroy(resource);
 	}
 }

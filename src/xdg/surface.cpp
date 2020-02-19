@@ -60,12 +60,7 @@ namespace Awning::XDG::Surface
 			data.surfaces[resource].window->ConfigMinSize(width, height);
 			data.surfaces[resource].window->ConfigMaxSize(width, height);
 
-			auto texture = Backend::Data();
-
-			data.surfaces[resource].window->ConfigPos(
-				texture.width  / 2 - width  / 2,
-				texture.height / 2 - height / 2
-			);
+			data.surfaces[resource].window->ConfigPos(10, 10);
 
 			data.surfaces[resource].configured = true;
 		}

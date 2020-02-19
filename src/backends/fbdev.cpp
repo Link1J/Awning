@@ -21,9 +21,12 @@
 #include "fbdev.hpp"
 #include "manager.hpp"
 
+#include "wm/output.hpp"
+
 static Awning::WM::Texture framebuffer;
 static uint8_t* framebufferMaped;
 static int fd;
+static Awning::WM::Output::ID id;
 int tty_fd;
 
 void Awning::Backend::FBDEV::Start()
@@ -67,26 +70,17 @@ void Awning::Backend::FBDEV::Start()
 	framebuffer.buffer.pointer = new uint8_t[framebuffer.size];
 	framebufferMaped = (uint8_t*)mmap(0, framebuffer.size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, (off_t)0);
 
-	Output output {
-		.manufacturer = finf.id,
-		.model        = "N/A",
-		.physical     = {
-			.width  = vinf.width,
-			.height = vinf.height,
-		},
-		.modes        = {
-			Output::Mode {
-				.resolution   = {
-					.width  = vinf.xres,
-					.height = vinf.yres,
-				},
-				.refresh_rate = 0,
-				.prefered     = true,
-				.current      = true,
-			}
-		}
-	};
-	Outputs::Add(output);
+	id = WM::Output::Create();
+	WM::Output::Set::NumberOfModes(id, 1);
+
+	WM::Output::Set::Manufacturer(id, finf.id                );
+	WM::Output::Set::Model       (id, "N/A"                  );
+	WM::Output::Set::Size        (id, vinf.width, vinf.height);
+
+	WM::Output::Set::Mode::Resolution (id, 0, vinf.xres, vinf.yres);
+	WM::Output::Set::Mode::RefreshRate(id, 0, 0                   );
+	WM::Output::Set::Mode::Prefered   (id, 0, true                );
+	WM::Output::Set::Mode::Current    (id, 0, true                );
 }
 
 void Awning::Backend::FBDEV::Poll()

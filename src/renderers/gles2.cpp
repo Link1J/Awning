@@ -134,8 +134,6 @@ void main()
 
 namespace Awning::Renderers::GLES2
 {
-	WM::Texture data;
-
 	GLuint FBO;
 	GLuint FBO_Texture;
 	GLuint programOES;
@@ -193,35 +191,40 @@ namespace Awning::Renderers::GLES2
 		glDeleteShader(pixelShaderOES);
 		glDeleteShader(pixelShader2D );
 
-		data = Backend::Data();
-
-		glGenTextures(1, &FBO_Texture);
-		glBindTexture(GL_TEXTURE_2D, FBO_Texture);
-
-		glGenFramebuffers(1, &FBO);
-		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-
-		auto width = data.bytesPerLine / (data.bitsPerPixel / 8);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, FBO_Texture, 0);
-
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		//data = Backend::Data();
+//
+		//glGenTextures(1, &FBO_Texture);
+		//glBindTexture(GL_TEXTURE_2D, FBO_Texture);
+//
+		//glGenFramebuffers(1, &FBO);
+		//glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+//
+		//auto width = data.bytesPerLine / (data.bitsPerPixel / 8);
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, FBO_Texture, 0);
+//
+		//glBindTexture(GL_TEXTURE_2D, 0);
+		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//
+		//glEnable(GL_BLEND);
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 
 	void Draw()
 	{
 		eglMakeCurrent(Awning::Server::data.egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE, Awning::Server::data.egl.context);
 		
-		data = Backend::Data();
+		//data = Backend::Data();
 
-		auto width = data.bytesPerLine / (data.bitsPerPixel / 8);
+		//auto width = data.bytesPerLine / (data.bitsPerPixel / 8);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
+		//glBindTexture(GL_TEXTURE_2D, FBO_Texture);
+		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		//glBindTexture(GL_TEXTURE_2D, 0);
+
+		//glViewport(0, 0, width, data.height);
 		glClearColor(238 / 255., 238 / 255., 238 / 255., 1);
 		glClear(GL_COLOR_BUFFER_BIT);
 		
@@ -233,7 +236,7 @@ namespace Awning::Renderers::GLES2
 		if (Awning::Wayland::Pointer::data.window)
 			RenderWindow(Awning::Wayland::Pointer::data.window, 0, 0);
 	
-		glReadPixels(0, 0, width, data.height, GL_RGBA, GL_UNSIGNED_BYTE, data.buffer.pointer);
+		//glReadPixels(0, 0, width, data.height, GL_RGBA, GL_UNSIGNED_BYTE, data.buffer.pointer);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
@@ -304,8 +307,7 @@ namespace Awning::Renderers::GLES2
     		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			glGenerateMipmap(GL_TEXTURE_2D);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 			glBindTexture(GL_TEXTURE_2D, 0);
 		}
@@ -328,7 +330,7 @@ void loadEGLProc(void* proc_ptr, const char* name)
 
 int LoadOpenGLES2()
 {
-	loadEGLProc(&eglGetPlatformDisplayEXT , "eglGetPlatformDisplayEXT" );
+	loadEGLProc(&eglGetPlatformDisplayEXT, "eglGetPlatformDisplayEXT");
 
 	int32_t fd = open("/dev/dri/renderD128", O_RDWR);
 	struct gbm_device* gbm = gbm_create_device(fd);

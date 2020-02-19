@@ -10,8 +10,8 @@ namespace Awning::WM
 		uintptr_t bytesPerLine;
 		struct 
 		{
-			uintptr_t size;
-			uintptr_t offset;
+			uintptr_t size   = 0;
+			uintptr_t offset = 0;
 		} 
 		red, green, blue, alpha;
 

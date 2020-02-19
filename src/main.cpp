@@ -91,7 +91,7 @@ uint32_t NextSerialNum()
 
 int main(int argc, char* argv[])
 {
-	bool noX = false;
+	bool noX = true;
 	Awning::Backend::API api_output = Awning::Backend::API::X11; //FBDEV;
 	Awning::Backend::API api_input  = Awning::Backend::API::X11; //libinput;
 
@@ -139,8 +139,6 @@ int main(int argc, char* argv[])
 	const char* socket = wl_display_add_socket_auto(Awning::Server::data.display);
 	std::cout << "Wayland Socket: " << socket << std::endl;
 
-	Awning::Backend::Init(api_output, api_input);
-
 	Awning::Server::data.client_listener.notify = client_created;
 
 	Awning::Server::data.event_loop = wl_display_get_event_loop(Awning::Server::data.display);
@@ -148,10 +146,11 @@ int main(int argc, char* argv[])
 	wl_display_add_client_created_listener(Awning::Server::data.display, &Awning::Server::data.client_listener);
 
 	Awning::Server::data.sigusr1 = wl_event_loop_add_signal(Awning::Server::data.event_loop, SIGUSR1, XWM_Start, nullptr);
-	
+
+	Awning::Backend::Init(api_output, api_input);
+
 	Awning::Wayland::Compositor         ::Add(Awning::Server::data.display);
 	Awning::Wayland::Seat               ::Add(Awning::Server::data.display);
-	Awning::Wayland::Output             ::Add(Awning::Server::data.display);
 	Awning::Wayland::Shell              ::Add(Awning::Server::data.display);
 	Awning::XDG    ::WM_Base            ::Add(Awning::Server::data.display);
 	//Awning::ZXDG   ::Decoration_Manager ::Add(Awning::Server::data.display);
@@ -159,7 +158,7 @@ int main(int argc, char* argv[])
 
 	wl_display_init_shm(Awning::Server::data.display);
 
-	Awning::Renderers::Init(Awning::Renderers::API::OpenGL_ES_2);
+	Awning::Renderers::Init(Awning::Renderers::API::Software);
 
 	if (pid != 0)
 	{
@@ -239,7 +238,7 @@ void ProtocolLogger(void* user_data, wl_protocol_logger_type direction, const wl
 	//if (direction == 1)
 	//	return;
 
-	std::cout << "[" << direction_strings[direction] << "] " << message->resource->object.interface->name << ": " << message->message->name << "\n";
+	//std::cout << "[" << direction_strings[direction] << "] " << message->resource->object.interface->name << ": " << message->message->name << "\n";
 }
 
 void client_created(struct wl_listener* listener, void* data)

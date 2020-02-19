@@ -11,6 +11,7 @@
 #include "wayland/keyboard.hpp"
 
 #include "wm/manager.hpp"
+#include "wm/output.hpp"
 
 #include "log.hpp"
 
@@ -30,16 +31,19 @@
 #include  <GLES2/gl2.h>
 #include  <EGL/egl.h>
 
-static Display*		             display;
-static Window		             window;
-static GLXContext	             context;
-static GLuint		             texture;
-static EGLDisplay                egl_display;
-static EGLContext                egl_context;
-static EGLSurface                egl_surface;
-             
-static bool 		             resized = false;
-static Awning::WM::Texture framebuffer;
+struct WindowData
+{	
+	EGLSurface             surface            ;
+	bool 		           resized     = false;
+	Awning::WM::Texture    framebuffer        ;
+	Awning::WM::Output::ID id                 ;
+	GLuint                 texture            ;
+};
+
+static Display*		                          display    ;
+static EGLDisplay                             egl_display;
+static EGLContext                             egl_context;
+static std::unordered_map<Window, WindowData> windows    ;
 
 void CreateShader(GLuint& shader, GLenum type, const char* code, std::experimental::fundamentals_v2::source_location function = std::experimental::fundamentals_v2::source_location::current());
 void CreateProgram(GLuint& program, GLuint vertexShader, GLuint pixelShader, std::experimental::fundamentals_v2::source_location function = std::experimental::fundamentals_v2::source_location::current());
@@ -79,28 +83,36 @@ void main()
 
 namespace Awning::Backend::X11
 {
-	void CreateBackingTexture()
+	void CreateBackingTexture(Window window)
 	{
+		WindowData& data = windows[window];
+
+		eglMakeCurrent(egl_display, data.surface, data.surface, egl_context);
+
 		glEnable(GL_TEXTURE_2D);
-		glGenTextures(1, &texture);
-		glBindTexture(GL_TEXTURE_2D, texture);
+		glGenTextures(1, &data.texture);
+		glBindTexture(GL_TEXTURE_2D, data.texture);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, framebuffer.width, framebuffer.height, 
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, data.framebuffer.width, data.framebuffer.height, 
 			0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 
-		framebuffer.buffer.pointer = new uint8_t[framebuffer.size];
+		data.framebuffer.buffer.pointer = new uint8_t[data.framebuffer.size];
 	}
 
-	void ReleaseBackingTexture()
+	void ReleaseBackingTexture(Window window)
 	{
-		glDeleteTextures(1, &texture);
+		WindowData& data = windows[window];
 
-		if (framebuffer.buffer.pointer)
+		eglMakeCurrent(egl_display, data.surface, data.surface, egl_context);
+
+		glDeleteTextures(1, &data.texture);
+
+		if (data.framebuffer.buffer.pointer)
 		{
-			delete framebuffer.buffer.pointer;
-			framebuffer.buffer.pointer = nullptr;
+			delete data.framebuffer.buffer.pointer;
+			data.framebuffer.buffer.pointer = nullptr;
 		}
 	}
 }
@@ -123,12 +135,6 @@ void Awning::Backend::X11::Start()
 	screen = DefaultScreen(display);
 	auto root = RootWindow(display, screen);
 
-	attribs.event_mask = StructureNotifyMask|ButtonPressMask|KeyPressMask|PointerMotionMask|ButtonReleaseMask|KeyReleaseMask;
-	
-	window = XCreateWindow(display, root, 0, 0, width, height, 0, CopyFromParent, InputOutput, CopyFromParent, CWEventMask, &attribs);
-	XStoreName(display, window, "Awning (X11 Backend)");
-	XMapWindow(display, window);
-	
 	EGLint attr[] = {
 		EGL_BUFFER_SIZE, 16,
 		EGL_RENDERABLE_TYPE,
@@ -146,9 +152,13 @@ void Awning::Backend::X11::Start()
 	egl_display = eglGetDisplay((EGLNativeDisplayType)display);
 	eglInitialize(egl_display, NULL, NULL);
 	eglChooseConfig(egl_display, attr, &ecfg, 1, &num_config);
-	egl_surface = eglCreateWindowSurface(egl_display, ecfg, window, NULL);
 	egl_context = eglCreateContext(egl_display, ecfg, EGL_NO_CONTEXT, ctxattr);
-	eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
+	eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_context);
+
+	Atom wm_state = XInternAtom(display, "_NET_WM_STATE", False);
+	Atom _NET_WM_STATE_ADD = XInternAtom(display, "_NET_WM_STATE_ADD", False);
+	Atom max_horz = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
+	Atom max_vert = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", False);
 
 	std::cout << "X EGL Vendor  : " << eglQueryString(egl_display, EGL_VENDOR ) << "\n";
 	std::cout << "X EGL Version : " << eglQueryString(egl_display, EGL_VERSION) << "\n";
@@ -156,58 +166,77 @@ void Awning::Backend::X11::Start()
 	std::cout << "X GL Renderer : " << glGetString(GL_RENDERER                ) << "\n";
 	std::cout << "X GL Version  : " << glGetString(GL_VERSION                 ) << "\n";
 	std::cout << "X GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
-
-	framebuffer = Awning::WM::Texture {
-        .size         = width * height * 4,
-        .bitsPerPixel = 32,
-        .bytesPerLine = width * 4,
-        .red          = { 
-			.size   = 8,
-			.offset = 16
-		},
-        .green        = { 
-			.size   = 8,
-			.offset = 8
-		},
-        .blue         = { 
-			.size   = 8,
-			.offset = 0
-		},
-        .alpha        = { 
-			.size   = 8,
-			.offset = 24
-		},
-        .width        = width,
-        .height       = height
-    };
-
-	CreateBackingTexture();
+	
+	attribs.event_mask = StructureNotifyMask|ButtonPressMask|KeyPressMask|PointerMotionMask|ButtonReleaseMask|KeyReleaseMask;
+	
 	glClearColor(1, 1, 1, 1);
 	CreateShader(vertexShader, GL_VERTEX_SHADER, vertexShaderCode);
 	CreateShader(pixelShader, GL_FRAGMENT_SHADER, pixelShaderCode);
 	CreateProgram(program, vertexShader, pixelShader);
 	glUseProgram(program);
 
-	Output output {
-		.manufacturer = "X.Org Foundation",
-		.model        = "11.0",
-		.physical     = {
-			.width  = 0,
-			.height = 0,
-		},
-		.modes        = {
-			Output::Mode {
-				.resolution   = {
-					.width  = framebuffer.width,
-					.height = framebuffer.height,
-				},
-				.refresh_rate = 60000,
-				.prefered     = true,
-				.current      = true,
-			}
-		}
-	};
-	Outputs::Add(output);
+	for (int a = 0; a < 2; a++)
+	{
+		WindowData data;
+		Window window = XCreateWindow(display, root, 0, 0, width, height, 0, CopyFromParent, InputOutput, CopyFromParent, CWEventMask, &attribs);
+
+		XEvent xev;
+		memset(&xev, 0, sizeof(xev));
+		xev.type = ClientMessage;
+		xev.xclient.window = window;
+		xev.xclient.message_type = wm_state;
+		xev.xclient.format = 32;
+		xev.xclient.data.l[0] = _NET_WM_STATE_ADD;
+		xev.xclient.data.l[1] = max_horz;
+		xev.xclient.data.l[2] = max_vert;
+
+		XSendEvent(display, root, False, SubstructureNotifyMask, &xev);
+
+		XStoreName(display, window, "Awning (X11 Backend)");
+		XMapWindow(display, window);
+
+		data.surface = eglCreateWindowSurface(egl_display, ecfg, window, NULL);
+
+		data.framebuffer = Awning::WM::Texture {
+    	    .size         = (uintptr_t)width * height * 4,
+    	    .bitsPerPixel = 32,
+    	    .bytesPerLine = (uintptr_t)width * 4,
+    	    .red          = { 
+				.size   = 8,
+				.offset = 16
+			},
+    	    .green        = { 
+				.size   = 8,
+				.offset = 8
+			},
+    	    .blue         = { 
+				.size   = 8,
+				.offset = 0
+			},
+    	    .alpha        = { 
+				.size   = 8,
+				.offset = 24
+			},
+    	    .width        = (uintptr_t)width,
+    	    .height       = (uintptr_t)height
+    	};
+
+		data.id = WM::Output::Create();
+		WM::Output::Set::NumberOfModes(data.id, 1);
+
+		WM::Output::Set::Manufacturer(data.id, "X.Org Foundation");
+		WM::Output::Set::Model       (data.id, "11.0"            );
+		WM::Output::Set::Size        (data.id, 0, 0              );
+
+		WM::Output::Set::Mode::Resolution (data.id, 0, data.framebuffer.width, data.framebuffer.height);
+		WM::Output::Set::Mode::RefreshRate(data.id, 0, 0                                              );
+		WM::Output::Set::Mode::Prefered   (data.id, 0, true                                           );
+		WM::Output::Set::Mode::Current    (data.id, 0, true                                           );
+
+		windows[window] = data;
+
+		CreateBackingTexture(window);
+	}
 }
 
 uint32_t XorgMouseToLinuxInputMouse(uint32_t button)
@@ -218,16 +247,9 @@ uint32_t XorgMouseToLinuxInputMouse(uint32_t button)
 	return BTN_EXTRA;
 }
 
-uint32_t XorgKeyboardToLinuxInputKeyboard(uint32_t button)
-{
-}
-
 void Awning::Backend::X11::Hand()
 {
-	eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
-
 	XEvent event;
-	int preWidth = framebuffer.width, preHeight = framebuffer.height;
 
 	while(XPending(display))
 	{
@@ -235,11 +257,20 @@ void Awning::Backend::X11::Hand()
 
 		if (event.type == ConfigureNotify)
 		{
-			framebuffer.width   = event.xconfigurerequest.width ;
-			framebuffer.height  = event.xconfigurerequest.height;
+			WindowData& data = windows[event.xconfigure.window];
+			if (data.framebuffer.width == event.xconfigure.width || data.framebuffer.height == event.xconfigure.height)
+				continue;
 
-			if (preWidth != framebuffer.width || preHeight != framebuffer.height)
-				resized = true;
+			data.framebuffer.width  = event.xconfigure.width ;
+			data.framebuffer.height = event.xconfigure.height;
+
+			data.framebuffer.size = data.framebuffer.width * data.framebuffer.height * 4;
+			data.framebuffer.bytesPerLine = data.framebuffer.width * 4;
+
+			ReleaseBackingTexture(event.xconfigure.window);
+			CreateBackingTexture (event.xconfigure.window);
+
+			WM::Output::Set::Mode::Resolution(data.id, 0, data.framebuffer.width, data.framebuffer.height);
 		}
 		else if (event.type == ClientMessage)
 		{
@@ -281,62 +312,45 @@ void Awning::Backend::X11::Hand()
 			Awning::WM::Manager::Handle::Input::Keyboard::Released(event.xkey.keycode - 8);
 		}
 	}
-
-	if (resized)
-	{
-		framebuffer.size = framebuffer.width * framebuffer.height * 4;
-		framebuffer.bytesPerLine = framebuffer.width * 4;
-
-		ReleaseBackingTexture();
-		CreateBackingTexture();
-
-		Output output {
-			.manufacturer = "X.Org Foundation",
-			.model        = "11.0",
-			.physical     = {
-				.width  = 0,
-				.height = 0,
-			},
-			.modes        = {
-				Output::Mode {
-					.resolution   = {
-						.width  = framebuffer.width,
-						.height = framebuffer.height,
-					},
-					.refresh_rate = 60000,
-					.prefered     = true,
-					.current      = true,
-				}
-			}
-		};
-		Outputs::Update(0, output);
-
-		resized = false;
-	}
-
-	memset(framebuffer.buffer.pointer, 0xEE, framebuffer.size);
 }
 
 void Awning::Backend::X11::Draw()
 {
-	eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
+	for (auto [window, data] : windows)
+	{
+		eglMakeCurrent(egl_display, data.surface, data.surface, egl_context);
 
-	glClear(GL_COLOR_BUFFER_BIT);
-	glViewport(0, 0, framebuffer.width, framebuffer.height);
+		glClear(GL_COLOR_BUFFER_BIT);
+		glViewport(0, 0, data.framebuffer.width, data.framebuffer.height);
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, framebuffer.width, framebuffer.height, GL_RGBA, GL_UNSIGNED_BYTE, framebuffer.buffer.pointer);
-	glDrawArrays(GL_TRIANGLES, 0, 6);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, data.texture);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, data.framebuffer.width, data.framebuffer.height, GL_RGBA, GL_UNSIGNED_BYTE, data.framebuffer.buffer.pointer);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 
-	eglSwapBuffers(egl_display, egl_surface);
+		eglSwapBuffers(egl_display, data.surface);
+	}
 }
 
 void Awning::Backend::X11::Poll()
 {
 }
 
-Awning::WM::Texture Awning::Backend::X11::Data()
+Awning::Backend::Displays Awning::Backend::X11::GetDisplays()
 {
-	return framebuffer;
+	Displays displays;
+
+	for (auto [window, data] : windows)
+	{
+		if (data.id == -1)
+			continue;
+
+		Display display;
+		display.output  = data.id         ;
+		display.texture = data.framebuffer;
+		display.mode    = 0               ;
+		displays.push_back(display);
+	}
+
+	return displays;
 }
