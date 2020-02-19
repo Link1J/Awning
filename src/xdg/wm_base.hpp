@@ -6,7 +6,6 @@ namespace Awning::XDG::WM_Base
 {
 	struct Data 
 	{
-		wl_global* global;
 	};
 
 	extern const struct xdg_wm_base_interface interface;
@@ -20,6 +19,6 @@ namespace Awning::XDG::WM_Base
 		void Pong(struct wl_client* client, struct wl_resource* resource, uint32_t serial);
 	}
 
-	void Add (struct wl_display* display                                            );
-	void Bind(struct wl_client *wl_client, void *data, uint32_t version, uint32_t id);
+	wl_global* Add (struct wl_display* display, void* data = nullptr                      );
+	void       Bind(struct wl_client *wl_client, void *data, uint32_t version, uint32_t id);
 }

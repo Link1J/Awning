@@ -39,8 +39,8 @@ namespace Awning::Wayland::Compositor
 		wl_resource_set_implementation(resource, &interface, data, nullptr);
 	}
 
-	void Add(struct wl_display* display)
+	wl_global* Add(struct wl_display* display, void* data)
 	{
-		data.global = wl_global_create(display, &wl_compositor_interface, 4, nullptr, Bind);
+		return wl_global_create(display, &wl_compositor_interface, 4, data, Bind);
 	}
 }

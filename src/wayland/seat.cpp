@@ -54,8 +54,8 @@ namespace Awning::Wayland::Seat
 		wl_seat_send_capabilities(resource, WL_SEAT_CAPABILITY_POINTER|WL_SEAT_CAPABILITY_KEYBOARD);
 	}
 
-	void Add(struct wl_display* display)
+	wl_global* Add(struct wl_display* display, void* data)
 	{
-		data.global = wl_global_create(display, &wl_seat_interface, 3, nullptr, Bind);
+		return wl_global_create(display, &wl_seat_interface, 3, data, Bind);
 	}
 }

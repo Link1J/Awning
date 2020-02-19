@@ -14,6 +14,7 @@ namespace Awning::Wayland::Pointer
 		{
 			wl_client* client;
 			bool inUse = false;
+			int version = 0;
 		};
 
 		std::unordered_map<wl_resource*,Interface> pointers;

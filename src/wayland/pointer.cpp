@@ -63,6 +63,7 @@ namespace Awning::Wayland::Pointer
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
 		data.pointers[resource].client = wl_client;
+		data.pointers[(wl_resource*)resource].version = version;
 
 		WM::Client::Bind::Pointer(wl_client, resource);
 
@@ -155,6 +156,12 @@ namespace Awning::Wayland::Pointer
 	void Frame(wl_client* client)
 	{
 		for (auto resource : WM::Client::Get::All::Pointers(client))
+		{
+			auto version = data.pointers[(wl_resource*)resource].version;
+			if (version < WL_POINTER_FRAME_SINCE_VERSION)
+				continue;
+
 			wl_pointer_send_frame((wl_resource*)resource);
+		}
 	}
 }

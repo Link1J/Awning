@@ -60,8 +60,8 @@ namespace Awning::Wayland::Output
 		wl_output_send_done(resource);
 	}
 
-	void Add(struct wl_display* display)
+	wl_global* Add(struct wl_display* display, void* data)
 	{
-		data.global = wl_global_create(display, &wl_output_interface, 2, nullptr, Bind);
+		return wl_global_create(display, &wl_output_interface, 2, data, Bind);
 	}
 }

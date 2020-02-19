@@ -37,8 +37,8 @@ namespace Awning::Wayland::Data_Device_Manager
 		wl_resource_set_implementation(resource, &interface, data, nullptr);
 	}
 
-	void Add(struct wl_display* display)
+	wl_global* Add(struct wl_display* display, void* data)
 	{
-		data.global = wl_global_create(display, &wl_data_device_manager_interface, 3, nullptr, Bind);
+		return wl_global_create(display, &wl_data_device_manager_interface, 3, data, Bind);
 	}
 }
