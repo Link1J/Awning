@@ -1,7 +1,6 @@
 #include "manager.hpp"
 
 #include "X11.hpp"
-#include "fbdev.hpp"
 #include "evdev.hpp"
 #include "libinput.hpp"
 #include "drm.hpp"

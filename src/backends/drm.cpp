@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <libdrm/drm.h>
 #include <libdrm/drm_mode.h>
@@ -155,7 +156,7 @@ void CheckData()
 				}
 				Output::ID output = card.connectors[i].output;
 
-				if (Output::Get::NumberOfModes(output) == conn.count_modes)
+				if (Output::Get::NumberOfModes(output) != conn.count_modes)
 					Output::Set::NumberOfModes(output, conn.count_modes);
 
 				Output::Set::Manufacturer(output, "N/A"                        );

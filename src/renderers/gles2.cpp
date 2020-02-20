@@ -391,6 +391,38 @@ int LoadOpenGLES2()
 {
 	loadEGLProc(&eglGetPlatformDisplayEXT, "eglGetPlatformDisplayEXT");
 
+	/*
+	for(auto& di : std::filesystem::directory_iterator("/dev/dri"))
+	{
+		auto p = di.path();
+		std::string s = p.filename();
+
+		if (s.starts_with("renderD"))
+		{
+			drm_version version = {0};
+			drm_irq_busid irq = {0};
+			int dri_fd = open(p.c_str(), O_RDWR | O_CLOEXEC);
+			ioctl(dri_fd, DRM_IOCTL_VERSION, &version);
+			ioctl(dri_fd, DRM_IOCTL_IRQ_BUSID, &irq);
+
+			version.name = (char*)malloc(version.name_len);
+			version.date = (char*)malloc(version.date_len);
+			version.desc = (char*)malloc(version.desc_len);
+
+			ioctl(dri_fd, DRM_IOCTL_VERSION, &version);
+			close(dri_fd);
+
+			std::cout << s << " | Name: " << version.name << " | Date: " << version.date << " | Desc: " << version.desc
+					  <<      " | Bus : " << irq.busnum   << " | Dev : " << irq.devnum   <<
+			"\n";
+
+			free(version.name);
+			free(version.date);
+			free(version.desc);
+		}
+	}
+	*/
+
 	int32_t fd = open("/dev/dri/renderD128", O_RDWR);
 	struct gbm_device* gbm = gbm_create_device(fd);
 
