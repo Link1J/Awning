@@ -248,7 +248,6 @@ namespace Awning::Renderers::GLES2
 
 		eglMakeCurrent(Awning::Server::data.egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE, Awning::Server::data.egl.context);
 		
-
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
 		glBindTexture(GL_TEXTURE_2D, FBO_Texture);

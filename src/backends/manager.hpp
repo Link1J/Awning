@@ -8,7 +8,7 @@ namespace Awning::Backend
 {
 	enum class API
 	{
-		NONE, X11, FBDEV, EVDEV, libinput, DRM
+		NONE, X11, EVDEV, libinput, DRM
 	};
 
 	struct Display

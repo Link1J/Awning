@@ -9,7 +9,6 @@ set(SOURCES
 
     src/backends/X11.cpp
     src/backends/manager.cpp
-    src/backends/fbdev.cpp
     src/backends/evdev.cpp
     src/backends/libinput.cpp
     src/backends/drm.cpp

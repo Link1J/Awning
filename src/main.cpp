@@ -92,8 +92,8 @@ uint32_t NextSerialNum()
 int main(int argc, char* argv[])
 {
 	bool noX = true;
-	Awning::Backend::API api_output = Awning::Backend::API::X11; //FBDEV;
-	Awning::Backend::API api_input  = Awning::Backend::API::X11; //libinput;
+	Awning::Backend::API api_output = Awning::Backend::API::DRM;
+	Awning::Backend::API api_input  = Awning::Backend::API::libinput;
 
 	for(int a = 0; a < argc; a++)
 	{
@@ -101,11 +101,6 @@ int main(int argc, char* argv[])
 		if (arg == "-noX")
 		{
 			noX = true;
-		}
-		if (arg == "-fbdev")
-		{
-			api_output = Awning::Backend::API::FBDEV;
-			api_input  = Awning::Backend::API::libinput;
 		}
 		if (arg == "-x11")
 		{
@@ -115,7 +110,14 @@ int main(int argc, char* argv[])
 		if (arg == "-drm")
 		{
 			api_output = Awning::Backend::API::DRM;
+		}
+		if (arg == "-libinput")
+		{
 			api_input  = Awning::Backend::API::libinput;
+		}
+		if (arg == "-evdev")
+		{
+			api_input  = Awning::Backend::API::EVDEV;
 		}
 	}
 

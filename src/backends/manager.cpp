@@ -23,12 +23,6 @@ namespace Awning::Backend
 			Draw        = X11  ::Draw       ;
 			GetDisplays = X11  ::GetDisplays;
 			break;
-		//case API::FBDEV:
-		//	FBDEV::Start();
-		//	Poll        = FBDEV::Poll       ;
-		//	Draw        = FBDEV::Draw       ;
-		//	GetDisplays = FBDEV::GetDisplays;
-		//	break;
 		case API::DRM:
 			DRM::Start();
 			Poll        = DRM  ::Poll       ;
