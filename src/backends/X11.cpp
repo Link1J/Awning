@@ -175,7 +175,9 @@ void Awning::Backend::X11::Start()
 	CreateProgram(program, vertexShader, pixelShader);
 	glUseProgram(program);
 
-	for (int a = 0; a < 2; a++)
+	int xOffset = 0;
+
+	for (int a = 0; a < 3; a++)
 	{
 		WindowData data;
 		Window window = XCreateWindow(display, root, 0, 0, width, height, 0, CopyFromParent, InputOutput, CopyFromParent, CWEventMask, &attribs);
@@ -227,7 +229,8 @@ void Awning::Backend::X11::Start()
 		WM::Output::Set::Manufacturer(data.id, "X.Org Foundation");
 		WM::Output::Set::Model       (data.id, "11.0"            );
 		WM::Output::Set::Size        (data.id, 0, 0              );
-
+		WM::Output::Set::Position    (data.id, xOffset, 0        );
+		
 		WM::Output::Set::Mode::Resolution (data.id, 0, data.framebuffer.width, data.framebuffer.height);
 		WM::Output::Set::Mode::RefreshRate(data.id, 0, 0                                              );
 		WM::Output::Set::Mode::Prefered   (data.id, 0, true                                           );
@@ -236,6 +239,8 @@ void Awning::Backend::X11::Start()
 		windows[window] = data;
 
 		CreateBackingTexture(window);
+
+		xOffset += data.framebuffer.width;
 	}
 }
 
@@ -277,7 +282,8 @@ void Awning::Backend::X11::Hand()
 		}
 		else if (event.type == MotionNotify)
 		{
-			Awning::WM::Manager::Handle::Input::Mouse::Moved(event.xbutton.x, event.xbutton.y);			
+			auto [px, py] = WM::Output::Get::Position(windows[event.xmotion.window].id);
+			Awning::WM::Manager::Handle::Input::Mouse::Moved(px + event.xmotion.x, py + event.xmotion.y);			
 		}
 		else if (event.type == ButtonPress)
 		{

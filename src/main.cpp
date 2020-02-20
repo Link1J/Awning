@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
 
 	wl_display_init_shm(Awning::Server::data.display);
 
-	Awning::Renderers::Init(Awning::Renderers::API::Software);
+	Awning::Renderers::Init(Awning::Renderers::API::OpenGL_ES_2);
 
 	if (pid != 0)
 	{

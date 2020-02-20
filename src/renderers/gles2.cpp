@@ -138,6 +138,12 @@ namespace Awning::Renderers::GLES2
 	GLuint FBO_Texture;
 	GLuint programOES;
 	GLuint program2D;
+	uint8_t* buffer = nullptr;
+	int bitsPerPixel;
+	int bytesPerLine;
+	int width  = 0;
+	int height = 0;
+	int size;
 
 	void RenderWindow(WM::Window* window, int count = 2, int frame = 1)
 	{
@@ -191,44 +197,67 @@ namespace Awning::Renderers::GLES2
 		glDeleteShader(pixelShaderOES);
 		glDeleteShader(pixelShader2D );
 
-		//data = Backend::Data();
-//
-		//glGenTextures(1, &FBO_Texture);
-		//glBindTexture(GL_TEXTURE_2D, FBO_Texture);
-//
-		//glGenFramebuffers(1, &FBO);
-		//glBindFramebuffer(GL_FRAMEBUFFER, FBO);
-//
-		//auto width = data.bytesPerLine / (data.bitsPerPixel / 8);
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-		//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, FBO_Texture, 0);
-//
-		//glBindTexture(GL_TEXTURE_2D, 0);
-		//glBindFramebuffer(GL_FRAMEBUFFER, 0);
-//
-		//glEnable(GL_BLEND);
-		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		auto list     = WM::Manager::Window::Get();
+		auto displays = Backend::GetDisplays();
+		auto [nW, nH] = Backend::Size(displays);
+
+		width  = nW;
+		height = nH;
+
+		bitsPerPixel = 32;
+		bytesPerLine = width * 4;
+		size = width * 4 * height;
+
+		buffer = new uint8_t[size];
+
+		glGenTextures(1, &FBO_Texture);
+		glBindTexture(GL_TEXTURE_2D, FBO_Texture);
+
+		glGenFramebuffers(1, &FBO);
+		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, FBO_Texture, 0);
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 
 	void Draw()
 	{
+		auto list     = WM::Manager::Window::Get();
+		auto displays = Backend::GetDisplays();
+		auto [nW, nH] = Backend::Size(displays);
+
+		if (nW != width || nH != height)
+		{
+			delete buffer;
+
+			width  = nW;
+			height = nH;
+
+			bitsPerPixel = 32;
+			bytesPerLine = width * 4;
+			size = width * 4 * height;
+
+			buffer = new uint8_t[size];	
+		}
+
 		eglMakeCurrent(Awning::Server::data.egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE, Awning::Server::data.egl.context);
 		
-		//data = Backend::Data();
-
-		//auto width = data.bytesPerLine / (data.bitsPerPixel / 8);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
-		//glBindTexture(GL_TEXTURE_2D, FBO_Texture);
-		//glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-		//glBindTexture(GL_TEXTURE_2D, 0);
+		glBindTexture(GL_TEXTURE_2D, FBO_Texture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glBindTexture(GL_TEXTURE_2D, 0);
 
-		//glViewport(0, 0, width, data.height);
+		glViewport(0, 0, width, height);
 		glClearColor(238 / 255., 238 / 255., 238 / 255., 1);
 		glClear(GL_COLOR_BUFFER_BIT);
-		
-		auto list = WM::Manager::Window::Get();
 
 		for (auto& window : reverse(list))
 			RenderWindow(window);
@@ -236,6 +265,37 @@ namespace Awning::Renderers::GLES2
 		if (Awning::Wayland::Pointer::data.window)
 			RenderWindow(Awning::Wayland::Pointer::data.window, 0, 0);
 	
+		for (auto& display : displays)
+		{
+			auto [px, py] = WM::Output::Get::      Position  (display.output              );
+			auto [sx, sy] = WM::Output::Get::Mode::Resolution(display.output, display.mode);
+
+			glReadPixels(px, py, sx, sy, GL_RGBA, GL_UNSIGNED_BYTE, display.texture.buffer.pointer);
+
+			//for (int x = 0; x < sx; x++)
+			//	for (int y = 0; y < sy; y++)
+			//	{
+			//		if ((px + x) <  0     )
+			//			continue;
+			//		if ((py + y) <  0     )
+			//			continue;
+			//		if ((px + x) >= width )
+			//			continue;
+			//		if ((py + y) >= height)
+			//			continue;
+//
+			//		int framebOffset = (px + x) * (bitsPerPixel / 8)
+			//						 + (py + y) *  bytesPerLine    ;
+			//		int windowOffset = (x) * (display.texture.bitsPerPixel / 8)
+			//						 + (y) *  display.texture.bytesPerLine    ;
+//
+			//		display.texture.buffer.pointer[windowOffset + (display.texture.red  .offset / 8)] = buffer[framebOffset + 2];
+			//		display.texture.buffer.pointer[windowOffset + (display.texture.green.offset / 8)] = buffer[framebOffset + 1];
+			//		display.texture.buffer.pointer[windowOffset + (display.texture.blue .offset / 8)] = buffer[framebOffset + 0];
+			//	}
+		}
+
+
 		//glReadPixels(0, 0, width, data.height, GL_RGBA, GL_UNSIGNED_BYTE, data.buffer.pointer);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
