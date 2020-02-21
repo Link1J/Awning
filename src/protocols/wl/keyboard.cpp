@@ -149,8 +149,12 @@ namespace Awning::Protocols::WL::Keyboard
 
 		for (auto resource : WM::Client::Get::All::Keyboards(client))
 		{
+			wl_keyboard_send_enter((wl_resource*)resource, NextSerialNum(), surface, states);
+
 			wl_keyboard_send_modifiers((wl_resource*)resource, NextSerialNum(), depressed, latched, locked, group);
 			wl_keyboard_send_key((wl_resource*)resource, NextSerialNum(), time, button, stateKey);
+
+			wl_keyboard_send_leave((wl_resource*)resource, NextSerialNum(), surface);
 		}
 		
 		wl_array_release(states);
@@ -161,21 +165,22 @@ namespace Awning::Protocols::WL::Keyboard
 	{
 		auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
 
-		for (auto resource : WM::Client::Get::All::Keyboards(client1))
-		{
-			wl_keyboard_send_leave((wl_resource*)resource, NextSerialNum(), surface1);
-		}
-
-		for (auto resource : WM::Client::Get::All::Keyboards(client2))
-		{
-			wl_array* states = new wl_array();
-			wl_array_init(states);
-
-			wl_keyboard_send_enter((wl_resource*)resource, NextSerialNum(), surface2, states);
-
-			wl_array_release(states);
-			delete states;
-		}
+		//if (Surface::data.surfaces.contains(surface1))
+		//	for (auto resource : WM::Client::Get::All::Keyboards(client1))
+		//	{
+		//		wl_keyboard_send_leave((wl_resource*)resource, NextSerialNum(), surface1);
+		//	}
+//
+		//for (auto resource : WM::Client::Get::All::Keyboards(client2))
+		//{
+		//	wl_array* states = new wl_array();
+		//	wl_array_init(states);
+//
+		//	wl_keyboard_send_enter((wl_resource*)resource, NextSerialNum(), surface2, states);
+//
+		//	wl_array_release(states);
+		//	delete states;
+		//}
 
 		surface = surface2;
 	}

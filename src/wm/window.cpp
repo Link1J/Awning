@@ -6,11 +6,12 @@ namespace Awning::WM
 	{
 		Window* window = new Window();
 
-		window->data = nullptr;
-		window->texture = nullptr;
-		window->mapped = false;
-		window->pos.x = 0;
-		window->pos.y = 0;
+		window->data      = nullptr;
+		window->texture   = nullptr;
+		window->parent    = nullptr;
+		window->mapped    = false;
+		window->pos.x     = 0;
+		window->pos.y     = 0;
 		window->minSize.x = 1;
 		window->minSize.y = 1;
 		window->maxSize.x = INT32_MAX;
@@ -26,11 +27,12 @@ namespace Awning::WM
 	{
 		Window* window = new Window();
 
-		window->data = nullptr;
-		window->texture = nullptr;
-		window->mapped = false;
-		window->pos.x = 0;
-		window->pos.y = 0;
+		window->data      = nullptr;
+		window->texture   = nullptr;
+		window->parent    = nullptr;
+		window->mapped    = false;
+		window->pos.x     = 0;
+		window->pos.y     = 0;
 		window->minSize.x = 1;
 		window->minSize.y = 1;
 		window->maxSize.x = INT32_MAX;
@@ -61,16 +63,22 @@ namespace Awning::WM
 
 	bool Window::Mapped()
 	{
-		return mapped;
+		if (parent)
+			return parent->texture && parent->mapped && texture && mapped;
+		return texture && mapped;
 	}
 
 	int Window::XPos()
 	{
+		if (parent && parentOffsets)
+			return parent->XPos() + pos.x;
 		return pos.x;
 	}
 
 	int Window::YPos()
 	{
+		if (parent && parentOffsets)
+			return parent->YPos() + pos.y;
 		return pos.y;
 	}
 
@@ -167,6 +175,11 @@ namespace Awning::WM
 			this->maxSize.x = xSize;
 			this->maxSize.y = ySize;
 		}
-		
+	}
+
+	void Window::Parent(WM::Window* parent, bool offsets)
+	{
+		this->parent = parent;
+		parentOffsets = offsets;
 	}
 }

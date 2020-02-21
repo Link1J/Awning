@@ -4,6 +4,8 @@
 #include "surface.hpp"
 
 #include "protocols/wl/surface.hpp"
+#include "protocols/xdg/positioner.hpp"
+#include "protocols/xdg/surface.hpp"
 
 namespace Awning::Protocols::XDG::Popup
 {
@@ -48,7 +50,17 @@ namespace Awning::Protocols::XDG::Popup
 		WL::Surface::data.surfaces[surface_wl].window = data.popups[resource].window;
 		    Surface::data.surfaces[surface   ].window = data.popups[resource].window;
 
-		data.popups[resource].window->Data      (resource);
+		auto pointer = Positioner::data.instances[point];
+
+		WL::Surface::data.surfaces[surface_wl].type = 2;
+
+		data.popups[resource].window->Data(resource);
+		data.popups[resource].window->ConfigPos(pointer.x, pointer.y);
+		data.popups[resource].window->ConfigSize(pointer.width, pointer.height);
+		data.popups[resource].window->Parent(Surface::data.surfaces[parent].window, true);
+		Surface::data.surfaces[resource].configured = true;
+
+		xdg_popup_send_configure(resource, pointer.x, pointer.y, pointer.width, pointer.height);
 	}
 
 	void Destroy(struct wl_resource* resource)
@@ -64,7 +76,7 @@ namespace Awning::Protocols::XDG::Popup
 			Surface::data.surfaces[surface   ].window = nullptr;
 		WL::Surface::data.surfaces[surface_wl].window = nullptr;
 
-		data.popups[resource].window->Mapped(false);
+		data.popups[resource].window->Mapped (false  );
 		data.popups[resource].window->Texture(nullptr);
 		WM::Window::Destory(data.popups[resource].window);
 		data.popups.erase(resource);

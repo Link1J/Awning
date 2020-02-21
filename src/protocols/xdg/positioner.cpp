@@ -20,16 +20,25 @@ namespace Awning::Protocols::XDG::Positioner
 		void Destroy(struct wl_client* client, struct wl_resource* resource)
 		{
 			Log::Function::Called("Protocols::XDG::Positioner::Interface");
+			Positioner::Destroy(resource);
 		}
 
 		void Set_Size(struct wl_client* client, struct wl_resource* resource, int32_t width, int32_t height)
 		{
 			Log::Function::Called("Protocols::XDG::Positioner::Interface");
+
+			data.instances[resource].width  = width ;
+			data.instances[resource].height = height;
 		}
 
 		void Set_Anchor_Rect(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
 		{
 			Log::Function::Called("Protocols::XDG::Positioner::Interface");
+
+			data.instances[resource].x      = x     ;
+			data.instances[resource].y      = y     ;
+			data.instances[resource].width  = width ;
+			data.instances[resource].height = height;
 		}
 
 		void Set_Anchor(struct wl_client* client, struct wl_resource* resource, uint32_t anchor)
@@ -50,6 +59,9 @@ namespace Awning::Protocols::XDG::Positioner
 		void Set_Offset(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y)
 		{
 			Log::Function::Called("Protocols::XDG::Positioner::Interface");
+
+			data.instances[resource].x = x;
+			data.instances[resource].y = y;
 		}
 	}
 
@@ -63,10 +75,17 @@ namespace Awning::Protocols::XDG::Positioner
 			return;
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
+
+		data.instances[resource] = Data::Instance();
 	}
 
 	void Destroy(struct wl_resource* resource)
 	{
 		Log::Function::Called("Protocols::XDG::Positioner");
+
+		if (!data.instances.contains(resource))
+			return;
+
+		data.instances.erase(resource);
 	}
 }

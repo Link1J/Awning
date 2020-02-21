@@ -17,6 +17,8 @@ namespace Awning::WM
 		Manager::Functions::Window::Raised  Raised ;
 
 		WM::Texture* texture;
+		WM::Window * parent;
+		bool parentOffsets;
 
 		struct {
 			int x, y;
@@ -48,6 +50,7 @@ namespace Awning::WM
 		void         Texture      (WM::Texture* texture                   );
 		void         ConfigMinSize(int xSize, int ySize                   );
 		void         ConfigMaxSize(int xSize, int ySize                   );
+		void         Parent       (WM::Window* parent, bool offsets       );
 
 		void SetRaised (Manager::Functions::Window::Raised  raised );
 		void SetResized(Manager::Functions::Window::Resized resized);

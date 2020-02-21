@@ -48,21 +48,12 @@ namespace Awning::Protocols::XDG::Surface
 		{
 			Log::Function::Called("Protocols::XDG::Surface::Interface");
 			
-			if (!data.surfaces.contains(resource))
-				return;
 			if (!data.surfaces[resource].window)
 				return;
-			if (data.surfaces[resource].configured)
-				return;
-
-			data.surfaces[resource].window->ConfigPos(x, y, true);
+			
+			if (x != 0 || y != 0)
+				data.surfaces[resource].window->ConfigPos(x, y, true);
 			data.surfaces[resource].window->ConfigSize(width, height);
-			//data.surfaces[resource].window->ConfigMinSize(width, height);
-			//data.surfaces[resource].window->ConfigMaxSize(width, height);
-
-			data.surfaces[resource].window->ConfigPos(10, 10);
-
-			data.surfaces[resource].configured = true;
 		}
 
 		void Ack_Configure(struct wl_client* client, struct wl_resource* resource, uint32_t serial)

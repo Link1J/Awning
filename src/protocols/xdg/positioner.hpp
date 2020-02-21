@@ -8,6 +8,13 @@ namespace Awning::Protocols::XDG::Positioner
 {
 	struct Data 
 	{
+		struct Instance 
+		{
+			int32_t width, height;
+			int32_t x, y;
+		};
+
+		std::unordered_map<wl_resource*, Instance> instances;
 	};
 
 	extern const struct xdg_positioner_interface interface;

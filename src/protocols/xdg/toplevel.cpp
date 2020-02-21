@@ -144,6 +144,8 @@ namespace Awning::Protocols::XDG::TopLevel
 		WL::Surface::data.surfaces[surface_wl].window = data.toplevels[resource].window;
 		    Surface::data.surfaces[surface   ].window = data.toplevels[resource].window;
 
+		WL::Surface::data.surfaces[surface_wl].type = 1;
+
 		data.toplevels[resource].window->Data      (resource);
 		data.toplevels[resource].window->SetRaised (Raised  );
 		data.toplevels[resource].window->SetResized(Resized );

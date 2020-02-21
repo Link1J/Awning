@@ -142,6 +142,10 @@ namespace Awning::Protocols::WL::Surface
 				{
 					xdg_surface_send_configure(surface.shell, NextSerialNum());
 				}
+				if (surface.type == 2)
+				{
+					xdg_surface_send_configure(surface.shell, NextSerialNum());
+				}
 				return;
 			}
 
@@ -164,7 +168,7 @@ namespace Awning::Protocols::WL::Surface
 
 			if (surface.window)
 			{
-				if (surface.window->XSize() == 0 && surface.window->YSize() == 0)
+				if ((surface.window->XSize() == 0 && surface.window->YSize() == 0) || surface.type == 2)
 					surface.window->ConfigSize(surface.texture->width, surface.texture->height);
 
 				surface.window->Mapped(true);

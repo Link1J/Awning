@@ -194,7 +194,7 @@ void Awning::Backend::X11::Start()
 
 	int xOffset = 0;
 
-	for (int a = 1; a <= 3; a++)
+	for (int a = 1; a <= 1; a++)
 	{
 		WindowData data;
 		Window window = XCreateWindow(display, root, 0, 0, width, height, 0, CopyFromParent, InputOutput, CopyFromParent, CWEventMask, &attribs);

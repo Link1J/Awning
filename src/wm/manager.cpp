@@ -401,6 +401,7 @@ namespace Awning::WM::Manager
 				curr++;
 			}
 			windowList.erase(curr);
+			Raise(*windowList.begin());
 		}
 
 		void Raise(Awning::WM::Window* window)
@@ -433,10 +434,6 @@ namespace Awning::WM::Manager
 
 		void Resize(Awning::WM::Window* window, int xSize, int ySize)
 		{
-			printf("    Size: %4d,%4d\n", xSize, ySize);
-			printf("    Min : %4d,%4d\n", window->minSize.x, window->minSize.y);
-			printf("    Max : %4d,%4d\n", window->maxSize.x, window->maxSize.y);
-
 			if (xSize < window->minSize.x)
 				xSize = window->minSize.x;
 			if (ySize < window->minSize.y)
