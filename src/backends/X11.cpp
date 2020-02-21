@@ -28,8 +28,9 @@
 #include "X11.hpp"
 #include "manager.hpp"
 
-#include  <GLES2/gl2.h>
-#include  <EGL/egl.h>
+#include <GLES2/gl2.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 
 struct WindowData
 {	
@@ -44,6 +45,8 @@ static Display*		                          display    ;
 static EGLDisplay                             egl_display;
 static EGLContext                             egl_context;
 static std::unordered_map<Window, WindowData> windows    ;
+
+static Atom WM_DELETE_WINDOW;
 
 void CreateShader(GLuint& shader, GLenum type, const char* code, std::experimental::fundamentals_v2::source_location function = std::experimental::fundamentals_v2::source_location::current());
 void CreateProgram(GLuint& program, GLuint vertexShader, GLuint pixelShader, std::experimental::fundamentals_v2::source_location function = std::experimental::fundamentals_v2::source_location::current());
@@ -66,8 +69,6 @@ void main()
 
 static const char* pixelShaderCode = R"(
 #version 300 es
-#extension GL_OES_EGL_image_external : require
-
 precision mediump float;
 
 uniform sampler2D texture0;
@@ -117,7 +118,13 @@ namespace Awning::Backend::X11
 	}
 }
 
-GLuint vertexShader, pixelShader, program;
+void loadEGLProc(void* proc_ptr, const char* name);
+
+static void eglLog(EGLenum error, const char *command, EGLint msg_type, EGLLabelKHR thread, EGLLabelKHR obj, const char *msg) {
+	std::cout << fmt::format("[X EGL] command: {}, error: 0x{:X}, message: \"{}\"\n", command, error, msg);
+}
+
+static GLuint vertexShader, pixelShader, program;
 
 void Awning::Backend::X11::Start()
 {
@@ -155,10 +162,18 @@ void Awning::Backend::X11::Start()
 	egl_context = eglCreateContext(egl_display, ecfg, EGL_NO_CONTEXT, ctxattr);
 	eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_context);
 
-	Atom wm_state = XInternAtom(display, "_NET_WM_STATE", False);
-	Atom _NET_WM_STATE_ADD = XInternAtom(display, "_NET_WM_STATE_ADD", False);
-	Atom max_horz = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
-	Atom max_vert = XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", False);
+	PFNEGLDEBUGMESSAGECONTROLKHRPROC eglDebugMessageControlKHR;
+	loadEGLProc(&eglDebugMessageControlKHR   , "eglDebugMessageControlKHR"   );
+
+	static const EGLAttrib debug_attribs[] = {
+		EGL_DEBUG_MSG_CRITICAL_KHR, EGL_TRUE,
+		EGL_DEBUG_MSG_ERROR_KHR   , EGL_TRUE,
+		EGL_DEBUG_MSG_WARN_KHR    , EGL_TRUE,
+		EGL_DEBUG_MSG_INFO_KHR    , EGL_TRUE,
+		EGL_NONE,
+	};
+
+	eglDebugMessageControlKHR(eglLog, debug_attribs);
 
 	std::cout << "X EGL Vendor  : " << eglQueryString(egl_display, EGL_VENDOR ) << "\n";
 	std::cout << "X EGL Version : " << eglQueryString(egl_display, EGL_VERSION) << "\n";
@@ -169,6 +184,8 @@ void Awning::Backend::X11::Start()
 	
 	attribs.event_mask = StructureNotifyMask|ButtonPressMask|KeyPressMask|PointerMotionMask|ButtonReleaseMask|KeyReleaseMask;
 	
+	WM_DELETE_WINDOW = XInternAtom(display, "WM_DELETE_WINDOW", False);
+
 	glClearColor(1, 1, 1, 1);
 	CreateShader(vertexShader, GL_VERTEX_SHADER, vertexShaderCode);
 	CreateShader(pixelShader, GL_FRAGMENT_SHADER, pixelShaderCode);
@@ -177,24 +194,20 @@ void Awning::Backend::X11::Start()
 
 	int xOffset = 0;
 
-	for (int a = 0; a < 3; a++)
+	for (int a = 1; a <= 3; a++)
 	{
 		WindowData data;
 		Window window = XCreateWindow(display, root, 0, 0, width, height, 0, CopyFromParent, InputOutput, CopyFromParent, CWEventMask, &attribs);
 
-		XEvent xev;
-		memset(&xev, 0, sizeof(xev));
-		xev.type = ClientMessage;
-		xev.xclient.window = window;
-		xev.xclient.message_type = wm_state;
-		xev.xclient.format = 32;
-		xev.xclient.data.l[0] = _NET_WM_STATE_ADD;
-		xev.xclient.data.l[1] = max_horz;
-		xev.xclient.data.l[2] = max_vert;
+		XClassHint classHint {
+			(char*)"Awning",
+			(char*)"Awning"
+		};
+		std::string displayName = fmt::format("X11-{}", a);
 
-		XSendEvent(display, root, False, SubstructureNotifyMask, &xev);
-
-		XStoreName(display, window, "Awning (X11 Backend)");
+		XSetClassHint(display, window, &classHint);
+		XStoreName(display, window, displayName.c_str());
+		XSetWMProtocols(display, window, &WM_DELETE_WINDOW, 1);
 		XMapWindow(display, window);
 
 		data.surface = eglCreateWindowSurface(egl_display, ecfg, window, NULL);
@@ -279,6 +292,11 @@ void Awning::Backend::X11::Hand()
 		}
 		else if (event.type == ClientMessage)
 		{
+			ReleaseBackingTexture(event.xclient.window);
+			//eglDestroySurface(egl_display, windows[event.xclient.window].surface);
+			WM::Output::Destory(windows[event.xclient.window].id);
+			windows.erase(event.xclient.window);
+			XDestroyWindow(display, event.xclient.window);
 		}
 		else if (event.type == MotionNotify)
 		{

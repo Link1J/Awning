@@ -270,32 +270,7 @@ namespace Awning::Renderers::GLES2
 			auto [sx, sy] = WM::Output::Get::Mode::Resolution(display.output, display.mode);
 
 			glReadPixels(px, py, sx, sy, GL_RGBA, GL_UNSIGNED_BYTE, display.texture.buffer.pointer);
-
-			//for (int x = 0; x < sx; x++)
-			//	for (int y = 0; y < sy; y++)
-			//	{
-			//		if ((px + x) <  0     )
-			//			continue;
-			//		if ((py + y) <  0     )
-			//			continue;
-			//		if ((px + x) >= width )
-			//			continue;
-			//		if ((py + y) >= height)
-			//			continue;
-//
-			//		int framebOffset = (px + x) * (bitsPerPixel / 8)
-			//						 + (py + y) *  bytesPerLine    ;
-			//		int windowOffset = (x) * (display.texture.bitsPerPixel / 8)
-			//						 + (y) *  display.texture.bytesPerLine    ;
-//
-			//		display.texture.buffer.pointer[windowOffset + (display.texture.red  .offset / 8)] = buffer[framebOffset + 2];
-			//		display.texture.buffer.pointer[windowOffset + (display.texture.green.offset / 8)] = buffer[framebOffset + 1];
-			//		display.texture.buffer.pointer[windowOffset + (display.texture.blue .offset / 8)] = buffer[framebOffset + 0];
-			//	}
 		}
-
-
-		//glReadPixels(0, 0, width, data.height, GL_RGBA, GL_UNSIGNED_BYTE, data.buffer.pointer);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
@@ -426,7 +401,6 @@ int LoadOpenGLES2()
 	int32_t fd = open("/dev/dri/renderD128", O_RDWR);
 	struct gbm_device* gbm = gbm_create_device(fd);
 
-	//Awning::Server::data.egl.display = eglGetPlatformDisplay(EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, NULL);
 	Awning::Server::data.egl.display = eglGetPlatformDisplayEXT(EGL_PLATFORM_GBM_MESA, gbm, NULL);
 
 	eglInitialize(Awning::Server::data.egl.display, &Awning::Server::data.egl.major, &Awning::Server::data.egl.minor);
