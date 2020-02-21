@@ -239,14 +239,39 @@ namespace Awning::WM::Manager
 						case LEFT:
 							XPos += deltaX;
 							XSize -= deltaX;
-							break;	
+							break;
 						case RIGHT:
 							XSize += deltaX;
 							break;
+						case TOP_LEFT:
+							YPos += deltaY;
+							YSize -= deltaY;
+							XPos += deltaX;
+							XSize -= deltaX;
+							break;
+						case TOP_RIGHT:
+							YPos += deltaY;
+							YSize -= deltaY;
+							XSize += deltaX;
+							break;
+						case BOTTOM_LEFT:
+							XPos += deltaX;
+							XSize -= deltaX;
+							YSize += deltaY;
+							break;
+						case BOTTOM_RIGHT:
+							XSize += deltaX;
+							YSize += deltaY;
+							break;
 						}
 
-						Manager::Window::Reposition(hoveredOver, XPos , YPos );
-						Manager::Window::Resize    (hoveredOver, XSize, YSize);
+						int preX = hoveredOver->XSize();
+						int preY = hoveredOver->YSize();
+
+						Manager::Window::Resize(hoveredOver, XSize, YSize);
+
+						if (preX != hoveredOver->XSize() || preY != hoveredOver->YSize())
+							Manager::Window::Reposition(hoveredOver, XPos, YPos);
 
 						Protocols::WL::Pointer::Moved(nullptr, XPos, YPos, x, y);
 					}
@@ -255,13 +280,6 @@ namespace Awning::WM::Manager
 
 					preX = x;
 					preY = y;
-
-					//if (hoveredOver)
-					//{
-					//	void* id = hoveredOver->Client();
-					//	wl_resource* wm =  (wl_resource*)Client::WM(id);
-					//	xdg_wm_base_send_ping(wm, 1);
-					//}
 				}
 
 				void Pressed(uint32_t button)
@@ -415,14 +433,18 @@ namespace Awning::WM::Manager
 
 		void Resize(Awning::WM::Window* window, int xSize, int ySize)
 		{
+			printf("    Size: %4d,%4d\n", xSize, ySize);
+			printf("    Min : %4d,%4d\n", window->minSize.x, window->minSize.y);
+			printf("    Max : %4d,%4d\n", window->maxSize.x, window->maxSize.y);
+
 			if (xSize < window->minSize.x)
 				xSize = window->minSize.x;
-			if (ySize < window->minSize.x)
-				ySize = window->minSize.x;
+			if (ySize < window->minSize.y)
+				ySize = window->minSize.y;
 			if (xSize > window->maxSize.x)
 				xSize = window->maxSize.x;
-			if (ySize > window->maxSize.x)
-				ySize = window->maxSize.x;
+			if (ySize > window->maxSize.y)
+				ySize = window->maxSize.y;
 			
 			if (window->Resized)
 				window->Resized(window->data, xSize, ySize);

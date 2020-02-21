@@ -57,8 +57,8 @@ namespace Awning::Protocols::XDG::Surface
 
 			data.surfaces[resource].window->ConfigPos(x, y, true);
 			data.surfaces[resource].window->ConfigSize(width, height);
-			data.surfaces[resource].window->ConfigMinSize(width, height);
-			data.surfaces[resource].window->ConfigMaxSize(width, height);
+			//data.surfaces[resource].window->ConfigMinSize(width, height);
+			//data.surfaces[resource].window->ConfigMaxSize(width, height);
 
 			data.surfaces[resource].window->ConfigPos(10, 10);
 
