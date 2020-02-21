@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="awn_config_compositor">
+  <copyright>
+    Copyright © 2020 Link1J
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice (including the next
+    paragraph) shall be included in all copies or substantial portions of the
+    Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+    THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    DEALINGS IN THE SOFTWARE.
+  </copyright>
+
+  <interface name="awn_config" version="1">
+    <description summary="Base config tool">
+    </description>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy">
+      </description>
+    </request>
+
+    <request name="renderer">
+      <description summary="Gets the renderer configuration tool">
+        Gets the renderer configuration tool.
+      </description>
+      <arg name="id" type="new_id" interface="awn_config_renderer"/>
+    </request>
+
+    <request name="output">
+      <description summary="Gets the output configuration tool">
+        Gets the output configuration tool.
+      </description>
+      <arg name="id" type="new_id" interface="awn_config_output"/>
+    </request>
+  </interface>
+
+  <interface name="awn_config_output" version="1">
+    <description summary="Output configuration">
+      Permits access to settings within the compositor for the purpose 
+      of configuring the outputs.
+    </description>
+
+    <request name="destroy" type="destructor"/>
+
+    <request name="set_mode">
+      <description summary="Sets the mode">
+        Sets the mode.
+      </description>
+      <arg name="output" type="object" interface="awn_output" summary="Output to change"/>
+      <arg name="mode" type="int" summary="Mode to change to"/>
+    </request>
+
+    <request name="set_position">
+      <description summary="Sets the position">
+        Sets the position.
+
+        NOTE:
+        Negitive numbers are currently not supported in Awning. Negitive numbers
+        may create problems in Awning. This may not be a problem in other 
+        compositors that support this.
+      </description>
+      <arg name="output" type="object" interface="awn_output" summary="Output to change"/>
+      <arg name="x" type="int" summary="X Position"/>
+      <arg name="y" type="int" summary="Y Position"/>
+    </request>
+
+    <event name="new_output">
+      <description summary="An new output">
+        This event is sent when a new output is connected or on creation of interface.
+      </description>
+      <arg name="head" type="new_id" interface="awn_output"/>
+    </event>
+  </interface>
+
+  <interface name="awn_output" version="1">
+    <description summary="Output configuration">
+      Permits access to settings within the compositor for the purpose 
+      of configuring the outputs.
+    </description>
+
+    <event name="mode">
+      <description summary="Mode info">
+        This event is sent when on creation of interface, or on a mode change.
+        It provideds the information about a mode.
+      </description>
+      <arg name="id"           type="uint"  summary="Mode id"                   />
+      <arg name="x_res"        type="uint"  summary="X resolution of mode"      />
+      <arg name="y_res"        type="uint"  summary="Y resolution of mode"      />
+      <arg name="refresh_rate" type="fixed" summary="Refresh Rate of mode in Hz"/>
+      <arg name="prefered"     type="uint"  summary="Mode is prefered"          />
+      <arg name="current"      type="uint"  summary="Mode is currently active"  />
+    </event>
+
+    <event name="position">
+      <description summary="Position info">
+        This event is sent when on creation of interface, or on a position change.
+        It provideds the information about the position of the output in compositor
+        space.
+      </description>
+      <arg name="x_pos" type="int" summary="X position"/>
+      <arg name="y_pos" type="int" summary="Y position"/>
+    </event>
+
+    <event name="description">
+      <description summary="Description">
+        This event is sent when on creation of interface.
+        Its provideds information about the mointor such as the name,
+        model, manufacturer, and serial.
+        The only field that must be filled out is the name, all other
+        fields may be blank.
+      </description>
+      <arg name="name"         type="string" summary=""/>
+      <arg name="model"        type="string" summary=""/>
+      <arg name="manufacturer" type="string" summary=""/>
+      <arg name="serial"       type="string" summary=""/>
+    </event>
+
+    <event name="state">
+      <description summary="Position info">
+        This event is sent when on creation of interface, or on a state change.
+        It provideds the information about the state of the output, such as if
+        the output is connected to a monitor, and if it is enabled. Connected's
+        value is always correct, where enabled's value is ownly correct when 
+        connected is true.
+      </description>
+      <arg name="connected" type="uint" summary=""/>
+      <arg name="enabled"   type="uint" summary=""/>
+    </event>
+  </interface>
+
+  <interface name="awn_config_renderer" version="1">
+    <description summary="Renderer configuration">
+      Permits access to settings within the compositor for the purpose 
+      of configuring the renderer.
+    </description>
+
+    <enum name="backend">
+      <entry name="software" value="0"/>
+      <entry name="gles2" value="1"/>
+    </enum>
+
+    <request name="destroy" type="destructor"/>
+
+    <request name="set_renderer">
+      <description summary="Sets the renderer backend">
+        Sets the renderer backend.
+      </description>
+      <arg name="backend" type="uint" enum="backend" summary="Backend"/>
+    </request>
+  </interface>
+</protocol>
