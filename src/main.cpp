@@ -4,7 +4,6 @@
 #include "backends/manager.hpp"
 
 #include <wayland-server.h>
-#include "protocols/xdg-shell-protocol.h"
 
 #include <linux/kd.h>
 
@@ -18,17 +17,18 @@
 #include <stdio.h>
 #include <fcntl.h>
 
-#include "wayland/compositor.hpp"
-#include "wayland/seat.hpp"
-#include "wayland/output.hpp"
-#include "wayland/shell.hpp"
-#include "wayland/surface.hpp"
-#include "wayland/shell_surface.hpp"
-#include "wayland/pointer.hpp"
-#include "wayland/data_device_manager.hpp"
+#include "protocols/wl/compositor.hpp"
+#include "protocols/wl/seat.hpp"
+#include "protocols/wl/output.hpp"
+#include "protocols/wl/shell.hpp"
+#include "protocols/wl/surface.hpp"
+#include "protocols/wl/shell_surface.hpp"
+#include "protocols/wl/pointer.hpp"
+#include "protocols/wl/data_device_manager.hpp"
 
-#include "xdg/wm_base.hpp"
-#include "xdg/decoration.hpp"
+#include "protocols/xdg/wm_base.hpp"
+
+#include "protocols/zxdg/decoration.hpp"
 
 #include "wm/x/wm.hpp"
 #include "wm/window.hpp"
@@ -151,12 +151,12 @@ int main(int argc, char* argv[])
 
 	Awning::Backend::Init(api_output, api_input);
 
-	Awning::Wayland::Compositor         ::Add(Awning::Server::data.display);
-	Awning::Wayland::Seat               ::Add(Awning::Server::data.display);
-	Awning::Wayland::Shell              ::Add(Awning::Server::data.display);
-	Awning::XDG    ::WM_Base            ::Add(Awning::Server::data.display);
-	//Awning::ZXDG   ::Decoration_Manager ::Add(Awning::Server::data.display);
-	Awning::Wayland::Data_Device_Manager::Add(Awning::Server::data.display);
+	Awning::Protocols::WL::Compositor         ::Add(Awning::Server::data.display);
+	Awning::Protocols::WL::Seat               ::Add(Awning::Server::data.display);
+	Awning::Protocols::WL::Shell              ::Add(Awning::Server::data.display);
+	Awning::Protocols::XDG    ::WM_Base            ::Add(Awning::Server::data.display);
+	//Awning::Protocols::ZXDG   ::Decoration_Manager ::Add(Awning::Server::data.display);
+	Awning::Protocols::WL::Data_Device_Manager::Add(Awning::Server::data.display);
 
 	wl_display_init_shm(Awning::Server::data.display);
 
@@ -183,7 +183,7 @@ int main(int argc, char* argv[])
 	
 	while(1)
 	{
-		Awning::Wayland::Surface::HandleFrameCallbacks();
+		Awning::Protocols::WL::Surface::HandleFrameCallbacks();
 
 		Awning::Backend::Poll();
 		Awning::Backend::Hand();
@@ -199,8 +199,6 @@ int main(int argc, char* argv[])
 	}
 
 	wl_display_destroy(Awning::Server::data.display);
-	ioctl(tty_fd, KDSETMODE, KD_TEXT);
-	ioctl(tty_fd, KDSKBMODE, K_RAW);
 }
 
 void on_term_signal(int signal_number)

@@ -5,7 +5,7 @@
 
 #include "wm/manager.hpp"
 
-#include "wayland/pointer.hpp"
+#include "protocols/wl/pointer.hpp"
 
 #include <string.h>
 
@@ -261,8 +261,8 @@ namespace Awning::Renderers::GLES2
 		for (auto& window : reverse(list))
 			RenderWindow(window);
 
-		if (Awning::Wayland::Pointer::data.window)
-			RenderWindow(Awning::Wayland::Pointer::data.window, 0, 0);
+		if (Awning::Protocols::WL::Pointer::data.window)
+			RenderWindow(Awning::Protocols::WL::Pointer::data.window, 0, 0);
 	
 		for (auto& display : displays)
 		{

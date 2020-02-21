@@ -5,7 +5,7 @@
 #include <wayland-server.h>
 #include <EGL/egl.h>
 
-#include "wayland/output.hpp"
+#include "protocols/wl/output.hpp"
 
 struct Size
 {
@@ -64,7 +64,7 @@ namespace Awning::WM::Output
 	ID Create()
 	{
 		::Output* output = new ::Output();
-		globals[output] = Wayland::Output::Add(Server::data.display, output);
+		globals[output] = Protocols::WL::Output::Add(Server::data.display, output);
 		return (ID)output;
 	}
 

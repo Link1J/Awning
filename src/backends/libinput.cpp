@@ -1,5 +1,5 @@
-#include "wayland/pointer.hpp"
-#include "wayland/keyboard.hpp"
+#include "protocols/wl/pointer.hpp"
+#include "protocols/wl/keyboard.hpp"
 
 #include "log.hpp"
 

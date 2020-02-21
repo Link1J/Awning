@@ -5,7 +5,7 @@
 
 #include "wm/manager.hpp"
 
-#include "wayland/pointer.hpp"
+#include "protocols/wl/pointer.hpp"
 
 #include <string.h>
 
@@ -241,18 +241,18 @@ namespace Awning::Renderers::Software
 		for (auto& window : reverse(list))
 			RenderWindow(window);
 
-		if (Awning::Wayland::Pointer::data.window)
+		if (Awning::Protocols::WL::Pointer::data.window)
 		{
-			auto texture = Awning::Wayland::Pointer::data.window->Texture();
+			auto texture = Awning::Protocols::WL::Pointer::data.window->Texture();
 
 			if (texture)
 			{
-				RenderWindow(Awning::Wayland::Pointer::data.window, 0, 0);
+				RenderWindow(Awning::Protocols::WL::Pointer::data.window, 0, 0);
 			}
 			else
 			{
-				auto winPosX  = Awning::Wayland::Pointer::data.window->XPos();
-				auto winPosY  = Awning::Wayland::Pointer::data.window->YPos();
+				auto winPosX  = Awning::Protocols::WL::Pointer::data.window->XPos();
+				auto winPosY  = Awning::Protocols::WL::Pointer::data.window->YPos();
 
 				for (int x = 0; x < 5; x++)
 					for (int y = 0; y < 5; y++)

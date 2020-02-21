@@ -7,8 +7,8 @@
 #include <X11/extensions/Xfixes.h>
 #include <linux/input.h>
 
-#include "wayland/pointer.hpp"
-#include "wayland/keyboard.hpp"
+#include "protocols/wl/pointer.hpp"
+#include "protocols/wl/keyboard.hpp"
 
 #include "wm/manager.hpp"
 #include "wm/output.hpp"

@@ -6,11 +6,11 @@
 #include "client.hpp"
 #include "log.hpp"
 
-#include "wayland/pointer.hpp"
-#include "wayland/keyboard.hpp"
+#include "protocols/wl/pointer.hpp"
+#include "protocols/wl/keyboard.hpp"
 
 #include <linux/input.h>
-#include "protocols/xdg-shell-protocol.h"
+#include "protocols/handler/xdg-shell-protocol.h"
 
 static std::list<Awning::WM::Window*> windowList;
 static Awning::WM::Window* hoveredOver;
@@ -40,7 +40,7 @@ namespace Awning::WM::Manager
 				{
 					if (hoveredOver && action == APPLCATION)
 					{
-						Wayland::Pointer::Axis(
+						Protocols::WL::Pointer::Axis(
 							(wl_client*)hoveredOver->Client(),
 							axis, step * (direction ? 1 : -1)
 						);
@@ -165,11 +165,11 @@ namespace Awning::WM::Manager
 					{
 						if (hoveredOver)
 						{
-							Wayland::Pointer::Leave(
+							Protocols::WL::Pointer::Leave(
 								(wl_client  *)hoveredOver->Client(), 
 								(wl_resource*)Client::Get::Surface(hoveredOver)
 							);
-							Wayland::Pointer::Frame(
+							Protocols::WL::Pointer::Frame(
 								(wl_client*)hoveredOver->Client()
 							);
 						}
@@ -179,12 +179,12 @@ namespace Awning::WM::Manager
 							int localX = x - (*curr)->XPos() + (*curr)->XOffset();
 							int localY = y - (*curr)->YPos() + (*curr)->YOffset();
 
-							Wayland::Pointer::Enter(
+							Protocols::WL::Pointer::Enter(
 								(wl_client  *)(*curr)->Client(), 
 								(wl_resource*)Client::Get::Surface(*curr),
 								localX, localY, x, y
 							);
-							Wayland::Pointer::Frame(
+							Protocols::WL::Pointer::Frame(
 								(wl_client*)(*curr)->Client()
 							);
 						}
@@ -203,11 +203,11 @@ namespace Awning::WM::Manager
 						int localX = x - hoveredOver->XPos() + hoveredOver->XOffset();
 						int localY = y - hoveredOver->YPos() + hoveredOver->YOffset();
 
-						Wayland::Pointer::Moved(
+						Protocols::WL::Pointer::Moved(
 							(wl_client*)hoveredOver->Client(),
 							localX, localY, x, y
 						);
-						Wayland::Pointer::Frame(
+						Protocols::WL::Pointer::Frame(
 							(wl_client*)hoveredOver->Client()
 						);
 					}
@@ -216,7 +216,7 @@ namespace Awning::WM::Manager
 						int newX = hoveredOver->XPos() + (x - preX);
 						int newY = hoveredOver->YPos() + (y - preY);
 						Manager::Window::Reposition(hoveredOver, newX, newY);
-						Wayland::Pointer::Moved(nullptr, x, y, x, y);
+						Protocols::WL::Pointer::Moved(nullptr, x, y, x, y);
 					}
 					else if (hoveredOver && action == RESIZE && input == LOCK)
 					{
@@ -248,10 +248,10 @@ namespace Awning::WM::Manager
 						Manager::Window::Reposition(hoveredOver, XPos , YPos );
 						Manager::Window::Resize    (hoveredOver, XSize, YSize);
 
-						Wayland::Pointer::Moved(nullptr, XPos, YPos, x, y);
+						Protocols::WL::Pointer::Moved(nullptr, XPos, YPos, x, y);
 					}
 
-					Wayland::Pointer::Moved(nullptr, x, y, x, y);
+					Protocols::WL::Pointer::Moved(nullptr, x, y, x, y);
 
 					preX = x;
 					preY = y;
@@ -279,7 +279,7 @@ namespace Awning::WM::Manager
 					}
 					else if (hoveredOver && action == APPLCATION)
 					{
-						Wayland::Pointer::Button(
+						Protocols::WL::Pointer::Button(
 							(wl_client*)hoveredOver->Client(),
 							button, true
 						);
@@ -289,7 +289,7 @@ namespace Awning::WM::Manager
 						if (hoveredOver)
 						{
 							Manager::Window::Raise(hoveredOver);
-							Wayland::Pointer::Leave(
+							Protocols::WL::Pointer::Leave(
 								(wl_client  *)hoveredOver->Client(), 
 								(wl_resource*)Client::Get::Surface(hoveredOver)
 							);
@@ -302,7 +302,7 @@ namespace Awning::WM::Manager
 				{
 					if (hoveredOver && action == APPLCATION)
 					{
-						Wayland::Pointer::Button(
+						Protocols::WL::Pointer::Button(
 							(wl_client*)hoveredOver->Client(),
 							button, false
 						);
@@ -313,7 +313,7 @@ namespace Awning::WM::Manager
 						{
 							if (hoveredOver)
 							{
-								Wayland::Pointer::Leave(
+								Protocols::WL::Pointer::Leave(
 									(wl_client  *)hoveredOver->Client(), 
 									(wl_resource*)Client::Get::Surface(hoveredOver)
 								);
@@ -334,7 +334,7 @@ namespace Awning::WM::Manager
 					auto window = windowList.front();
 					if (window)
 					{
-						Wayland::Keyboard::Button(
+						Protocols::WL::Keyboard::Button(
 							(wl_client*)window->Client(),
 							key, true
 						);
@@ -346,7 +346,7 @@ namespace Awning::WM::Manager
 					auto window = windowList.front();
 					if (window)
 					{
-						Wayland::Keyboard::Button(
+						Protocols::WL::Keyboard::Button(
 							(wl_client*)window->Client(),
 							key, false
 						);
@@ -399,7 +399,7 @@ namespace Awning::WM::Manager
 			if (curr == windowList.end())
 				return;
 
-			Wayland::Keyboard::ChangeWindow(
+			Protocols::WL::Keyboard::ChangeWindow(
 				(wl_client  *)(*star)->Client(), 
 				(wl_resource*)Client::Get::Surface(*star),
 				(wl_client  *)(*curr)->Client(), 

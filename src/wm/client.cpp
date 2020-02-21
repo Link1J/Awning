@@ -1,7 +1,7 @@
 #include "client.hpp"
 #include "window.hpp"
 
-#include "wayland/surface.hpp"
+#include "protocols/wl/surface.hpp"
 
 #include <unordered_map>
 #include <algorithm>
@@ -68,7 +68,7 @@ namespace Awning::WM::Client
 		void* surface = clients[window->client].windows[window].surface;
 		if (!surface)
 		{
-			for (auto& [resource, data] : Wayland::Surface::data.surfaces)
+			for (auto& [resource, data] : Protocols::WL::Surface::data.surfaces)
 			{
 				if (data.window == window)
 				{
