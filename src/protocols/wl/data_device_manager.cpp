@@ -16,18 +16,18 @@ namespace Awning::Protocols::WL::Data_Device_Manager
 	{
 		void Create_Data_Source(struct wl_client *client, struct wl_resource *resource, uint32_t id)
         {
-		    Log::Function::Called("Wayland::Data_Device_Manager::Interface");
+		    Log::Function::Called("Protocols::WL::Data_Device_Manager::Interface");
         }
 
 		void Get_Data_Device(struct wl_client *client, struct wl_resource *resource, uint32_t id, struct wl_resource *seat)
         {
-		    Log::Function::Called("Wayland::Data_Device_Manager::Interface");
+		    Log::Function::Called("Protocols::WL::Data_Device_Manager::Interface");
         }
     }
 
 	void Bind(struct wl_client* wl_client, void* data, uint32_t version, uint32_t id) 
 	{
-		Log::Function::Called("Wayland::Data_Device_Manager");
+		Log::Function::Called("Protocols::WL::Data_Device_Manager");
 		
 		struct wl_resource* resource = wl_resource_create(wl_client, &wl_data_device_manager_interface, version, id);
 		if (resource == nullptr) {

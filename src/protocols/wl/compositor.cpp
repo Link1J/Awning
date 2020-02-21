@@ -16,20 +16,20 @@ namespace Awning::Protocols::WL::Compositor
 	{
 		void Create_Region(struct wl_client* client, struct wl_resource* resource, uint32_t id) 
 		{
-			Log::Function::Called("Wayland::Compositor::Interface");
+			Log::Function::Called("Protocols::WL::Compositor::Interface");
 			Region::Create(client, wl_resource_get_version(resource), id);
 		}
 
 		void Create_Surface(struct wl_client* client, struct wl_resource* resource, uint32_t id) 
 		{
-			Log::Function::Called("Wayland::Compositor::Interface");
+			Log::Function::Called("Protocols::WL::Compositor::Interface");
 			Surface::Create(client, wl_resource_get_version(resource), id);
 		}
 	}
 
 	void Bind(struct wl_client* wl_client, void* data, uint32_t version, uint32_t id) 
 	{
-		Log::Function::Called("Wayland::Compositor");
+		Log::Function::Called("Protocols::WL::Compositor");
 
 		struct wl_resource* resource = wl_resource_create(wl_client, &wl_compositor_interface, version, id);
 		if (resource == nullptr) {

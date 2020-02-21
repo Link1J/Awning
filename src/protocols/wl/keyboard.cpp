@@ -82,7 +82,7 @@ namespace Awning::Protocols::WL::Keyboard
 	const struct wl_keyboard_interface interface = {
 		.release = [](struct wl_client *client, struct wl_resource *resource) 
 		{
-			Log::Function::Called("Wayland::Keyboard::interface.release");
+			Log::Function::Called("Protocols::WL::Keyboard::interface.release");
 		},
 	};
 
@@ -90,7 +90,7 @@ namespace Awning::Protocols::WL::Keyboard
 
 	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id)
 	{
-		Log::Function::Called("Wayland::Keyboard");
+		Log::Function::Called("Protocols::WL::Keyboard");
 
 		struct wl_resource* resource = wl_resource_create(wl_client, &wl_keyboard_interface, version, id);
 		if (resource == nullptr) {

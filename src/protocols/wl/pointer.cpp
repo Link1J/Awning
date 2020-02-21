@@ -15,7 +15,7 @@ namespace Awning::Protocols::WL::Pointer
 	const struct wl_pointer_interface interface = {
 		.set_cursor = [](struct wl_client *client, struct wl_resource *resource, uint32_t serial, struct wl_resource *surface, int32_t hotspot_x, int32_t hotspot_y) 
 		{
-			Log::Function::Called("Wayland::Pointer::interface.set_cursor");
+			Log::Function::Called("Protocols::WL::Pointer::interface.set_cursor");
 
 			if (data.inUse)
 			{
@@ -44,7 +44,7 @@ namespace Awning::Protocols::WL::Pointer
 		},
 		.release    = [](struct wl_client* client, struct wl_resource* resource) 
 		{
-			Log::Function::Called("Wayland::Pointer::interface.release");
+			Log::Function::Called("Protocols::WL::Pointer::interface.release");
 			Awning::Protocols::WL::Pointer::Destroy(resource);
 		},
 	};
@@ -53,7 +53,7 @@ namespace Awning::Protocols::WL::Pointer
 
 	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id)
 	{
-		Log::Function::Called("Wayland::Pointer");
+		Log::Function::Called("Protocols::WL::Pointer");
 
 		struct wl_resource* resource = wl_resource_create(wl_client, &wl_pointer_interface, version, id);
 		if (resource == nullptr) {

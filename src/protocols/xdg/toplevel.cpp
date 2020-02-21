@@ -36,39 +36,39 @@ namespace Awning::Protocols::XDG::TopLevel
 	{
 		void Destroy(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("Protocols::XDG::TopLevel::Interface");
 			TopLevel::Destroy(resource);
 		}
 
 		void Set_Parent(struct wl_client* client, struct wl_resource* resource, struct wl_resource* parent)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("Protocols::XDG::TopLevel::Interface");
 		}
 
 		void Set_Title(struct wl_client* client, struct wl_resource* resource, const char* title)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("Protocols::XDG::TopLevel::Interface");
 		}
 
 		void Set_App_id(struct wl_client* client, struct wl_resource* resource, const char* app_id)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("Protocols::XDG::TopLevel::Interface");
 		}
 
 		void Show_Window_Menu(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, int32_t x, int32_t y)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("Protocols::XDG::TopLevel::Interface");
 		}
 
 		void Move(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("Protocols::XDG::TopLevel::Interface");
 			WM::Manager::Handle::Input::Lock(WM::Manager::Handle::Input::MOVE);
 		}
 
 		void Resize(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, uint32_t edges)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("Protocols::XDG::TopLevel::Interface");
 
 			WM::Manager::Handle::Input::WindowSide side;
 			switch (edges)
@@ -88,45 +88,45 @@ namespace Awning::Protocols::XDG::TopLevel
 
 		void Set_Max_Size(struct wl_client* client, struct wl_resource* resource, int32_t width, int32_t height)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("Protocols::XDG::TopLevel::Interface");
 			data.toplevels[resource].window->ConfigMaxSize(width, height);
 		}
 
 		void Set_Min_Size(struct wl_client* client, struct wl_resource* resource, int32_t width, int32_t height)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("Protocols::XDG::TopLevel::Interface");
 			data.toplevels[resource].window->ConfigMinSize(width, height);
 		}
 
 		void Set_Maximized(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("Protocols::XDG::TopLevel::Interface");
 		}
 
 		void Unset_Maximized(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("Protocols::XDG::TopLevel::Interface");
 		}
 
 		void Set_Fullscreen(struct wl_client* client, struct wl_resource* resource, struct wl_resource* output)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("Protocols::XDG::TopLevel::Interface");
 		}
 
 		void Unset_Fullscreen(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("Protocols::XDG::TopLevel::Interface");
 		}
 
 		void Set_Minimized(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("XDG::TopLevel::Interface");
+			Log::Function::Called("Protocols::XDG::TopLevel::Interface");
 		}
 	}
 
 	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* surface) 
 	{
-		Log::Function::Called("XDG::TopLevel");
+		Log::Function::Called("Protocols::XDG::TopLevel");
 
 		struct wl_resource* resource = wl_resource_create(wl_client, &xdg_toplevel_interface, version, id);
 		if (resource == nullptr) {
@@ -151,7 +151,7 @@ namespace Awning::Protocols::XDG::TopLevel
 
 	void Destroy(struct wl_resource* resource)
 	{
-		Log::Function::Called("XDG::TopLevel");
+		Log::Function::Called("Protocols::XDG::TopLevel");
 
 		if (!data.toplevels.contains(resource))
 			return;
@@ -170,7 +170,7 @@ namespace Awning::Protocols::XDG::TopLevel
 
 	void Raised(void* data)
 	{
-		Log::Function::Called("XDG::TopLevel");
+		Log::Function::Called("Protocols::XDG::TopLevel");
 		
 		struct wl_resource* resource = (struct wl_resource*)data;
 		wl_array* states = new wl_array();
@@ -187,7 +187,7 @@ namespace Awning::Protocols::XDG::TopLevel
 
 	void Resized(void* data, int width, int height)
 	{
-		Log::Function::Called("XDG::TopLevel");
+		Log::Function::Called("Protocols::XDG::TopLevel");
 		
 		struct wl_resource* resource = (struct wl_resource*)data;
 		wl_array* states = new wl_array();
