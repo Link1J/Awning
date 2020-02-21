@@ -3,6 +3,9 @@
 
 #include "backends/manager.hpp"
 
+#include "data_source.hpp"
+#include "data_device.hpp"
+
 namespace Awning::Protocols::WL::Data_Device_Manager
 {
 	const struct wl_data_device_manager_interface interface = {
@@ -14,14 +17,16 @@ namespace Awning::Protocols::WL::Data_Device_Manager
 
 	namespace Interface
 	{
-		void Create_Data_Source(struct wl_client *client, struct wl_resource *resource, uint32_t id)
+		void Create_Data_Source(struct wl_client* client, struct wl_resource* resource, uint32_t id)
         {
 		    Log::Function::Called("Protocols::WL::Data_Device_Manager::Interface");
+			Data_Source::Create(client, wl_resource_get_version(resource), id);
         }
 
-		void Get_Data_Device(struct wl_client *client, struct wl_resource *resource, uint32_t id, struct wl_resource *seat)
+		void Get_Data_Device(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* seat)
         {
 		    Log::Function::Called("Protocols::WL::Data_Device_Manager::Interface");
+			Data_Device::Create(client, wl_resource_get_version(resource), id, seat);
         }
     }
 
@@ -39,6 +44,6 @@ namespace Awning::Protocols::WL::Data_Device_Manager
 
 	wl_global* Add(struct wl_display* display, void* data)
 	{
-		return wl_global_create(display, &wl_data_device_manager_interface, 3, data, Bind);
+		return wl_global_create(display, &wl_data_device_manager_interface, 1, data, Bind);
 	}
 }
