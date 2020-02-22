@@ -1,6 +1,6 @@
 #include "surface.hpp"
 #include "log.hpp"
-#include "protocols/handler/xdg-shell-protocol.h"
+#include "protocols/handler/xdg-shell.h"
 #include "renderers/manager.hpp"
 
 #include <cstring>

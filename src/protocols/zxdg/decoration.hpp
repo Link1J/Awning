@@ -1,7 +1,7 @@
 #pragma once
 
-#include "protocols/handler/xdg-shell-protocol.h"
-#include "protocols/handler/xdg-decoration-protocol.h"
+#include "protocols/handler/xdg-shell.h"
+#include "protocols/handler/xdg-decoration.h"
 #include <unordered_map>
 #include <string>
 

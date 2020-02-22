@@ -1,6 +1,6 @@
 #pragma once
 
-#include "protocols/handler/xdg-shell-protocol.h"
+#include "protocols/handler/xdg-shell.h"
 #include <unordered_map>
 #include <string>
 #include "wm/window.hpp"

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "protocols/handler/xdg-shell-protocol.h"
+#include "protocols/handler/xdg-shell.h"
 
 namespace Awning::Protocols::XDG::WM_Base
 {

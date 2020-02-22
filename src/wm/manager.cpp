@@ -10,7 +10,7 @@
 #include "protocols/wl/keyboard.hpp"
 
 #include <linux/input.h>
-#include "protocols/handler/xdg-shell-protocol.h"
+#include "protocols/handler/xdg-shell.h"
 
 static std::list<Awning::WM::Window*> windowList;
 static Awning::WM::Window* hoveredOver;
