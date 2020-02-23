@@ -50,10 +50,19 @@ namespace Awning::Protocols::XDG::Surface
 			
 			if (!data.surfaces[resource].window)
 				return;
+
+			auto window = data.surfaces[resource].window;
 			
 			if (x != 0 || y != 0)
-				data.surfaces[resource].window->ConfigPos(x, y, true);
-			data.surfaces[resource].window->ConfigSize(width, height);
+				window->ConfigPos(x, y, true);
+			
+			if (window->XSize() == 0 || window->YSize() == 0)
+				window->ConfigSize(width, height);
+
+			if (window->YPos() == 0)
+				window->ConfigPos(window->XPos(), 10);
+			if (window->XPos() == 0)
+				window->ConfigPos( 3, window->YPos());
 		}
 
 		void Ack_Configure(struct wl_client* client, struct wl_resource* resource, uint32_t serial)

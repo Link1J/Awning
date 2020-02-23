@@ -145,6 +145,8 @@ namespace Awning::Renderers::GLES2
 	int height = 0;
 	int size;
 
+	GLuint frameTexture;
+
 	void RenderWindow(WM::Window* window, int count = 2, int frame = 1)
 	{
 		auto texture = window->Texture();
@@ -161,7 +163,28 @@ namespace Awning::Renderers::GLES2
 		auto winOffX  = window->XOffset();
 		auto winOffY  = window->YOffset();
 
-		glViewport(winPosX - winOffX, winPosY - winOffY, winSizeX, winSizeY);
+		int posX  = winPosX  - winOffX                     ;
+		int posY  = winPosY  - winOffY                     ;
+		int sizeX = winSizeX + winOffX * std::max(count, 0);
+		int sizeY = winSizeY + winOffY * std::max(count, 0);
+
+		int frameSX = Frame::Size::left   * frame;
+		int frameSY = Frame::Size::top    * frame;
+		int frameEX = Frame::Size::right  * frame;
+		int frameEY = Frame::Size::bottom * frame;
+
+		if (window->Frame())
+		{
+			glViewport(posX - frameSX, posY - frameSY, sizeX + frameSX + frameEX, sizeY + frameSY + frameEY);
+
+			glUseProgram(program2D);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, frameTexture);
+
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
+
+		glViewport(posX, posY, sizeX, sizeY);
 
 		if (texture->buffer.offscreen)
 		{
@@ -218,6 +241,13 @@ namespace Awning::Renderers::GLES2
 
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, FBO_Texture, 0);
+
+		glGenTextures(1, &frameTexture);
+		glBindTexture(GL_TEXTURE_2D, frameTexture);
+
+		GLubyte frameColor[] = { 0xFF, 0xFF, 0x00, 0xFF };
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, frameColor);
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);

@@ -132,27 +132,37 @@ namespace Awning::Renderers::Software
 		auto winOffX  = window->XOffset();
 		auto winOffY  = window->YOffset();
 
-		for (int x = (-Frame::Size::left * frame); x < winSizeX + (winOffX * count) + (Frame::Size::right * frame); x++)
-			for (int y = (-Frame::Size::top * frame); y < winSizeY + (winOffY * count) + (Frame::Size::bottom * frame); y++)
+		int posX    = winPosX  - winOffX                     ;
+		int posY    = winPosY  - winOffY                     ;
+		int sizeX   = winSizeX + winOffX * std::max(count, 0);
+		int sizeY   = winSizeY + winOffY * std::max(count, 0);
+
+		int frameSX = Frame::Size::left   * frame;
+		int frameSY = Frame::Size::top    * frame;
+		int frameEX = Frame::Size::right  * frame;
+		int frameEY = Frame::Size::bottom * frame;
+
+		for (int x = -frameSX; x < sizeX + frameEX; x++)
+			for (int y = -frameSY; y < sizeY + frameEY; y++)
 			{
-				if ((winPosX + x - winOffX) <  0     )
+				if ((posX + x) <  0     )
 					continue;
-				if ((winPosY + y - winOffY) <  0     )
+				if ((posY + y) <  0     )
 					continue;
-				if ((winPosX + x - winOffX) >= width )
+				if ((posX + x) >= width )
 					continue;
-				if ((winPosY + y - winOffY) >= height)
+				if ((posY + y) >= height)
 					continue;
 
 				int windowOffset = (x) * (texture->bitsPerPixel / 8)
 								 + (y) *  texture->bytesPerLine    ;
 
-				int framebOffset = (winPosX + x - winOffX) * (bitsPerPixel / 8)
-								 + (winPosY + y - winOffY) *  bytesPerLine    ;
+				int framebOffset = (posX + x) * (bitsPerPixel / 8)
+								 + (posY + y) *  bytesPerLine    ;
 
 				uint8_t red, green, blue, alpha;
 
-				if (x < winSizeX + winOffX && y < winSizeY + winOffY && x >= 0 && y >= 0)
+				if (x < sizeX && y < sizeY && x >= 0 && y >= 0)
 				{
 					if (texture->buffer.pointer != nullptr && windowOffset < texture->size)
 					{
