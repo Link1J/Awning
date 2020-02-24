@@ -31,6 +31,6 @@ namespace Awning::Protocols::XDG::Positioner
 		void Set_Offset(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y);
 	}
 
-	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id);
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id);
 	void Destroy(struct wl_resource* resource);
 }

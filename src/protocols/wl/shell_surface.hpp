@@ -35,6 +35,6 @@ namespace Awning::Protocols::WL::Shell_Surface
 		void Set_Class(struct wl_client* client, struct wl_resource* resource, const char* class_);
 	}
 	
-	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id, struct wl_resource* surface);
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, struct wl_resource* surface);
 	void Destroy(struct wl_resource* resource);
 }

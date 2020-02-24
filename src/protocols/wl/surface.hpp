@@ -42,7 +42,7 @@ namespace Awning::Protocols::WL::Surface
 		void Damage_Buffer(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height);
 	}
 
-	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id);
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id);
 	void Destroy(struct wl_resource* resource);
 	void HandleFrameCallbacks();
 }

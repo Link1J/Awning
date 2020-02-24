@@ -18,6 +18,6 @@ namespace Awning::Protocols::AWN::Config_Output
 		void Set_Position(struct wl_client* client, struct wl_resource* resource, struct wl_resource* output, int32_t x, int32_t y);
 	}
 
-	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id);
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id);
 	void Destroy(struct wl_resource* resource);
 }

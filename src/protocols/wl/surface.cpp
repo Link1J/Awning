@@ -200,20 +200,22 @@ namespace Awning::Protocols::WL::Surface
 		}
 	}
 
-	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id) 
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id) 
 	{
 		Log::Function::Called("Protocols::WL::Surface");
 
 		struct wl_resource* resource = wl_resource_create(wl_client, &wl_surface_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
-			return;
+			return resource;
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 		
 		data.surfaces[resource].client = wl_client;
 		data.surfaces[resource].texture = new WM::Texture();
 		memset(data.surfaces[resource].texture, 0, sizeof(WM::Texture));
+
+		return resource;
 	}
 
 	void Destroy(struct wl_resource* resource)

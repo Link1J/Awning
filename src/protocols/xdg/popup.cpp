@@ -30,14 +30,14 @@ namespace Awning::Protocols::XDG::Popup
 		}
 	}
 
-	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* surface, wl_resource* parent, wl_resource* point) 
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* surface, wl_resource* parent, wl_resource* point) 
 	{
 		Log::Function::Called("Protocols::XDG::Popup");
 
 		struct wl_resource* resource = wl_resource_create(wl_client, &xdg_popup_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
-			return;
+			return resource;
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
@@ -61,6 +61,8 @@ namespace Awning::Protocols::XDG::Popup
 		Surface::data.surfaces[resource].configured = true;
 
 		xdg_popup_send_configure(resource, pointer.x, pointer.y, pointer.width, pointer.height);
+
+		return resource;
 	}
 
 	void Destroy(struct wl_resource* resource)

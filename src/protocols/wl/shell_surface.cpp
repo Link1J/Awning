@@ -89,24 +89,26 @@ namespace Awning::Protocols::WL::Shell_Surface
 		}
 	}
 
-	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id, struct wl_resource* surface) 
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, struct wl_resource* surface) 
 	{
 		Log::Function::Called("Protocols::WL::Shell_Surface");
 
 		struct wl_resource* resource = wl_resource_create(wl_client, &wl_shell_surface_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
-			return;
+			return resource;
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
 		data.shells[resource] = Data::Instance();
 
 		data.shells[resource].surface = surface;
-		data.shells[resource].window = WM::Window::Create(wl_client);
-		Surface::data.surfaces[surface].window = data.shells[resource].window;
+		//data.shells[resource].window = WM::Window::Create(wl_client);
+		//Surface::data.surfaces[surface].window = data.shells[resource].window;
 
 		WM::Manager::Window::Raise(data.shells[resource].window);
+
+		return resource;
 	}
 
 	void Destroy(struct wl_resource* resource)

@@ -34,18 +34,20 @@ namespace Awning::Protocols::ZXDG::Toplevel_Decoration
 		}
 	}
 
-	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* toplevel)
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* toplevel)
 	{
 		Log::Function::Called("Protocols::ZXDG::Toplevel_Decoration");
 
 		struct wl_resource* resource = wl_resource_create(wl_client, &zxdg_toplevel_decoration_v1_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
-			return;
+			return resource;
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
 		data.decorations[resource].toplevel = toplevel;
+
+		return resource;
 	}
 
 	void Destroy(struct wl_resource* resource)

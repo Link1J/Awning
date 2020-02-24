@@ -27,7 +27,7 @@ namespace Awning::Protocols::ZXDG::Toplevel_Decoration
 		void Unset_Mode(struct wl_client* client, struct wl_resource *resource);
 	}
 
-	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* toplevel);
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* toplevel);
 	void Destroy(struct wl_resource* resource);
 }
 

@@ -63,6 +63,9 @@ namespace Awning::Protocols::WL::Output
 		}
 
 		wl_output_send_done(resource);
+
+		Output::data.resource_to_outputId[resource] = outputId;
+		Output::data.outputId_to_resource[outputId].emplace(resource);
 	}
 
 	wl_global* Add(struct wl_display* display, void* data)
@@ -78,6 +81,5 @@ namespace Awning::Protocols::WL::Output
 		auto id = data.resource_to_outputId[resource];
 		data.outputId_to_resource[id].erase(resource);
 		data.resource_to_outputId    .erase(resource);
-		wl_resource_destroy(resource);
 	}
 }

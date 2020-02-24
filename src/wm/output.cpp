@@ -31,6 +31,7 @@ struct Output
 	std::string       model       ;
 	Size              physical    ;
 	std::vector<Mode> modes       ;
+	int	              currentMode ;
 	Position          position    ;
 };
 
@@ -134,6 +135,7 @@ namespace Awning::WM::Output
 			{
 				::Output* output = (::Output*)id;
 				output->modes[mode].current = current;
+				output->currentMode = current ? mode : output->currentMode;
 			}
 		}
 	}
@@ -144,6 +146,12 @@ namespace Awning::WM::Output
 		{
 			::Output* output = (::Output*)id;
 			return output->modes.size();
+		}
+		
+		int CurrentMode(ID id)
+		{
+			::Output* output = (::Output*)id;
+			return output->currentMode;
 		}
 
 		std::string Model(ID id)

@@ -28,6 +28,6 @@ namespace Awning::Protocols::WL::Data_Source
 		void Set_Actions(struct wl_client* client, struct wl_resource* resource, uint32_t dnd_actions);
 	}
 
-	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id);
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id);
 	void Destroy(struct wl_resource* resource);
 }

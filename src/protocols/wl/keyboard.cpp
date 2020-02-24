@@ -88,14 +88,14 @@ namespace Awning::Protocols::WL::Keyboard
 
 	Data data;
 
-	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id)
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id)
 	{
 		Log::Function::Called("Protocols::WL::Keyboard");
 
 		struct wl_resource* resource = wl_resource_create(wl_client, &wl_keyboard_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
-			return;
+			return resource;
 		}
 
 		if (!ctx)
@@ -127,6 +127,8 @@ namespace Awning::Protocols::WL::Keyboard
 		data.keyboards[wl_client].resource = resource;
 
 		WM::Client::Bind::Keyboard(wl_client, resource);
+
+		return resource;
 	}
 
 	void Button(wl_client* client, uint32_t button, bool released)

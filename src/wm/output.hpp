@@ -32,8 +32,8 @@ namespace Awning::WM::Output
 
 	namespace Get
 	{
-		std::tuple<int,int> Size();
 		int NumberOfModes(ID id);
+		int CurrentMode(ID id);
 
 		std::string         Model       (ID id);
 		std::string         Manufacturer(ID id);

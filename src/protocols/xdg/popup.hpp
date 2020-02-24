@@ -28,6 +28,6 @@ namespace Awning::Protocols::XDG::Popup
 		void Grab(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial);
 	}
 
-	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* surface, wl_resource* parent, wl_resource* point);
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* surface, wl_resource* parent, wl_resource* point);
 	void Destroy(struct wl_resource* resource);
 }

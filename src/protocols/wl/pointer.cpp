@@ -51,14 +51,14 @@ namespace Awning::Protocols::WL::Pointer
 
 	Data data;
 
-	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id)
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id)
 	{
 		Log::Function::Called("Protocols::WL::Pointer");
 
 		struct wl_resource* resource = wl_resource_create(wl_client, &wl_pointer_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
-			return;
+			return resource;
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
@@ -73,6 +73,8 @@ namespace Awning::Protocols::WL::Pointer
 			data.window->Mapped(true);
 			data.inUse = nullptr;
 		}
+
+		return resource;
 	}
 
 	void Destroy(struct wl_resource* resource)

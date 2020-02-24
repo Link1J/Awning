@@ -176,8 +176,8 @@ namespace Awning::WM::Manager
 
 						if (curr != windowList.end())
 						{
-							int localX = x - (*curr)->XPos() + (*curr)->XOffset();
-							int localY = y - (*curr)->YPos() + (*curr)->YOffset();
+							int localX = x - (*curr)->XPos() - (*curr)->XOffset();
+							int localY = y - (*curr)->YPos() - (*curr)->YOffset();
 
 							Protocols::WL::Pointer::Enter(
 								(wl_client  *)(*curr)->Client(), 

@@ -25,7 +25,7 @@ namespace Awning::Protocols::WL::Pointer
 	extern const struct wl_pointer_interface interface;
 	extern Data data;
 
-	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id);
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id);
 	void Destroy(struct wl_resource* resource);
 
 	void Enter(wl_client* client, wl_resource* surface, double x, double y, double tx, double ty);

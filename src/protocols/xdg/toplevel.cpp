@@ -124,14 +124,14 @@ namespace Awning::Protocols::XDG::TopLevel
 		}
 	}
 
-	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* surface) 
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* surface) 
 	{
 		Log::Function::Called("Protocols::XDG::TopLevel");
 
 		struct wl_resource* resource = wl_resource_create(wl_client, &xdg_toplevel_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
-			return;
+			return resource;
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
@@ -149,6 +149,8 @@ namespace Awning::Protocols::XDG::TopLevel
 		data.toplevels[resource].window->Data      (resource);
 		data.toplevels[resource].window->SetRaised (Raised  );
 		data.toplevels[resource].window->SetResized(Resized );
+
+		return resource;
 	}
 
 	void Destroy(struct wl_resource* resource)

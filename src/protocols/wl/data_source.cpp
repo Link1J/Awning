@@ -41,16 +41,18 @@ namespace Awning::Protocols::WL::Data_Source
 		}
 	}
 
-	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id)
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id)
 	{
 		Log::Function::Called("Protocols::WL::Data_Source");
 
 		struct wl_resource* resource = wl_resource_create(wl_client, &wl_data_source_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
-			return;
+			return resource;
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
+
+		return resource;
 	}
 
 	void Destroy(struct wl_resource* resource)

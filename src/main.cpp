@@ -29,6 +29,9 @@
 #include "protocols/xdg/wm_base.hpp"
 
 #include "protocols/zxdg/decoration.hpp"
+#include "protocols/zxdg/output.hpp"
+
+#include "protocols/wlr/output_manager.hpp"
 
 #include "wm/x/wm.hpp"
 #include "wm/window.hpp"
@@ -151,12 +154,14 @@ int main(int argc, char* argv[])
 
 	Awning::Backend::Init(api_output, api_input);
 
-	Awning::Protocols::WL::Compositor         ::Add(Awning::Server::data.display);
-	Awning::Protocols::WL::Seat               ::Add(Awning::Server::data.display);
-	Awning::Protocols::WL::Shell              ::Add(Awning::Server::data.display);
-	Awning::Protocols::XDG    ::WM_Base            ::Add(Awning::Server::data.display);
-	//Awning::Protocols::ZXDG   ::Decoration_Manager ::Add(Awning::Server::data.display);
-	Awning::Protocols::WL::Data_Device_Manager::Add(Awning::Server::data.display);
+	Awning::Protocols::WL  ::Compositor         ::Add(Awning::Server::data.display);
+	Awning::Protocols::WL  ::Seat               ::Add(Awning::Server::data.display);
+	Awning::Protocols::WL  ::Shell              ::Add(Awning::Server::data.display);
+	Awning::Protocols::XDG ::WM_Base            ::Add(Awning::Server::data.display);
+	//Awning::Protocols::ZXDG::Decoration_Manager ::Add(Awning::Server::data.display);
+	Awning::Protocols::WL  ::Data_Device_Manager::Add(Awning::Server::data.display);
+	Awning::Protocols::WLR ::Output_Manager     ::Add(Awning::Server::data.display);
+	Awning::Protocols::ZXDG::Output_Manager     ::Add(Awning::Server::data.display);
 
 	wl_display_init_shm(Awning::Server::data.display);
 

@@ -42,7 +42,7 @@ namespace Awning::Protocols::XDG::TopLevel
 		void Set_Minimized(struct wl_client* client, struct wl_resource* resource);
 	}
 
-	void Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* surface);
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* surface);
 	void Destroy(struct wl_resource* resource);
 
 	void Raised (void* data);

@@ -33,6 +33,7 @@ set(SOURCES
     src/protocols/xdg/positioner.cpp
 
     src/protocols/zxdg/decoration.cpp
+    src/protocols/zxdg/output.cpp
 
     src/wm/manager.cpp
     src/wm/window.cpp
@@ -46,7 +47,9 @@ set(SOURCES
     src/renderers/manager.cpp
 
     src/protocols/awn/config.cpp
-    src/protocols/awn/config_output.cpp
+	src/protocols/awn/config_output.cpp
+	
+    src/protocols/wlr/output_manager.cpp
 )
 
 set(SOURCE_WAYLAND
@@ -55,11 +58,13 @@ set(SOURCE_WAYLAND
     src/protocols/handler/linux-dmabuf.c
 	src/protocols/handler/awn-config.c
 	src/protocols/handler/wlr-output-management.c
+	src/protocols/handler/xdg-output.c
     src/protocols/handler/xdg-shell.h 
     src/protocols/handler/xdg-decoration.h
     src/protocols/handler/linux-dmabuf.h
 	src/protocols/handler/awn-config.h
 	src/protocols/handler/wlr-output-management.h
+	src/protocols/handler/xdg-output.h
 )
 
 #------------------------------------------------------------------------------
@@ -85,126 +90,43 @@ find_program(PKG_CONFIG pkg-config)
 
 #------------------------------------------------------------------------------
 
+function(wayland_protocol_create file_name file_to_use)
+	#message(${file_name})
+	#message(${file_to_use})
+
+	add_custom_command(
+	    OUTPUT  ${CMAKE_SOURCE_DIR}/src/protocols/handler/${file_name}.h
+	            ${CMAKE_SOURCE_DIR}/src/protocols/handler/${file_name}.c
+
+		DEPENDS ${file_to_use}
+		
+	    COMMAND ${WaylandScanner_EXECUTABLE} server-header
+	            ${file_to_use} ${CMAKE_SOURCE_DIR}/src/protocols/handler/${file_name}.h
+	
+	    COMMAND ${WaylandScanner_EXECUTABLE} private-code
+	            ${file_to_use} ${CMAKE_SOURCE_DIR}/src/protocols/handler/${file_name}.c
+	)
+	execute_process(
+	    COMMAND ${WaylandScanner_EXECUTABLE} server-header
+	            ${file_to_use} ${CMAKE_SOURCE_DIR}/src/protocols/handler/${file_name}.h
+	
+	    COMMAND ${WaylandScanner_EXECUTABLE} private-code
+	            ${file_to_use} ${CMAKE_SOURCE_DIR}/src/protocols/handler/${file_name}.c
+	)
+endfunction(wayland_protocol_create)
+
+#------------------------------------------------------------------------------
+
 execute_process(COMMAND ${PKG_CONFIG} --variable=pkgdatadir wayland-protocols OUTPUT_VARIABLE protocol_dir OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/src/protocols/handler")
 
-add_custom_command(
-    OUTPUT  ${CMAKE_SOURCE_DIR}/src/protocols/handler/xdg-shell.h
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/xdg-shell.c
-
-    DEPENDS ${protocol_dir}/stable/xdg-shell/xdg-shell.xml
-
-    COMMAND ${WaylandScanner_EXECUTABLE} server-header
-            ${protocol_dir}/stable/xdg-shell/xdg-shell.xml
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/xdg-shell.h
-            
-    COMMAND ${WaylandScanner_EXECUTABLE} private-code
-            ${protocol_dir}/stable/xdg-shell/xdg-shell.xml
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/xdg-shell.c
-)
-add_custom_command(
-    OUTPUT  ${CMAKE_SOURCE_DIR}/src/protocols/handler/xdg-decoration.h
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/xdg-decoration.c
-
-    DEPENDS ${protocol_dir}/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml
-
-    COMMAND ${WaylandScanner_EXECUTABLE} server-header
-            ${protocol_dir}/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/xdg-decoration.h
-
-    COMMAND ${WaylandScanner_EXECUTABLE} private-code
-            ${protocol_dir}/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/xdg-decoration.c
-)
-add_custom_command(
-    OUTPUT  ${CMAKE_SOURCE_DIR}/src/protocols/handler/linux-dmabuf.h
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/linux-dmabuf.c
-
-    DEPENDS ${protocol_dir}/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml
-
-    COMMAND ${WaylandScanner_EXECUTABLE} server-header
-            ${protocol_dir}/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/linux-dmabuf.h
-    
-    COMMAND ${WaylandScanner_EXECUTABLE} private-code
-            ${protocol_dir}/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/linux-dmabuf.c
-)
-add_custom_command(
-    OUTPUT  ${CMAKE_SOURCE_DIR}/src/protocols/handler/awn-config.h
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/awn-config.c
-
-    DEPENDS ${CMAKE_SOURCE_DIR}/protocols/awn-config.xml
-
-    COMMAND ${WaylandScanner_EXECUTABLE} server-header
-            ${CMAKE_SOURCE_DIR}/protocols/awn-config.xml
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/awn-config.h
-
-    COMMAND ${WaylandScanner_EXECUTABLE} private-code
-            ${CMAKE_SOURCE_DIR}/protocols/awn-config.xml
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/awn-config.c
-)
-add_custom_command(
-    OUTPUT  ${CMAKE_SOURCE_DIR}/src/protocols/handler/wlr-output-management.h
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/wlr-output-management.c
-
-    DEPENDS ${CMAKE_SOURCE_DIR}/protocols/wlr-output-management-unstable-v1.xml
-
-    COMMAND ${WaylandScanner_EXECUTABLE} server-header
-            ${CMAKE_SOURCE_DIR}/protocols/wlr-output-management-unstable-v1.xml
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/wlr-output-management.h
-
-    COMMAND ${WaylandScanner_EXECUTABLE} private-code
-            ${CMAKE_SOURCE_DIR}/protocols/wlr-output-management-unstable-v1.xml
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/wlr-output-management.c
-)
-
-execute_process(
-    COMMAND ${WaylandScanner_EXECUTABLE} server-header
-            ${protocol_dir}/stable/xdg-shell/xdg-shell.xml
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/xdg-shell.h
-            
-    COMMAND ${WaylandScanner_EXECUTABLE} private-code
-            ${protocol_dir}/stable/xdg-shell/xdg-shell.xml
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/xdg-shell.c
-)
-execute_process(
-    COMMAND ${WaylandScanner_EXECUTABLE} server-header
-            ${protocol_dir}/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/xdg-decoration.h
-
-    COMMAND ${WaylandScanner_EXECUTABLE} private-code
-            ${protocol_dir}/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/xdg-decoration.c
-)
-execute_process(
-    COMMAND ${WaylandScanner_EXECUTABLE} server-header
-            ${protocol_dir}/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/linux-dmabuf.h
-    
-    COMMAND ${WaylandScanner_EXECUTABLE} private-code
-            ${protocol_dir}/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/linux-dmabuf.c
-)
-execute_process(
-    COMMAND ${WaylandScanner_EXECUTABLE} server-header
-            ${CMAKE_SOURCE_DIR}/protocols/awn-config.xml
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/awn-config.h
-
-    COMMAND ${WaylandScanner_EXECUTABLE} private-code
-            ${CMAKE_SOURCE_DIR}/protocols/awn-config.xml
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/awn-config.c
-)
-execute_process(
-    COMMAND ${WaylandScanner_EXECUTABLE} server-header
-            ${CMAKE_SOURCE_DIR}/protocols/wlr-output-management-unstable-v1
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/wlr-output-management.h
-
-    COMMAND ${WaylandScanner_EXECUTABLE} private-code
-            ${CMAKE_SOURCE_DIR}/protocols/wlr-output-management-unstable-v1
-            ${CMAKE_SOURCE_DIR}/src/protocols/handler/wlr-output-management.c
-)
+wayland_protocol_create(xdg-shell ${protocol_dir}/stable/xdg-shell/xdg-shell.xml)
+wayland_protocol_create(xdg-decoration ${protocol_dir}/unstable/xdg-decoration/xdg-decoration-unstable-v1.xml)
+wayland_protocol_create(linux-dmabuf ${protocol_dir}/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml)
+wayland_protocol_create(awn-config ${CMAKE_SOURCE_DIR}/protocols/awn-config.xml)
+wayland_protocol_create(wlr-output-management ${CMAKE_SOURCE_DIR}/protocols/wlr-output-management-unstable-v1.xml)
+wayland_protocol_create(xdg-output ${protocol_dir}/unstable/xdg-output/xdg-output-unstable-v1.xml)
 
 #------------------------------------------------------------------------------
 
