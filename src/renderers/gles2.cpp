@@ -169,7 +169,7 @@ namespace Awning::Renderers::GLES2
 
 		auto subwindows = window->GetSubwindows();
 		for (auto& subwindow : reverse(subwindows))
-			RenderWindow(subwindow, count, frame, depth + 1);
+			RenderWindow(subwindow, 0, 0, depth + 1);
 	}
 
 	void Init()

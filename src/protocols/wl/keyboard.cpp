@@ -121,8 +121,11 @@ namespace Awning::Protocols::WL::Keyboard
 		}
 
 		wl_resource_set_implementation(resource, &interface, nullptr, nullptr);
+		
 		wl_keyboard_send_keymap(resource, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1, keymap_fd, keymap_size);
-		wl_keyboard_send_repeat_info(resource, 25, 1000);
+
+		if (version >= WL_KEYBOARD_REPEAT_INFO_SINCE_VERSION)
+			wl_keyboard_send_repeat_info(resource, 25, 1000);
 
 		data.keyboards[wl_client].resource = resource;
 

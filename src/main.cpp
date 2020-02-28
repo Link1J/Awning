@@ -161,15 +161,13 @@ int main(int argc, char* argv[])
 
 	//launchApp(launchArgs1);
 	//launchApp(launchArgs2);
-	launchApp(launchArgs3);
+	//launchApp(launchArgs3);
 	//launchApp(launchArgs4);
 	//launchApp(launchArgs5);
 	//launchApp(launchArgs6);
 	
 	while(1)
 	{
-		Awning::Protocols::WL::Surface::HandleFrameCallbacks();
-
 		Awning::Backend::Poll();
 		Awning::Backend::Hand();
 
@@ -181,6 +179,8 @@ int main(int argc, char* argv[])
 		Awning::Renderers::Draw();
 
 		Awning::Backend::Draw();
+
+		Awning::Protocols::WL::Surface::HandleFrameCallbacks();
 	}
 
 	wl_display_destroy(Awning::Server::data.display);

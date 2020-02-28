@@ -50,12 +50,14 @@ namespace Awning::Protocols::WL::Seat
 		}
 		wl_resource_set_implementation(resource, &interface, data, nullptr);
 
-		wl_seat_send_name(resource, "Maybe Working Input.");
 		wl_seat_send_capabilities(resource, WL_SEAT_CAPABILITY_POINTER|WL_SEAT_CAPABILITY_KEYBOARD);
+
+		if (version >= WL_SEAT_NAME_SINCE_VERSION)
+			wl_seat_send_name(resource, "Maybe Working Input.");
 	}
 
 	wl_global* Add(struct wl_display* display, void* data)
 	{
-		return wl_global_create(display, &wl_seat_interface, 3, data, Bind);
+		return wl_global_create(display, &wl_seat_interface, 5, data, Bind);
 	}
 }

@@ -64,7 +64,7 @@ namespace Awning::WM
 	bool Window::Mapped()
 	{
 		if (parent)
-			return parent->texture && parent->mapped && texture && mapped;
+			return parent->Mapped() && texture && mapped;
 		return texture && mapped;
 	}
 
@@ -144,12 +144,16 @@ namespace Awning::WM
 
 	int Window::XOffset()
 	{
+		if (parent && parentOffsets)
+			return parent->XOffset() + offset.x;
 		return offset.x;
 	}
 
 	int Window::YOffset()
 	{
-		return offset.x;
+		if (parent && parentOffsets)
+			return parent->YOffset() + offset.y;
+		return offset.y;
 	}
 
 	void Window::Texture(WM::Texture* texture)
