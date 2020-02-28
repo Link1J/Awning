@@ -25,6 +25,8 @@ set(SOURCES
     src/protocols/wl/data_device_manager.cpp
     src/protocols/wl/data_source.cpp
     src/protocols/wl/data_device.cpp
+    src/protocols/wl/subcompositor.cpp
+    src/protocols/wl/subsurface.cpp
 
     src/protocols/xdg/wm_base.cpp
     src/protocols/xdg/surface.cpp

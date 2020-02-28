@@ -25,6 +25,7 @@
 #include "protocols/wl/shell_surface.hpp"
 #include "protocols/wl/pointer.hpp"
 #include "protocols/wl/data_device_manager.hpp"
+#include "protocols/wl/subcompositor.hpp"
 
 #include "protocols/xdg/wm_base.hpp"
 
@@ -139,6 +140,7 @@ int main(int argc, char* argv[])
 	Awning::Protocols::WLR ::Output_Manager     ::Add(Awning::Server::data.display);
 	//Awning::Protocols::ZXDG::Output_Manager     ::Add(Awning::Server::data.display);
 	Awning::Protocols::ZWP ::Linux_Dmabuf       ::Add(Awning::Server::data.display);
+	Awning::Protocols::WL  ::Subcompositor      ::Add(Awning::Server::data.display);
 
 	wl_display_init_shm(Awning::Server::data.display);
 

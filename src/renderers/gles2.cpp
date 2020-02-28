@@ -110,8 +110,11 @@ namespace Awning::Renderers::GLES2
 
 	GLuint frameTexture;
 
-	void RenderWindow(WM::Window* window, int count = 2, int frame = 1)
+	void RenderWindow(WM::Window* window, int count = 2, int frame = 1, int depth = 0)
 	{
+		if (window->DrawingManaged() && depth == 0)
+			return;
+
 		auto texture = window->Texture();
 
 		auto winPosX  = window->XPos   ();
@@ -163,6 +166,10 @@ namespace Awning::Renderers::GLES2
 		}
 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		auto subwindows = window->GetSubwindows();
+		for (auto& subwindow : reverse(subwindows))
+			RenderWindow(subwindow, count, frame, depth + 1);
 	}
 
 	void Init()

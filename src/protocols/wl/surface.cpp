@@ -169,7 +169,7 @@ namespace Awning::Protocols::WL::Surface
 
 			if (surface.window)
 			{
-				if ((surface.window->XSize() == 0 && surface.window->YSize() == 0) || surface.type == 2)
+				if ((surface.window->XSize() == 0 && surface.window->YSize() == 0) || surface.type == 2 || surface.type == 3)
 					surface.window->ConfigSize(surface.texture->width, surface.texture->height);
 
 				surface.window->Mapped(true);

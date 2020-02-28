@@ -182,4 +182,21 @@ namespace Awning::WM
 		this->parent = parent;
 		parentOffsets = offsets;
 	}
+
+	void Window::AddSubwindow(WM::Window* child)
+	{
+		child->Parent(this, true);
+		child->drawingManaged = true;
+		subwindows.push_back(child);
+	}
+
+	std::vector<Window*> Window::GetSubwindows()
+	{
+		return subwindows;
+	}
+
+	bool Window::DrawingManaged()
+	{
+		return drawingManaged;                                       
+	}
 }
