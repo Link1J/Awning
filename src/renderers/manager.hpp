@@ -2,6 +2,11 @@
 #include "wm/texture.hpp"
 #include <wayland-server.h>
 
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/extensions/Xcomposite.h>
+#include <X11/extensions/Xrender.h>
+
 namespace Awning::Renderers
 {
 	enum class API
@@ -11,9 +16,10 @@ namespace Awning::Renderers
 
 	namespace Functions
 	{
-		typedef void (*Draw     )(                                                              );
-		typedef void (*EGLImage )(wl_resource  * buffer, WM::Texture* texture, WM::Damage damage);
-		typedef void (*SHMBuffer)(wl_shm_buffer* buffer, WM::Texture* texture, WM::Damage damage);
+		typedef void (*Draw       )(                                                              );
+		typedef void (*EGLImage   )(wl_resource  * buffer, WM::Texture* texture, WM::Damage damage);
+		typedef void (*SHMBuffer  )(wl_shm_buffer* buffer, WM::Texture* texture, WM::Damage damage);
+		typedef void (*LinuxDMABuf)(wl_resource  * buffer, WM::Texture* texture, WM::Damage damage);
 	};
 
 	void Init(API renderer);
@@ -22,7 +28,8 @@ namespace Awning::Renderers
 
 	namespace FillTextureFrom
 	{
-		extern Functions::SHMBuffer SHMBuffer;
-		extern Functions::EGLImage  EGLImage ;
+		extern Functions::SHMBuffer   SHMBuffer  ;
+		extern Functions::EGLImage    EGLImage   ;
+		extern Functions::LinuxDMABuf LinuxDMABuf;
 	}
 }

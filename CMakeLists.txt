@@ -41,15 +41,19 @@ set(SOURCES
     src/wm/output.cpp
 
     src/wm/x/wm.cpp
+    src/wm/x/server.cpp
 
     src/renderers/software.cpp
     src/renderers/gles2.cpp
     src/renderers/manager.cpp
+    src/renderers/egl.cpp
 
     src/protocols/awn/config.cpp
 	src/protocols/awn/config_output.cpp
 	
     src/protocols/wlr/output_manager.cpp
+    
+    src/protocols/zwp/dmabuf.cpp
 )
 
 set(SOURCE_WAYLAND
@@ -84,6 +88,7 @@ find_package(Libinput REQUIRED)
 find_package(OpenGL REQUIRED)
 #find_package(fmt REQUIRED)
 find_package(EGL REQUIRED)
+find_package(XCB COMPONENTS XCB ATOM COMPOSITE DRI2 DRI3 EWMH ICCCM XFIXES XKB RENDER SHAPE REQUIRED)
 
 find_package(WaylandScanner REQUIRED)
 find_program(PKG_CONFIG pkg-config)
@@ -162,6 +167,18 @@ target_link_libraries(Awning PRIVATE
     UDev::UDev
     fmt::fmt
     EGL::EGL
+    Wayland::Client
+    XCB::XCB
+    XCB::ATOM
+    XCB::COMPOSITE
+    XCB::DRI2
+    XCB::DRI3
+    XCB::EWMH
+    XCB::ICCCM
+    XCB::XFIXES
+    XCB::XKB
+    XCB::RENDER
+    XCB::SHAPE
 
     gbm
     GLESv2

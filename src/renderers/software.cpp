@@ -9,13 +9,7 @@
 
 #include <string.h>
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <EGL/eglmesaext.h>
-
-//#include <GL/gl.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#include "egl.hpp"
 
 #include <iostream>
 
@@ -36,40 +30,12 @@ namespace Awning
 		{
 			wl_display* display;
 			wl_event_loop* event_loop;
-			wl_event_source* sigusr1;
 			wl_protocol_logger* logger; 
 			wl_listener client_listener;
-
-			struct {
-				EGLDisplay display;
-				EGLint major, minor;
-				EGLContext context;
-				EGLSurface surface;
-			} egl;
 		};
 		extern Data data;
 	}
 };
-
-extern PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXT;
-extern PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC eglCreatePlatformWindowSurfaceEXT;
-extern PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR;
-extern PFNEGLDESTROYIMAGEKHRPROC eglDestroyImageKHR;
-extern PFNEGLQUERYWAYLANDBUFFERWL eglQueryWaylandBufferWL;
-extern PFNEGLBINDWAYLANDDISPLAYWL eglBindWaylandDisplayWL;
-extern PFNEGLUNBINDWAYLANDDISPLAYWL eglUnbindWaylandDisplayWL;
-extern PFNEGLSWAPBUFFERSWITHDAMAGEEXTPROC eglSwapBuffersWithDamage; // KHR or EXT
-extern PFNEGLQUERYDMABUFFORMATSEXTPROC eglQueryDmaBufFormatsEXT;
-extern PFNEGLQUERYDMABUFMODIFIERSEXTPROC eglQueryDmaBufModifiersEXT;
-extern PFNEGLEXPORTDMABUFIMAGEQUERYMESAPROC eglExportDMABUFImageQueryMESA;
-extern PFNEGLEXPORTDMABUFIMAGEMESAPROC eglExportDMABUFImageMESA;
-extern PFNEGLDEBUGMESSAGECONTROLKHRPROC eglDebugMessageControlKHR;
-
-extern PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES;
-
-#define GL_TEXTURE_EXTERNAL_OES 0x8D65
-
-int LoadOpenGLES2();
 
 static const char* vertexShaderCode = R"(
 #version 300 es
@@ -103,9 +69,6 @@ void main()
 	FragColor = texture2D(texture0, color.xy);
 }
 )";
-
-void CreateShader(GLuint& shader, GLenum type, const char* code, std::experimental::fundamentals_v2::source_location function = std::experimental::fundamentals_v2::source_location::current());
-void CreateProgram(GLuint& program, GLuint vertexShader, GLuint pixelShader, std::experimental::fundamentals_v2::source_location function = std::experimental::fundamentals_v2::source_location::current());
 
 namespace Awning::Renderers::Software
 {
@@ -214,14 +177,14 @@ namespace Awning::Renderers::Software
 
 	void Init()
 	{
-		if (LoadOpenGLES2() != 0)
+		if (EGL::Init() != 0)
 			return;
 		
-		eglBindWaylandDisplayWL(Awning::Server::data.egl.display, Awning::Server::data.display);
+		eglBindWaylandDisplayWL(EGL::display, Awning::Server::data.display);
 
-		CreateShader(vertexShader, GL_VERTEX_SHADER, vertexShaderCode);
-		CreateShader(pixelShader, GL_FRAGMENT_SHADER, pixelShaderCode);
-		CreateProgram(program, vertexShader, pixelShader);
+		EGL::CreateShader(vertexShader, GL_VERTEX_SHADER, vertexShaderCode);
+		EGL::CreateShader(pixelShader, GL_FRAGMENT_SHADER, pixelShaderCode);
+		EGL::CreateProgram(program, vertexShader, pixelShader);
 		glUseProgram(program);
 	}
 
@@ -330,11 +293,11 @@ namespace Awning::Renderers::Software
 
 		void EGLImage(wl_resource* buffer, WM::Texture* texture, WM::Damage damage)
 		{
-			eglMakeCurrent(Awning::Server::data.egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE, Awning::Server::data.egl.context);
+			eglMakeCurrent(EGL::display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL::context);
 		
 			EGLint width, height;
-			eglQueryWaylandBufferWL(Server::data.egl.display, buffer, EGL_WIDTH , &width );
-			eglQueryWaylandBufferWL(Server::data.egl.display, buffer, EGL_HEIGHT, &height);
+			eglQueryWaylandBufferWL(EGL::display, buffer, EGL_WIDTH , &width );
+			eglQueryWaylandBufferWL(EGL::display, buffer, EGL_HEIGHT, &height);
 
 			SizeTextureBuffer(texture, width * 4, height);
 
@@ -352,7 +315,7 @@ namespace Awning::Renderers::Software
 				EGL_WAYLAND_PLANE_WL, 0,
 				EGL_NONE 
 			};
-			auto image = eglCreateImageKHR(Server::data.egl.display, EGL_NO_CONTEXT, EGL_WAYLAND_BUFFER_WL, buffer, attribs);
+			auto image = eglCreateImageKHR(EGL::display, EGL_NO_CONTEXT, EGL_WAYLAND_BUFFER_WL, buffer, attribs);
 			
 			GLuint textures[2];
 			GLuint fbo;
@@ -383,7 +346,7 @@ namespace Awning::Renderers::Software
 
 			glDeleteFramebuffers(1, &fbo);
 			glDeleteTextures(2, textures);
-			eglDestroyImageKHR(Server::data.egl.display, image);
+			eglDestroyImageKHR(EGL::display, image);
 		}
 
 		void SHMBuffer(wl_shm_buffer* shm_buffer, WM::Texture* texture, WM::Damage damage)

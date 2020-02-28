@@ -33,10 +33,13 @@
 
 #include "protocols/wlr/output_manager.hpp"
 
+#include "protocols/zwp/dmabuf.hpp"
+
 #include "wm/x/wm.hpp"
 #include "wm/window.hpp"
 #include "wm/client.hpp"
 #include "wm/manager.hpp"
+#include "wm/x/server.hpp"
 
 #include "log.hpp"
 
@@ -52,11 +55,8 @@
 #include <unordered_map>
 
 void ProtocolLogger(void* user_data, wl_protocol_logger_type direction, const wl_protocol_logger_message* message);
-int XWM_Start(int signal_number, void *data);
-void LaunchXwayland(int signal_number);
 void on_term_signal(int signal_number);
 void client_created(struct wl_listener *listener, void *data);
-void loadEGLProc(void* proc_ptr, const char* name);
 void launchApp(const char** argv);
 
 namespace Awning
@@ -67,16 +67,8 @@ namespace Awning
 		{
 			wl_display* display;
 			wl_event_loop* event_loop;
-			wl_event_source* sigusr1;
 			wl_protocol_logger* logger; 
 			wl_listener client_listener;
-
-			struct {
-				EGLDisplay display;
-				EGLint major, minor;
-				EGLContext context;
-				EGLSurface surface;
-			} egl;
 		};
 		Data data;
 	}
@@ -94,7 +86,7 @@ uint32_t NextSerialNum()
 
 int main(int argc, char* argv[])
 {
-	bool noX = true;
+	bool noX = false;
 	Awning::Backend::API api_output = Awning::Backend::API::DRM;
 	Awning::Backend::API api_input  = Awning::Backend::API::libinput;
 
@@ -124,22 +116,6 @@ int main(int argc, char* argv[])
 		}
 	}
 
-    int pid;
-    int status, ret;
-
-	if (!noX)
-	{
-		pid = fork();
-	}
-
-	if (!noX && pid == 0) 
-	{
-		signal(SIGUSR1, SIG_IGN);
-		signal(SIGUSR2, LaunchXwayland);
-		pause();
-   		exit(-1);
-	}
-
 	Awning::Server::data.display = wl_display_create(); 
 	const char* socket = wl_display_add_socket_auto(Awning::Server::data.display);
 	std::cout << "Wayland Socket: " << socket << std::endl;
@@ -150,9 +126,9 @@ int main(int argc, char* argv[])
 	wl_display_add_protocol_logger(Awning::Server::data.display, ProtocolLogger, nullptr);
 	wl_display_add_client_created_listener(Awning::Server::data.display, &Awning::Server::data.client_listener);
 
-	Awning::Server::data.sigusr1 = wl_event_loop_add_signal(Awning::Server::data.event_loop, SIGUSR1, XWM_Start, nullptr);
-
 	Awning::Backend::Init(api_output, api_input);
+
+	Awning::Renderers::Init(Awning::Renderers::API::OpenGL_ES_2);
 
 	Awning::Protocols::WL  ::Compositor         ::Add(Awning::Server::data.display);
 	Awning::Protocols::WL  ::Seat               ::Add(Awning::Server::data.display);
@@ -161,27 +137,29 @@ int main(int argc, char* argv[])
 	//Awning::Protocols::ZXDG::Decoration_Manager ::Add(Awning::Server::data.display);
 	Awning::Protocols::WL  ::Data_Device_Manager::Add(Awning::Server::data.display);
 	Awning::Protocols::WLR ::Output_Manager     ::Add(Awning::Server::data.display);
-	Awning::Protocols::ZXDG::Output_Manager     ::Add(Awning::Server::data.display);
+	//Awning::Protocols::ZXDG::Output_Manager     ::Add(Awning::Server::data.display);
+	Awning::Protocols::ZWP ::Linux_Dmabuf       ::Add(Awning::Server::data.display);
 
 	wl_display_init_shm(Awning::Server::data.display);
 
-	Awning::Renderers::Init(Awning::Renderers::API::OpenGL_ES_2);
-
-	if (pid != 0)
+	if (!noX)
 	{
-		kill(pid, SIGUSR2);
+		Awning::WM::X::Server::Setup();
+		Awning::WM::X::Server::Run  ();
 	}
 
 	const char* launchArgs1[] = { "falkon", "-platform", "wayland", NULL };
     const char* launchArgs2[] = { "weston-terminal", NULL };
-    const char* launchArgs3[] = { "env", "MOZ_ENABLE_WAYLAND=1", "firefox", NULL };
+    const char* launchArgs3[] = { "firefox", NULL };
     const char* launchArgs4[] = { "ksysguard", "-platform", "wayland", NULL };
     const char* launchArgs5[] = { "konsole", "-platform", "wayland", NULL };
     const char* launchArgs6[] = { "termite", NULL };
 
+	setenv("MOZ_ENABLE_WAYLAND", "1", 1);
+
 	//launchApp(launchArgs1);
 	//launchApp(launchArgs2);
-	//launchApp(launchArgs3);
+	launchApp(launchArgs3);
 	//launchApp(launchArgs4);
 	//launchApp(launchArgs5);
 	//launchApp(launchArgs6);
@@ -210,29 +188,6 @@ void on_term_signal(int signal_number)
 {
 }
 
-int XWM_Start(int signal_number, void *data)
-{
-	Log::Function::Called("");
-	Awning::WM::X::Init();
-	signal(SIGUSR1, on_term_signal);
-	return 0;
-}
-
-void LaunchXwayland(int signal_number)
-{
-	Log::Function::Called("");
-
-    const char* XWaylandArgs [] = { "Xwayland", ":1", NULL };
-
-	int fd = open("/dev/null", O_RDWR);
-	dup2(fd, STDOUT_FILENO);
-	dup2(fd, STDERR_FILENO);
-
-	int ret = execvp(XWaylandArgs[0], (char**)XWaylandArgs);
-	printf("Xwayland did not launch! %d %s\n", ret, strerror(errno));
-	exit(ret);
-}
-
 void ProtocolLogger(void* user_data, wl_protocol_logger_type direction, const wl_protocol_logger_message* message)
 {
 	const char* direction_strings[] = { 
@@ -251,9 +206,6 @@ void client_created(struct wl_listener* listener, void* data)
 	Log::Function::Called("");
 
 	Awning::WM::Client::Create(data);
-
-	if (!Awning::WM::X::xWaylandClient)
-		Awning::WM::X::xWaylandClient = (wl_client*)data;
 }
 
 /*void GetSockAddress()

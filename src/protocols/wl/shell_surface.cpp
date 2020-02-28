@@ -3,6 +3,8 @@
 #include "pointer.hpp"
 #include "log.hpp"
 
+#include "wm/x/wm.hpp"
+
 namespace Awning::Protocols::WL::Shell_Surface
 {
 	const struct wl_shell_surface_interface interface = {
@@ -108,6 +110,9 @@ namespace Awning::Protocols::WL::Shell_Surface
 
 		WM::Manager::Window::Raise(data.shells[resource].window);
 
+		if (WM::X::surface == nullptr)
+			WM::X::surface = surface;
+
 		return resource;
 	}
 
@@ -118,12 +123,12 @@ namespace Awning::Protocols::WL::Shell_Surface
 		if (!data.shells.contains(resource))
 			return;
 
-		auto surface = data.shells[resource].surface; 
-		Surface::data.surfaces[surface].window = nullptr;
+		//auto surface = data.shells[resource].surface; 
+		//Surface::data.surfaces[surface].window = nullptr;
 		
-		data.shells[resource].window->Mapped(false);
-		data.shells[resource].window->Texture(nullptr);
-		WM::Window::Destory(data.shells[resource].window);
+		//data.shells[resource].window->Mapped(false);
+		//data.shells[resource].window->Texture(nullptr);
+		//WM::Window::Destory(data.shells[resource].window);
 		data.shells.erase(resource);
 	}
 }

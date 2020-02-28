@@ -141,6 +141,9 @@ namespace Awning::Protocols::WL::Keyboard
 
 		xkb_state_update_key(state, button + 8, (xkb_key_direction)stateKey);
 
+		if (!surface)
+			return;
+
 		xkb_mod_mask_t depressed = xkb_state_serialize_mods(state, XKB_STATE_MODS_DEPRESSED);
 		xkb_mod_mask_t latched = xkb_state_serialize_mods(state, XKB_STATE_MODS_LATCHED);
 		xkb_mod_mask_t locked = xkb_state_serialize_mods(state, XKB_STATE_MODS_LOCKED);

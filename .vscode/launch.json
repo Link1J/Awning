@@ -10,7 +10,8 @@
 			"request": "launch",
 			"program": "${workspaceFolder}/build/Awning",
 			"args": [
-				"-x11"
+				"-x11",
+				"-noX"
 			],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",

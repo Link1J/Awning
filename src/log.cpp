@@ -21,12 +21,12 @@ namespace Log
 	{
 		void Error(std::string message, source_location function)
 		{
-			std::cout << "[ERROR  ] " << "(" << function.file_name() << "::" << function.line() << ")" << message << "\n";
+			std::cout << "[ERROR  ] " << "(" << function.file_name() << "::" << function.line() << ") " << message << "\n";
 		}
 
 		void Info(std::string message, source_location function)
 		{
-			std::cout << "[INFO   ] " << "(" << function.file_name() << "::" << function.line() << ")" << message << "\n";
+			std::cout << "[INFO   ] " << "(" << function.file_name() << "::" << function.line() << ") " << message << "\n";
 		}
 	}
 }

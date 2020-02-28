@@ -3,6 +3,8 @@
 #include "protocols/handler/xdg-shell.h"
 #include "renderers/manager.hpp"
 
+#include "protocols/zwp/dmabuf.hpp"
+
 #include <cstring>
 
 #include <EGL/egl.h>
@@ -25,7 +27,6 @@ namespace Awning
 		{
 			wl_display* display;
 			wl_event_loop* event_loop;
-			wl_event_source* sigusr1;
 			wl_protocol_logger* logger; 
 			wl_listener client_listener;
 
@@ -79,8 +80,6 @@ namespace Awning::Protocols::WL::Surface
 		{
 			Log::Function::Called("Protocols::WL::Surface::Interface");
 
-			if (data.surfaces[resource].buffer)
-				wl_buffer_send_release(data.surfaces[resource].buffer);
 			data.surfaces[resource].buffer = buffer;
 		}
 
@@ -159,12 +158,14 @@ namespace Awning::Protocols::WL::Surface
 			}
 
 			EGLint texture_format;
-			if (eglQueryWaylandBufferWL(Server::data.egl.display, surface.buffer, EGL_TEXTURE_FORMAT, &texture_format))
-				Renderers::FillTextureFrom::EGLImage(surface.buffer, surface.texture, surface.damage);
-
 			auto shm_buffer = wl_shm_buffer_get(surface.buffer);
-			if (shm_buffer)
+
+			if (surface.buffer->destroy == Protocols::ZWP::Linux_Buffer_Params::BufferDestroy)
+				Renderers::FillTextureFrom::LinuxDMABuf(surface.buffer, surface.texture, surface.damage);
+			else if (shm_buffer)
 				Renderers::FillTextureFrom::SHMBuffer(shm_buffer, surface.texture, surface.damage);
+			else if (eglQueryWaylandBufferWL(Server::data.egl.display, surface.buffer, EGL_TEXTURE_FORMAT, &texture_format))
+				Renderers::FillTextureFrom::EGLImage(surface.buffer, surface.texture, surface.damage);
 
 			if (surface.window)
 			{
@@ -174,8 +175,8 @@ namespace Awning::Protocols::WL::Surface
 				surface.window->Mapped(true);
 			}
 
-			//wl_buffer_send_release(surface.buffer);
-			//surface.buffer = nullptr;
+			wl_buffer_send_release(surface.buffer);
+			surface.buffer = nullptr;
 		}
 
 		void Set_Buffer_Transform(struct wl_client* client, struct wl_resource* resource, int32_t transform)

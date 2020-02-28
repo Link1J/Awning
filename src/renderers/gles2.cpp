@@ -4,29 +4,20 @@
 #include "backends/manager.hpp"
 
 #include "wm/manager.hpp"
+#include "wm/x/wm.hpp"
 
 #include "protocols/wl/pointer.hpp"
+#include "protocols/zwp/dmabuf.hpp"
 
 #include <string.h>
-
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <EGL/eglmesaext.h>
-
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
-
-#include <gbm.h>
-
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <stdio.h>
-#include <fcntl.h>
 
 #include <fmt/format.h>
 
+#include <libdrm/drm_fourcc.h>
+
 #include <iostream>
+#include <sstream>
+#include <algorithm>
 
 template <typename T>
 struct reversion_wrapper { T& iterable; };
@@ -45,41 +36,13 @@ namespace Awning
 		{
 			wl_display* display;
 			wl_event_loop* event_loop;
-			wl_event_source* sigusr1;
 			wl_protocol_logger* logger; 
 			wl_listener client_listener;
-
-			struct {
-				EGLDisplay display;
-				EGLint major, minor;
-				EGLContext context;
-				EGLSurface surface;
-			} egl;
 		};
 		extern Data data;
 	}
 };
 
-PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXT;
-PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC eglCreatePlatformWindowSurfaceEXT;
-PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR;
-PFNEGLDESTROYIMAGEKHRPROC eglDestroyImageKHR;
-PFNEGLQUERYWAYLANDBUFFERWL eglQueryWaylandBufferWL;
-PFNEGLBINDWAYLANDDISPLAYWL eglBindWaylandDisplayWL;
-PFNEGLUNBINDWAYLANDDISPLAYWL eglUnbindWaylandDisplayWL;
-PFNEGLSWAPBUFFERSWITHDAMAGEEXTPROC eglSwapBuffersWithDamage; // KHR or EXT
-PFNEGLQUERYDMABUFFORMATSEXTPROC eglQueryDmaBufFormatsEXT;
-PFNEGLQUERYDMABUFMODIFIERSEXTPROC eglQueryDmaBufModifiersEXT;
-PFNEGLEXPORTDMABUFIMAGEQUERYMESAPROC eglExportDMABUFImageQueryMESA;
-PFNEGLEXPORTDMABUFIMAGEMESAPROC eglExportDMABUFImageMESA;
-PFNEGLDEBUGMESSAGECONTROLKHRPROC eglDebugMessageControlKHR;
-
-PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES;
-
-#define GL_TEXTURE_EXTERNAL_OES 0x8D65
-
-void CreateShader(GLuint& shader, GLenum type, const char* code, std::experimental::fundamentals_v2::source_location function = std::experimental::fundamentals_v2::source_location::current());
-void CreateProgram(GLuint& program, GLuint vertexShader, GLuint pixelShader, std::experimental::fundamentals_v2::source_location function = std::experimental::fundamentals_v2::source_location::current());
 
 int LoadOpenGLES2();
 
@@ -151,11 +114,6 @@ namespace Awning::Renderers::GLES2
 	{
 		auto texture = window->Texture();
 
-		if (!window->Mapped())
-			return;
-		if (!texture)
-			return;
-
 		auto winPosX  = window->XPos   ();
 		auto winPosY  = window->YPos   ();
 		auto winSizeX = window->XSize  ();
@@ -184,6 +142,11 @@ namespace Awning::Renderers::GLES2
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
 
+		if (!window->Mapped())
+			return;
+		if (!texture)
+			return;
+
 		glViewport(posX, posY, sizeX, sizeY);
 
 		if (texture->buffer.offscreen)
@@ -204,17 +167,17 @@ namespace Awning::Renderers::GLES2
 
 	void Init()
 	{
-		LoadOpenGLES2();
-		eglBindWaylandDisplayWL(Awning::Server::data.egl.display, Awning::Server::data.display);
+		EGL::Init();
+		eglBindWaylandDisplayWL(EGL::display, Awning::Server::data.display);
 
 		GLuint vertexShader, pixelShaderOES, pixelShader2D;
 
-		CreateShader(vertexShader  , GL_VERTEX_SHADER  , vertexShaderCode  );
-		CreateShader(pixelShaderOES, GL_FRAGMENT_SHADER, pixelShaderCodeOES);
-		CreateShader(pixelShader2D , GL_FRAGMENT_SHADER, pixelShaderCode2D );
+		EGL::CreateShader(vertexShader  , GL_VERTEX_SHADER  , vertexShaderCode  );
+		EGL::CreateShader(pixelShaderOES, GL_FRAGMENT_SHADER, pixelShaderCodeOES);
+		EGL::CreateShader(pixelShader2D , GL_FRAGMENT_SHADER, pixelShaderCode2D );
 
-		CreateProgram(programOES, vertexShader, pixelShaderOES);
-		CreateProgram(program2D , vertexShader, pixelShader2D );
+		EGL::CreateProgram(programOES, vertexShader, pixelShaderOES);
+		EGL::CreateProgram(program2D , vertexShader, pixelShader2D );
 
 		glDeleteShader(vertexShader  );
 		glDeleteShader(pixelShaderOES);
@@ -276,7 +239,7 @@ namespace Awning::Renderers::GLES2
 			buffer = new uint8_t[size];	
 		}
 
-		eglMakeCurrent(Awning::Server::data.egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE, Awning::Server::data.egl.context);
+		eglMakeCurrent(EGL::display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL::context);
 		
 		glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
@@ -309,11 +272,11 @@ namespace Awning::Renderers::GLES2
 	{
 		void EGLImage(wl_resource* buffer, WM::Texture* texture, WM::Damage damage)
 		{
-			eglMakeCurrent(Awning::Server::data.egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE, Awning::Server::data.egl.context);
+			eglMakeCurrent(EGL::display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL::context);
 
 			EGLint width, height;
-			eglQueryWaylandBufferWL(Server::data.egl.display, buffer, EGL_WIDTH , &width );
-			eglQueryWaylandBufferWL(Server::data.egl.display, buffer, EGL_HEIGHT, &height);
+			eglQueryWaylandBufferWL(EGL::display, buffer, EGL_WIDTH , &width );
+			eglQueryWaylandBufferWL(EGL::display, buffer, EGL_HEIGHT, &height);
 
 			texture->width            = width ;
 			texture->height           = height;
@@ -330,7 +293,7 @@ namespace Awning::Renderers::GLES2
 				EGL_WAYLAND_PLANE_WL, 0,
 				EGL_NONE 
 			};
-			auto image = eglCreateImageKHR(Server::data.egl.display, EGL_NO_CONTEXT, EGL_WAYLAND_BUFFER_WL, buffer, attribs);
+			auto image = eglCreateImageKHR(EGL::display, EGL_NO_CONTEXT, EGL_WAYLAND_BUFFER_WL, buffer, attribs);
 			
 			if (texture->buffer.number != 0)
 				glDeleteTextures(1, &texture->buffer.number);
@@ -340,12 +303,12 @@ namespace Awning::Renderers::GLES2
 			glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, image);
 
 			glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
-			eglDestroyImageKHR(Server::data.egl.display, image);
+			eglDestroyImageKHR(EGL::display, image);
 		}
 
 		void SHMBuffer(wl_shm_buffer* shm_buffer, WM::Texture* texture, WM::Damage damage)
 		{
-			eglMakeCurrent(Awning::Server::data.egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE, Awning::Server::data.egl.context);
+			eglMakeCurrent(EGL::display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL::context);
 
 			texture->width            = wl_shm_buffer_get_width (shm_buffer);
 			texture->height           = wl_shm_buffer_get_height(shm_buffer);
@@ -375,148 +338,102 @@ namespace Awning::Renderers::GLES2
 
 			glBindTexture(GL_TEXTURE_2D, 0);
 		}
-	}
-}
 
-static void eglLog(EGLenum error, const char *command, EGLint msg_type, EGLLabelKHR thread, EGLLabelKHR obj, const char *msg) {
-	std::cout << fmt::format("[EGL] command: {}, error: 0x{:X}, message: \"{}\"\n", command, error, msg);
-}
-
-void loadEGLProc(void* proc_ptr, const char* name)
-{
-	void* proc = (void*)eglGetProcAddress(name);
-	if (proc == NULL) {
-		Log::Report::Error(fmt::format("eglGetProcAddress({}) failed", name));
-		abort();
-	}
-	*(void**)proc_ptr = proc;
-}
-
-int LoadOpenGLES2()
-{
-	loadEGLProc(&eglGetPlatformDisplayEXT, "eglGetPlatformDisplayEXT");
-
-	/*
-	for(auto& di : std::filesystem::directory_iterator("/dev/dri"))
-	{
-		auto p = di.path();
-		std::string s = p.filename();
-
-		if (s.starts_with("renderD"))
+		void LinuxDMABuf(wl_resource* buffer, WM::Texture* texture, WM::Damage damage)
 		{
-			drm_version version = {0};
-			drm_irq_busid irq = {0};
-			int dri_fd = open(p.c_str(), O_RDWR | O_CLOEXEC);
-			ioctl(dri_fd, DRM_IOCTL_VERSION, &version);
-			ioctl(dri_fd, DRM_IOCTL_IRQ_BUSID, &irq);
+			eglMakeCurrent(EGL::display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL::context);
 
-			version.name = (char*)malloc(version.name_len);
-			version.date = (char*)malloc(version.date_len);
-			version.desc = (char*)malloc(version.desc_len);
+			auto attributes = (Protocols::ZWP::Linux_Buffer_Params::Data::Instance*)wl_resource_get_user_data(buffer);
 
-			ioctl(dri_fd, DRM_IOCTL_VERSION, &version);
-			close(dri_fd);
+			bool hasMod = false;
+			if (attributes->modifier != DRM_FORMAT_MOD_INVALID && attributes->modifier != DRM_FORMAT_MOD_LINEAR) {
+				hasMod = true;
+			}
 
-			std::cout << s << " | Name: " << version.name << " | Date: " << version.date << " | Desc: " << version.desc
-					  <<      " | Bus : " << irq.busnum   << " | Dev : " << irq.devnum   <<
-			"\n";
+			texture->width            = attributes->width ;
+			texture->height           = attributes->height;
+			texture->bitsPerPixel     = 32;
+			texture->bytesPerLine     = texture->width        * (texture->bitsPerPixel / 8);
+			texture->size             = texture->bytesPerLine *  texture->height           ;
+			texture->red              = { .size = 8, .offset =  0 };
+			texture->green            = { .size = 8, .offset =  8 };
+			texture->blue             = { .size = 8, .offset = 16 };
+			texture->alpha            = { .size = 8, .offset = 24 };
+			texture->buffer.offscreen = true;
 
-			free(version.name);
-			free(version.date);
-			free(version.desc);
+			struct {
+				EGLint fd;
+				EGLint offset;
+				EGLint pitch;
+				EGLint mod_lo;
+				EGLint mod_hi;
+			} attr_names[Protocols::ZWP::Linux_Buffer_Params::DMABUF_MAX_PLANES] = {
+				{
+					EGL_DMA_BUF_PLANE0_FD_EXT,
+					EGL_DMA_BUF_PLANE0_OFFSET_EXT,
+					EGL_DMA_BUF_PLANE0_PITCH_EXT,
+					EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT,
+					EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT
+				}, {
+					EGL_DMA_BUF_PLANE1_FD_EXT,
+					EGL_DMA_BUF_PLANE1_OFFSET_EXT,
+					EGL_DMA_BUF_PLANE1_PITCH_EXT,
+					EGL_DMA_BUF_PLANE1_MODIFIER_LO_EXT,
+					EGL_DMA_BUF_PLANE1_MODIFIER_HI_EXT
+				}, {
+					EGL_DMA_BUF_PLANE2_FD_EXT,
+					EGL_DMA_BUF_PLANE2_OFFSET_EXT,
+					EGL_DMA_BUF_PLANE2_PITCH_EXT,
+					EGL_DMA_BUF_PLANE2_MODIFIER_LO_EXT,
+					EGL_DMA_BUF_PLANE2_MODIFIER_HI_EXT
+				}, {
+					EGL_DMA_BUF_PLANE3_FD_EXT,
+					EGL_DMA_BUF_PLANE3_OFFSET_EXT,
+					EGL_DMA_BUF_PLANE3_PITCH_EXT,
+					EGL_DMA_BUF_PLANE3_MODIFIER_LO_EXT,
+					EGL_DMA_BUF_PLANE3_MODIFIER_HI_EXT
+				}
+			};
+			
+			unsigned int atti = 0;
+			EGLint attribs[50];
+			attribs[atti++] = EGL_WIDTH;
+			attribs[atti++] = attributes->width;
+			attribs[atti++] = EGL_HEIGHT;
+			attribs[atti++] = attributes->height;
+			attribs[atti++] = EGL_LINUX_DRM_FOURCC_EXT;
+			attribs[atti++] = attributes->format;
+
+			for (int i=0; i < attributes->planesUsed; i++) {
+				attribs[atti++] = attr_names[i].fd;
+				attribs[atti++] = attributes->planes[i].fd;
+				attribs[atti++] = attr_names[i].offset;
+				attribs[atti++] = attributes->planes[i].offset;
+				attribs[atti++] = attr_names[i].pitch;
+				attribs[atti++] = attributes->planes[i].stride;
+				if (hasMod)
+				{
+					attribs[atti++] = attr_names[i].mod_lo;
+					attribs[atti++] = attributes->modifier & 0xFFFFFFFF;
+					attribs[atti++] = attr_names[i].mod_hi;
+					attribs[atti++] = attributes->modifier >> 32;
+				}
+			}
+			attribs[atti++] = EGL_NONE;
+
+			auto image = eglCreateImageKHR(EGL::display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, NULL, attribs);
+			
+			if (texture->buffer.number != 0)
+				glDeleteTextures(1, &texture->buffer.number);
+
+			glGenTextures(1, &texture->buffer.number);
+			glBindTexture(GL_TEXTURE_EXTERNAL_OES, texture->buffer.number);
+			glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, image);
+
+			glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
+			eglDestroyImageKHR(EGL::display, image);
 		}
 	}
-	*/
-
-	int32_t fd = open("/dev/dri/renderD128", O_RDWR);
-	struct gbm_device* gbm = gbm_create_device(fd);
-
-	Awning::Server::data.egl.display = eglGetPlatformDisplayEXT(EGL_PLATFORM_GBM_MESA, gbm, NULL);
-
-	eglInitialize(Awning::Server::data.egl.display, &Awning::Server::data.egl.major, &Awning::Server::data.egl.minor);
-
-	loadEGLProc(&eglBindWaylandDisplayWL     , "eglBindWaylandDisplayWL"     );
-	loadEGLProc(&eglUnbindWaylandDisplayWL   , "eglUnbindWaylandDisplayWL"   );
-	loadEGLProc(&eglQueryWaylandBufferWL     , "eglQueryWaylandBufferWL"     );
-	loadEGLProc(&eglCreateImageKHR           , "eglCreateImageKHR"           );
-	loadEGLProc(&eglDestroyImageKHR          , "eglDestroyImageKHR"          );
-	loadEGLProc(&glEGLImageTargetTexture2DOES, "glEGLImageTargetTexture2DOES");
-	loadEGLProc(&eglDebugMessageControlKHR   , "eglDebugMessageControlKHR"   );
-
-	static const EGLAttrib debug_attribs[] = {
-		EGL_DEBUG_MSG_CRITICAL_KHR, EGL_TRUE,
-		EGL_DEBUG_MSG_ERROR_KHR   , EGL_TRUE,
-		EGL_DEBUG_MSG_WARN_KHR    , EGL_TRUE,
-		EGL_DEBUG_MSG_INFO_KHR    , EGL_TRUE,
-		EGL_NONE,
-	};
-
-	eglDebugMessageControlKHR(eglLog, debug_attribs);
-
-	EGLint attribs[] = { 
-		EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-		EGL_NONE 
-	};
-	EGLConfig config;
-	EGLint num_configs_returned;
-	eglChooseConfig(Awning::Server::data.egl.display, attribs, &config, 1, &num_configs_returned);
-
-	eglBindAPI(EGL_OPENGL_ES_API);
-
-	EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE, EGL_NONE };
-
-	Awning::Server::data.egl.context = eglCreateContext(Awning::Server::data.egl.display, config, EGL_NO_CONTEXT, contextAttribs);
-	
-	eglMakeCurrent(Awning::Server::data.egl.display, EGL_NO_SURFACE, EGL_NO_SURFACE, Awning::Server::data.egl.context);
-
-	auto error = glGetError();
-
-	if (error != 0 && error != 1280)
-		return error;
-
-	std::cout << "EGL Vendor    : " << eglQueryString(Awning::Server::data.egl.display, EGL_VENDOR ) << "\n";
-	std::cout << "EGL Version   : " << eglQueryString(Awning::Server::data.egl.display, EGL_VERSION) << "\n";
-	std::cout << "GL Vendor     : " << glGetString(GL_VENDOR                  ) << "\n";
-	std::cout << "GL Renderer   : " << glGetString(GL_RENDERER                ) << "\n";
-	std::cout << "GL Version    : " << glGetString(GL_VERSION                 ) << "\n";
-	std::cout << "GLSL Version  : " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
-
-	return error;
 }
 
-void CreateShader(GLuint& shader, GLenum type, const char* code, std::experimental::fundamentals_v2::source_location function)
-{
-	int  success;
-	char infoLog[512];
 
-	shader = glCreateShader(type);
-	glShaderSource(shader, 1, &code, NULL);
-	glCompileShader(shader);
-
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-	if(!success)
-	{
-	    glGetShaderInfoLog(shader, 512, NULL, infoLog);
-
-	    Log::Report::Error(fmt::format("Shader Compilation Failed {}", infoLog), function);
-	}
-}	
-
-void CreateProgram(GLuint& program, GLuint vertexShader, GLuint pixelShader, std::experimental::fundamentals_v2::source_location function)
-{	
-	int  success;
-	char infoLog[512];
-
-	program = glCreateProgram();
-	glAttachShader(program, vertexShader);
-	glAttachShader(program, pixelShader);
-	glLinkProgram(program);
-
-	glGetShaderiv(program, GL_LINK_STATUS, &success);
-	if(!success)
-	{
-	    glGetShaderInfoLog(program, 512, NULL, infoLog);
-
-	    Log::Report::Error(fmt::format("Program Linking Failed {}", infoLog), function);
-	}
-}

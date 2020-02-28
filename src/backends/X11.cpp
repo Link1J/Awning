@@ -48,8 +48,7 @@ static std::unordered_map<Window, WindowData> windows    ;
 
 static Atom WM_DELETE_WINDOW;
 
-void CreateShader(GLuint& shader, GLenum type, const char* code, std::experimental::fundamentals_v2::source_location function = std::experimental::fundamentals_v2::source_location::current());
-void CreateProgram(GLuint& program, GLuint vertexShader, GLuint pixelShader, std::experimental::fundamentals_v2::source_location function = std::experimental::fundamentals_v2::source_location::current());
+#include "renderers/egl.hpp"
 
 static const char* vertexShaderCode = R"(
 #version 300 es
@@ -118,8 +117,6 @@ namespace Awning::Backend::X11
 	}
 }
 
-void loadEGLProc(void* proc_ptr, const char* name);
-
 static void eglLog(EGLenum error, const char *command, EGLint msg_type, EGLLabelKHR thread, EGLLabelKHR obj, const char *msg) {
 	std::cout << fmt::format("[X EGL] command: {}, error: 0x{:X}, message: \"{}\"\n", command, error, msg);
 }
@@ -163,7 +160,7 @@ void Awning::Backend::X11::Start()
 	eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, egl_context);
 
 	PFNEGLDEBUGMESSAGECONTROLKHRPROC eglDebugMessageControlKHR;
-	loadEGLProc(&eglDebugMessageControlKHR   , "eglDebugMessageControlKHR"   );
+	Renderers::EGL::loadEGLProc(&eglDebugMessageControlKHR   , "eglDebugMessageControlKHR"   );
 
 	static const EGLAttrib debug_attribs[] = {
 		EGL_DEBUG_MSG_CRITICAL_KHR, EGL_TRUE,
@@ -175,21 +172,24 @@ void Awning::Backend::X11::Start()
 
 	eglDebugMessageControlKHR(eglLog, debug_attribs);
 
-	std::cout << "X EGL Vendor  : " << eglQueryString(egl_display, EGL_VENDOR ) << "\n";
-	std::cout << "X EGL Version : " << eglQueryString(egl_display, EGL_VERSION) << "\n";
-	std::cout << "X GL Vendor   : " << glGetString(GL_VENDOR                  ) << "\n";
-	std::cout << "X GL Renderer : " << glGetString(GL_RENDERER                ) << "\n";
-	std::cout << "X GL Version  : " << glGetString(GL_VERSION                 ) << "\n";
-	std::cout << "X GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
+	auto extensions = std::string(eglQueryString(egl_display, EGL_EXTENSIONS));
+
+	//std::cout << "X EGL Vendor  : " << eglQueryString(egl_display, EGL_VENDOR ) << "\n";
+	//std::cout << "X EGL Version : " << eglQueryString(egl_display, EGL_VERSION) << "\n";
+	//std::cout << "EGL Extensions: " << extensions                               << "\n";
+	//std::cout << "X GL Vendor   : " << glGetString(GL_VENDOR                  ) << "\n";
+	//std::cout << "X GL Renderer : " << glGetString(GL_RENDERER                ) << "\n";
+	//std::cout << "X GL Version  : " << glGetString(GL_VERSION                 ) << "\n";
+	//std::cout << "X GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
 	
 	attribs.event_mask = StructureNotifyMask|ButtonPressMask|KeyPressMask|PointerMotionMask|ButtonReleaseMask|KeyReleaseMask;
 	
 	WM_DELETE_WINDOW = XInternAtom(display, "WM_DELETE_WINDOW", False);
 
 	glClearColor(1, 1, 1, 1);
-	CreateShader(vertexShader, GL_VERTEX_SHADER, vertexShaderCode);
-	CreateShader(pixelShader, GL_FRAGMENT_SHADER, pixelShaderCode);
-	CreateProgram(program, vertexShader, pixelShader);
+	Renderers::EGL::CreateShader(vertexShader, GL_VERTEX_SHADER, vertexShaderCode);
+	Renderers::EGL::CreateShader(pixelShader, GL_FRAGMENT_SHADER, pixelShaderCode);
+	Renderers::EGL::CreateProgram(program, vertexShader, pixelShader);
 	glUseProgram(program);
 
 	int xOffset = 0;

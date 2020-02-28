@@ -270,8 +270,10 @@ namespace Awning::WM::Manager
 
 						Manager::Window::Resize(hoveredOver, XSize, YSize);
 
-						if (preX != hoveredOver->XSize() || preY != hoveredOver->YSize())
-							Manager::Window::Reposition(hoveredOver, XPos, YPos);
+						if (preX != hoveredOver->XSize())
+							Manager::Window::Reposition(hoveredOver, XPos, hoveredOver->YPos());
+						if (preY != hoveredOver->YSize())
+							Manager::Window::Reposition(hoveredOver, hoveredOver->XPos(), YPos);
 
 						Protocols::WL::Pointer::Moved(nullptr, XPos, YPos, x, y);
 					}
