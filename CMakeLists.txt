@@ -140,6 +140,7 @@ wayland_protocol_create(awn-config ${CMAKE_SOURCE_DIR}/protocols/awn-config.xml)
 wayland_protocol_create(wlr-output-management ${CMAKE_SOURCE_DIR}/protocols/wlr-output-management-unstable-v1.xml)
 wayland_protocol_create(xdg-output ${protocol_dir}/unstable/xdg-output/xdg-output-unstable-v1.xml)
 wayland_protocol_create(server_decoration ${CMAKE_SOURCE_DIR}/protocols/server_decoration.xml)
+wayland_protocol_create(wlr-layer-shell ${CMAKE_SOURCE_DIR}/protocols/wlr-layer-shell-unstable-v1.xml)
 
 #------------------------------------------------------------------------------
 
