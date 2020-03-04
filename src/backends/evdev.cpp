@@ -167,7 +167,7 @@ void Awning::Backend::EVDEV::Hand()
 				else
 				{
 					using namespace WM::Manager::Handle::Input;
-					Mouse::Scroll(event.code, event.value > 0, abs(event.value));
+					Mouse::Scroll(event.code, event.value);
 				}
 			}
 			else if (event.type == EV_KEY)

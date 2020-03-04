@@ -309,11 +309,11 @@ void Awning::Backend::X11::Hand()
 			{
 				if (event.xbutton.button == Button4)
 				{
-					Awning::WM::Manager::Handle::Input::Mouse::Scroll(0, false, 15);
+					Awning::WM::Manager::Handle::Input::Mouse::Scroll(0, -15);
 				}
 				if (event.xbutton.button == Button5)
 				{
-					Awning::WM::Manager::Handle::Input::Mouse::Scroll(0, true, 15);
+					Awning::WM::Manager::Handle::Input::Mouse::Scroll(0, 15);
 				}
 			}
 			else

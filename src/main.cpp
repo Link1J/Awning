@@ -135,10 +135,10 @@ int main(int argc, char* argv[])
 	Awning::Protocols::WL  ::Seat               ::Add(Awning::Server::data.display);
 	Awning::Protocols::WL  ::Shell              ::Add(Awning::Server::data.display);
 	Awning::Protocols::XDG ::WM_Base            ::Add(Awning::Server::data.display);
-	//Awning::Protocols::ZXDG::Decoration_Manager ::Add(Awning::Server::data.display);
+	Awning::Protocols::ZXDG::Decoration_Manager ::Add(Awning::Server::data.display);
 	Awning::Protocols::WL  ::Data_Device_Manager::Add(Awning::Server::data.display);
 	Awning::Protocols::WLR ::Output_Manager     ::Add(Awning::Server::data.display);
-	//Awning::Protocols::ZXDG::Output_Manager     ::Add(Awning::Server::data.display);
+	Awning::Protocols::ZXDG::Output_Manager     ::Add(Awning::Server::data.display);
 	Awning::Protocols::ZWP ::Linux_Dmabuf       ::Add(Awning::Server::data.display);
 	Awning::Protocols::WL  ::Subcompositor      ::Add(Awning::Server::data.display);
 
@@ -159,11 +159,13 @@ int main(int argc, char* argv[])
 
 	setenv("MOZ_ENABLE_WAYLAND", "1", 1);
 
+	signal(SIGINT, on_term_signal);
+
 	//launchApp(launchArgs1);
 	//launchApp(launchArgs2);
 	//launchApp(launchArgs3);
 	//launchApp(launchArgs4);
-	//launchApp(launchArgs5);
+	launchApp(launchArgs5);
 	//launchApp(launchArgs6);
 	
 	while(1)

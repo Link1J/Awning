@@ -86,10 +86,10 @@ namespace Awning::WM::Manager
 
 			namespace Mouse
 			{
-				void Scroll  (int axis, bool direction, float step);
-				void Moved   (int x, int y                        );
-				void Pressed (uint32_t button                     );
-				void Released(uint32_t button                     );
+				void Scroll  (int axis, float step);
+				void Moved   (int x, int y        );
+				void Pressed (uint32_t button     );
+				void Released(uint32_t button     );
 			}
 
 			namespace Keyboard

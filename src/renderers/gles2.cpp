@@ -12,7 +12,6 @@
 #include <string.h>
 
 #include <fmt/format.h>
-
 #include <libdrm/drm_fourcc.h>
 
 #include <iostream>
@@ -136,13 +135,24 @@ namespace Awning::Renderers::GLES2
 
 		if (window->Frame())
 		{
-			glViewport(posX - frameSX, posY - frameSY, sizeX + frameSX + frameEX, sizeY + frameSY + frameEY);
+			//glViewport(posX - frameSX, posY - frameSY, sizeX + frameSX + frameEX, sizeY + frameSY + frameEY);
 
 			glUseProgram(program2D);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, frameTexture);
 
+			glViewport(posX - frameSX, posY - frameSY, sizeX + frameSX + frameEX, frameSY);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			glViewport(posX - frameSX, posY + sizeY, sizeX + frameSX + frameEX, frameEY);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			glViewport(posX - frameSX, posY - frameSY, frameSX, sizeY + frameSY + frameEY);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			glViewport(posX + sizeX, posY - frameSY, frameEX, sizeY + frameSY + frameEY);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
 		}
 
 		if (!window->Mapped())
@@ -266,8 +276,10 @@ namespace Awning::Renderers::GLES2
 	
 		for (auto& display : displays)
 		{
-			auto [px, py] = WM::Output::Get::      Position  (display.output              );
-			auto [sx, sy] = WM::Output::Get::Mode::Resolution(display.output, display.mode);
+			auto [px, py] = WM::Output::Get::Position(display.output);
+
+			int sx = display.texture.bytesPerLine / (display.texture.bitsPerPixel / 8);
+			int sy = display.texture.height;
 
 			glReadPixels(px, py, sx, sy, GL_RGBA, GL_UNSIGNED_BYTE, display.texture.buffer.pointer);
 		}

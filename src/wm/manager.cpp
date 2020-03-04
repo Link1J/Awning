@@ -36,13 +36,16 @@ namespace Awning::WM::Manager
 
 				int preX = 0, preY = 0;
 				
-				void Scroll(int axis, bool direction, float step)
+				void Scroll(int axis, float step)
 				{
 					if (hoveredOver && action == APPLCATION)
 					{
 						Protocols::WL::Pointer::Axis(
 							(wl_client*)hoveredOver->Client(),
-							axis, step * (direction ? 1 : -1)
+							axis, step
+						);
+						Protocols::WL::Pointer::Frame(
+							(wl_client*)hoveredOver->Client()
 						);
 					}
 				}

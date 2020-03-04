@@ -178,7 +178,10 @@ void CheckData()
 				}
 				
 				if (card.connectors[i].texture.red.size != 8)
+				{
 					CreateFramebuffer(card.id, i);
+					SetMode(card.id, i, card.connectors[i].prefered);
+				}
 			}
 			else
 			{
@@ -277,7 +280,7 @@ void SetMode(int cardID, int connectorID, int modeID)
 	ioctl(card.dri_fd, DRM_IOCTL_MODE_GETCRTC, &crtc);
 
 	crtc.fb_id              = cmd_dumb.fb_id;
-	crtc.set_connectors_ptr = connector.id;
+	crtc.set_connectors_ptr = (uint64_t)&connector.id;
 	crtc.count_connectors   = 1;
 	crtc.mode               = connector.modes[modeID];
 	crtc.mode_valid         = 1;
