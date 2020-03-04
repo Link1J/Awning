@@ -25,6 +25,50 @@
 
 #include "wm/output.hpp"
 
+#include <fmt/format.h>
+
+#include <algorithm> 
+#include <cctype>
+#include <locale>
+
+// trim from start (in place)
+static inline void ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
+        return !std::isspace(ch);
+    }));
+}
+
+// trim from end (in place)
+static inline void rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
+}
+
+// trim from both ends (in place)
+static inline void trim(std::string &s) {
+    ltrim(s);
+    rtrim(s);
+}
+
+// trim from start (copying)
+static inline std::string ltrim_copy(std::string s) {
+    ltrim(s);
+    return s;
+}
+
+// trim from end (copying)
+static inline std::string rtrim_copy(std::string s) {
+    rtrim(s);
+    return s;
+}
+
+// trim from both ends (copying)
+static inline std::string trim_copy(std::string s) {
+    trim(s);
+    return s;
+}
+
 struct Connector
 {
 	int                     framebuffer = -1     ;
@@ -104,6 +148,38 @@ Awning::Backend::Displays Awning::Backend::DRM::GetDisplays()
 	return displays;
 }
 
+const char* connectorTypes[] = {
+	"Unknown",
+	"VGA",
+	"DVII",
+	"DVID",
+	"DVIA",
+	"Composite",
+	"SVIDEO",
+	"LVDS",
+	"Component",
+	"9PinDIN",
+	"DisplayPort",
+	"HDMIA",
+	"HDMIB",
+	"TV",
+	"eDP",
+	"VIRTUAL",
+	"DSI",
+	"DPI",
+	"WRITEBACK"
+};
+
+int connectorCount[19] = {0};
+
+struct DisplayDescriptor {
+	uint16_t descriptor;
+	uint8_t zero;
+	uint8_t type;
+	uint8_t range;
+	uint8_t data[13];
+} __attribute__((packed));
+
 void CheckData()
 {
 	using namespace Awning::WM;
@@ -159,12 +235,62 @@ void CheckData()
 				if (Output::Get::NumberOfModes(output) != conn.count_modes)
 					Output::Set::NumberOfModes(output, conn.count_modes);
 
-				Output::Set::Manufacturer(output, "N/A"                        );
-				Output::Set::Model       (output, "N/A"                        );
+				auto name = fmt::format("{}-{}", connectorTypes[conn.connector_type], ++connectorCount[conn.connector_type]);
+				std::string model, manufacturer;
+
+				for (uint32_t a = 0; a < conn.count_props; a++)
+				{
+					drm_mode_get_property prop;
+					prop.prop_id = ((uint32_t*)conn.props_ptr)[a];
+					ioctl(card.dri_fd, DRM_IOCTL_MODE_GETPROPERTY, &prop);
+
+					if (prop.flags & DRM_MODE_PROP_BLOB)
+					{
+						drm_mode_get_blob blob;
+
+						blob.blob_id = ((uint64_t*)conn.prop_values_ptr)[a];
+
+						ioctl(card.dri_fd, DRM_IOCTL_MODE_GETPROPBLOB, &blob);
+						
+						blob.data = (uint64_t)malloc(blob.length);
+
+						ioctl(card.dri_fd, DRM_IOCTL_MODE_GETPROPBLOB, &blob);
+
+						if (std::string(prop.name) == "EDID")
+						{
+							std::cout << "\n";
+							int offset[] = {54,72,90,108};
+							int count = 0;
+							for (int c = 0; c < 4; c++)
+							{
+								DisplayDescriptor* descriptor = (DisplayDescriptor*)(blob.data + offset[c]);
+
+								if (descriptor->descriptor == 0 && descriptor->type == 0xFC)
+								{
+									model = (char*)descriptor->data;
+								}
+								if (descriptor->descriptor == 0 && descriptor->type == 0xFE)
+								{
+									if (manufacturer == "" && count == 0)
+										manufacturer = (char*)descriptor->data;
+									if (model        == "" && count == 1)
+										model        = (char*)descriptor->data;
+									count++;
+								}
+							}
+						}
+					}
+				}
+
+				trim(model);
+				trim(manufacturer);
+
+				Output::Set::Manufacturer(output, manufacturer                 );
+				Output::Set::Model       (output, model                        );
 				Output::Set::Size        (output, conn.mm_width, conn.mm_height);
 				Output::Set::Position    (output, 0, 0                         );
-				Output::Set::Name        (output, "N/A"                        );
-				Output::Set::Description (output, "N/A"                        );
+				Output::Set::Name        (output, name                         );
+				Output::Set::Description (output, manufacturer + " " + model   );
 
 				drm_mode_modeinfo* mode_ptr = (drm_mode_modeinfo*)conn.modes_ptr;
 				for (int a = 0; a < conn.count_modes; a++)
@@ -183,6 +309,7 @@ void CheckData()
 				{
 					CreateFramebuffer(card.id, i);
 					SetMode(card.id, i, card.connectors[i].prefered);
+					Output::Set::Mode::Current(output, card.connectors[i].prefered, true);
 				}
 			}
 			else

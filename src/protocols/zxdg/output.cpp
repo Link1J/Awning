@@ -42,7 +42,7 @@ namespace Awning::Protocols::ZXDG::Output
 		zxdg_output_v1_send_logical_position(resource, px, py);
 		zxdg_output_v1_send_logical_size    (resource, sx, sy);
 
-		//zxdg_output_v1_send_done(resource);
+		zxdg_output_v1_send_done(resource);
 
 		return resource;
 	}

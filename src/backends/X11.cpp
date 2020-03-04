@@ -239,12 +239,12 @@ void Awning::Backend::X11::Start()
 		data.id = WM::Output::Create();
 		WM::Output::Set::NumberOfModes(data.id, 1);
 
-		WM::Output::Set::Manufacturer(data.id, "X.Org Foundation");
-		WM::Output::Set::Model       (data.id, "11.0"            );
-		WM::Output::Set::Size        (data.id, 0, 0              );
-		WM::Output::Set::Position    (data.id, xOffset, 0        );
-		WM::Output::Set::Name        (data.id, displayName       );
-		WM::Output::Set::Description (data.id, "X11 Display"     );
+		WM::Output::Set::Manufacturer(data.id, "X.Org Foundation"     );
+		WM::Output::Set::Model       (data.id, "11.0"                 );
+		WM::Output::Set::Size        (data.id, 0, 0                   );
+		WM::Output::Set::Position    (data.id, xOffset, 0             );
+		WM::Output::Set::Name        (data.id, displayName            );
+		WM::Output::Set::Description (data.id, "X.Org Foundation 11.0");
 		
 		WM::Output::Set::Mode::Resolution (data.id, 0, data.framebuffer.width, data.framebuffer.height);
 		WM::Output::Set::Mode::RefreshRate(data.id, 0, 0                                              );
