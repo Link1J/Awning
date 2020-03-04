@@ -157,6 +157,9 @@ int main(int argc, char* argv[])
     const char* launchArgs5[] = { "konsole", "-platform", "wayland", NULL };
     const char* launchArgs6[] = { "termite", NULL };
 
+	int display = Awning::WM::X::Server::display;
+
+	setenv("DISPLAY", fmt::format(":{}", display).c_str(), 1);
 	setenv("MOZ_ENABLE_WAYLAND", "1", 1);
 
 	signal(SIGINT, on_term_signal);
@@ -229,8 +232,8 @@ void launchApp(const char** argv)
 	if (pid == 0) 
 	{
 		int fd = open("/dev/null", O_RDWR);
-		//dup2(fd, STDOUT_FILENO);
-		//dup2(fd, STDERR_FILENO);
+		dup2(fd, STDOUT_FILENO);
+		dup2(fd, STDERR_FILENO);
 
 		int ret = execvp(argv[0], (char**)argv);
 		printf("%s did not launch! %d %s\n", argv[0], ret, strerror(errno));

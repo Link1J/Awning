@@ -148,48 +148,60 @@ void unlink_display_sockets(int display) {
 	unlink(sun_path);
 }
 
-int open_display_sockets(int socks[2], int display) {
-	int lock_fd;
+int open_display_sockets(int socks[2]) 
+{
+	int lock_fd, display;
 	char lock_name[64];
 
-	snprintf(lock_name, sizeof(lock_name), lock_fmt, display);
-	if ((lock_fd = open(lock_name, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0444)) >= 0) {
-		if (!open_sockets(socks, display)) {
-			unlink(lock_name);
+	for (display = 0; display <= 32; display++) {
+		snprintf(lock_name, sizeof(lock_name), lock_fmt, display);
+		if ((lock_fd = open(lock_name, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0444)) >= 0) {
+			if (!open_sockets(socks, display)) {
+				unlink(lock_name);
+				close(lock_fd);
+				continue;
+			}
+			char pid[12];
+			snprintf(pid, sizeof(pid), "%10d", getpid());
+			if (write(lock_fd, pid, sizeof(pid) - 1) != sizeof(pid) - 1) {
+				unlink(lock_name);
+				close(lock_fd);
+				continue;
+			}
 			close(lock_fd);
-			return -1;
+			break;
 		}
-		char pid[12];
-		snprintf(pid, sizeof(pid), "%10d", getpid());
-		if (write(lock_fd, pid, sizeof(pid) - 1) != sizeof(pid) - 1) {
-			unlink(lock_name);
-			close(lock_fd);
-			return -1;
+
+		if ((lock_fd = open(lock_name, O_RDONLY | O_CLOEXEC)) < 0) {
+			continue;
 		}
+
+		char pid[12] = { 0 }, *end_pid;
+		ssize_t bytes = read(lock_fd, pid, sizeof(pid) - 1);
 		close(lock_fd);
-	}
 
-	if ((lock_fd = open(lock_name, O_RDONLY | O_CLOEXEC)) < 0) {
-		return -1;
-	}
-
-	char pid[12] = { 0 }, *end_pid;
-	ssize_t bytes = read(lock_fd, pid, sizeof(pid) - 1);
-	close(lock_fd);
-
-	if (bytes != sizeof(pid) - 1) {
-		return -1;
-	}
-	long int read_pid;
-	read_pid = strtol(pid, &end_pid, 10);
-	if (read_pid < 0 || read_pid > INT32_MAX || end_pid != pid + sizeof(pid) - 2) {
-		return -1;
-	}
-	errno = 0;
-	if (kill((pid_t)read_pid, 0) != 0 && errno == ESRCH) {
-		if (unlink(lock_name) != 0) {
-			return -1;
+		if (bytes != sizeof(pid) - 1) {
+			continue;
 		}
+		long int read_pid;
+		read_pid = strtol(pid, &end_pid, 10);
+		if (read_pid < 0 || read_pid > INT32_MAX || end_pid != pid + sizeof(pid) - 2) {
+			continue;
+		}
+		errno = 0;
+		if (kill((pid_t)read_pid, 0) != 0 && errno == ESRCH) {
+			if (unlink(lock_name) != 0) {
+				continue;
+			}
+			// retry
+			display--;
+			continue;
+		}
+	}
+
+	if (display > 32) {
+		Log::Report::Error("No display available in the first 33");
+		return -1;
 	}
 
 	return display;
@@ -201,35 +213,9 @@ namespace Awning::WM::X::Server
 	wl_event_source* sigusr1;
 	int x_fd[2], wl_fd[2], wm_fd[2];
 
-	int FindDisplay()
-	{
-		int lock_fd, display, tempFD;
-
-		for (display = 0; display <= 32; display++) 
-		{
-			auto lock_name = fmt::format("/tmp/.X{}-lock", display);
-			auto socket_name = fmt::format("/tmp/.X11-unix/X{}", display);
-
-			if ((tempFD = open(socket_name.c_str(), O_RDONLY | O_CLOEXEC)) > 0)
-			{
-				close(tempFD);
-				continue;
-			}
-			int errnum = errno;
-			if (errnum != ENOENT)
-				continue;
-			break;
-		}
-		
-		return display;
-	}
-
 	int XWM_Start(int signal_number, void* data)
 	{
 		Log::Function::Called("WM::X::Server");
-
-		setenv("DISPLAY", fmt::format(":{}", display).c_str(), true);
-
 		Awning::WM::X::Init();
 		return 0;
 	}
@@ -246,6 +232,11 @@ namespace Awning::WM::X::Server
 	void LaunchXwayland(int signal_number)
 	{
 		Log::Function::Called("WM::X::Server");
+
+		set_cloexec(x_fd [0], false);
+		set_cloexec(x_fd [1], false);
+		set_cloexec(wm_fd[1], false);
+		set_cloexec(wl_fd[1], false);
 
 		char wayland_socket_str[16];
 		snprintf(wayland_socket_str, sizeof(wayland_socket_str), "%d", wl_fd[1]);
@@ -279,11 +270,14 @@ namespace Awning::WM::X::Server
 
 	void Setup()
 	{
-		display = FindDisplay();
-
-		open_display_sockets(x_fd, display);
+		display = open_display_sockets(x_fd);
 		socketpair(AF_UNIX, SOCK_STREAM, 0, wl_fd);
 		socketpair(AF_UNIX, SOCK_STREAM, 0, wm_fd);
+
+		set_cloexec(wl_fd[0], true);
+		set_cloexec(wl_fd[1], true);
+		set_cloexec(wm_fd[0], true);
+		set_cloexec(wm_fd[1], true);
 
 		xWaylandClient = wl_client_create(Awning::Server::data.display, wl_fd[0]);
 		
@@ -296,7 +290,8 @@ namespace Awning::WM::X::Server
 			LaunchXwayland(0);
 		}
 
-		pid = pidT;
+		close(wl_fd[1]);
+		close(wm_fd[1]);
 	}
 
 	void Run()

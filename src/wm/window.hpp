@@ -14,9 +14,11 @@ namespace Awning::WM
 		friend void  Client::Unbind::Window(        Awning::WM::Window* window        );
 		friend void* Client::Get::Surface(          Awning::WM::Window* window        );
 		friend void  Client::Bind::Surface(         Awning::WM::Window* window, void* );
+		friend void  Manager::Window::Reposition(   Awning::WM::Window* window,int,int);
 
 		Manager::Functions::Window::Resized Resized;
 		Manager::Functions::Window::Raised  Raised ;
+		Manager::Functions::Window::Moved   Moved  ;
 
 		WM::Texture* texture;
 		WM::Window * parent;
@@ -62,5 +64,6 @@ namespace Awning::WM
 
 		void SetRaised (Manager::Functions::Window::Raised  raised );
 		void SetResized(Manager::Functions::Window::Resized resized);
+		void SetMoved  (Manager::Functions::Window::Moved   moved  );
 	};
 }

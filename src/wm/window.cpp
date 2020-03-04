@@ -203,4 +203,9 @@ namespace Awning::WM
 	{
 		return drawingManaged;                                       
 	}
+
+	void Window::SetMoved(Manager::Functions::Window::Moved moved)
+	{
+		Moved = moved;
+	}
 }

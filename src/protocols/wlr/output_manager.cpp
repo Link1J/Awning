@@ -137,8 +137,8 @@ namespace Awning::Protocols::WLR::Mode
 		auto [mX, mY] = WM::Output::Get::Mode::Resolution (outputId, mode);
 		auto refresh  = WM::Output::Get::Mode::RefreshRate(outputId, mode);
 
-		zwlr_output_mode_v1_send_size     (resource, mX, mY  );
-		zwlr_output_mode_v1_send_refresh  (resource, refresh );
+		zwlr_output_mode_v1_send_size     (resource, mX, mY );
+		zwlr_output_mode_v1_send_refresh  (resource, refresh);
 
 		if (WM::Output::Get::Mode::Prefered(outputId, mode))
 			zwlr_output_mode_v1_send_preferred(resource);

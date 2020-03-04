@@ -456,6 +456,9 @@ namespace Awning::WM::Manager
 
 		void Reposition(Awning::WM::Window* window, int xPos, int yPos)
 		{
+			if (window->Moved)
+				window->Moved(window->data, xPos, yPos);
+
 			window->ConfigPos(xPos, yPos);
 		}
 
