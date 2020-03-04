@@ -11,7 +11,7 @@ namespace Awning::Renderers
 {
 	enum class API
 	{
-		NONE, Software, OpenGL_ES_2,
+		NONE, Software, OpenGLES2,
 	};
 
 	namespace Functions

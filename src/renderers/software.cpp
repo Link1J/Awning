@@ -7,6 +7,9 @@
 
 #include "protocols/wl/pointer.hpp"
 
+#include "protocols/zwp/dmabuf.hpp"
+#include <libdrm/drm_fourcc.h>
+
 #include <string.h>
 
 #include "egl.hpp"
@@ -79,7 +82,7 @@ namespace Awning::Renderers::Software
 	int height = 0;
 	int size;
 
-	void RenderWindow(WM::Window* window, int count = 2, int frame = 1)
+	void RenderWindow(WM::Window* window, int count = 2, int frame = 1, int depth = 0)
 	{
 		auto texture = window->Texture();
 
@@ -171,6 +174,10 @@ namespace Awning::Renderers::Software
 					buffer_blue  = blue  * (alpha / 256.) + buffer_blue  * (1 - alpha / 256.);
 				}
 			}
+		
+		auto subwindows = window->GetSubwindows();
+		for (auto& subwindow : reverse(subwindows))
+			RenderWindow(subwindow, 0, 0, depth + 1);
 	}
 
 	GLuint vertexShader, pixelShader, program;
@@ -329,13 +336,13 @@ namespace Awning::Renderers::Software
 
 			glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, image);
 
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->width, texture->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textures[1], 0);
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_EXTERNAL_OES, textures[0]);
 
-			glViewport(0, 0, width, height);
+			glViewport(0, 0, texture->width, texture->height);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 
 			glReadPixels(0, 0, texture->width, texture->height, GL_RGBA, GL_UNSIGNED_BYTE, texture->buffer.pointer);
@@ -379,6 +386,124 @@ namespace Awning::Renderers::Software
 						if (offs < texture->size)
 							texture->buffer.pointer[offs] = shm_data[offs];
 					}
+		}
+
+		void LinuxDMABuf(wl_resource* buffer, WM::Texture* texture, WM::Damage damage)
+		{
+			eglMakeCurrent(EGL::display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL::context);
+		
+			auto attributes = (Protocols::ZWP::Linux_Buffer_Params::Data::Instance*)wl_resource_get_user_data(buffer);
+
+			bool hasMod = false;
+			if (attributes->modifier != DRM_FORMAT_MOD_INVALID && attributes->modifier != DRM_FORMAT_MOD_LINEAR) {
+				hasMod = true;
+			}
+
+			SizeTextureBuffer(texture, attributes->width * 4, attributes->height);
+
+			texture->width            = attributes->width ;
+			texture->height           = attributes->height;
+			texture->bitsPerPixel     = 32;
+			texture->bytesPerLine     = texture->width        * (texture->bitsPerPixel / 8);
+			texture->size             = texture->bytesPerLine *  texture->height           ;
+			texture->red              = { .size = 8, .offset =  0 };
+			texture->green            = { .size = 8, .offset =  8 };
+			texture->blue             = { .size = 8, .offset = 16 };
+			texture->alpha            = { .size = 8, .offset = 24 };
+			texture->buffer.offscreen = true;
+
+			struct {
+				EGLint fd;
+				EGLint offset;
+				EGLint pitch;
+				EGLint mod_lo;
+				EGLint mod_hi;
+			} attr_names[Protocols::ZWP::Linux_Buffer_Params::DMABUF_MAX_PLANES] = {
+				{
+					EGL_DMA_BUF_PLANE0_FD_EXT,
+					EGL_DMA_BUF_PLANE0_OFFSET_EXT,
+					EGL_DMA_BUF_PLANE0_PITCH_EXT,
+					EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT,
+					EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT
+				}, {
+					EGL_DMA_BUF_PLANE1_FD_EXT,
+					EGL_DMA_BUF_PLANE1_OFFSET_EXT,
+					EGL_DMA_BUF_PLANE1_PITCH_EXT,
+					EGL_DMA_BUF_PLANE1_MODIFIER_LO_EXT,
+					EGL_DMA_BUF_PLANE1_MODIFIER_HI_EXT
+				}, {
+					EGL_DMA_BUF_PLANE2_FD_EXT,
+					EGL_DMA_BUF_PLANE2_OFFSET_EXT,
+					EGL_DMA_BUF_PLANE2_PITCH_EXT,
+					EGL_DMA_BUF_PLANE2_MODIFIER_LO_EXT,
+					EGL_DMA_BUF_PLANE2_MODIFIER_HI_EXT
+				}, {
+					EGL_DMA_BUF_PLANE3_FD_EXT,
+					EGL_DMA_BUF_PLANE3_OFFSET_EXT,
+					EGL_DMA_BUF_PLANE3_PITCH_EXT,
+					EGL_DMA_BUF_PLANE3_MODIFIER_LO_EXT,
+					EGL_DMA_BUF_PLANE3_MODIFIER_HI_EXT
+				}
+			};
+			
+			unsigned int atti = 0;
+			EGLint attribs[50];
+			attribs[atti++] = EGL_WIDTH;
+			attribs[atti++] = attributes->width;
+			attribs[atti++] = EGL_HEIGHT;
+			attribs[atti++] = attributes->height;
+			attribs[atti++] = EGL_LINUX_DRM_FOURCC_EXT;
+			attribs[atti++] = attributes->format;
+
+			for (int i=0; i < attributes->planesUsed; i++) {
+				attribs[atti++] = attr_names[i].fd;
+				attribs[atti++] = attributes->planes[i].fd;
+				attribs[atti++] = attr_names[i].offset;
+				attribs[atti++] = attributes->planes[i].offset;
+				attribs[atti++] = attr_names[i].pitch;
+				attribs[atti++] = attributes->planes[i].stride;
+				if (hasMod)
+				{
+					attribs[atti++] = attr_names[i].mod_lo;
+					attribs[atti++] = attributes->modifier & 0xFFFFFFFF;
+					attribs[atti++] = attr_names[i].mod_hi;
+					attribs[atti++] = attributes->modifier >> 32;
+				}
+			}
+			attribs[atti++] = EGL_NONE;
+
+			auto image = eglCreateImageKHR(EGL::display, EGL_NO_CONTEXT, EGL_LINUX_DMA_BUF_EXT, NULL, attribs);
+			
+			GLuint textures[2];
+			GLuint fbo;
+
+			glGenTextures(2, textures);
+			glGenFramebuffers(1, &fbo); 
+			
+			glBindTexture(GL_TEXTURE_EXTERNAL_OES, textures[0]);
+			glBindTexture(GL_TEXTURE_2D, textures[1]);
+			glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+			glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, image);
+
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texture->width, texture->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textures[1], 0);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_EXTERNAL_OES, textures[0]);
+
+			glViewport(0, 0, texture->width, texture->height);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			glReadPixels(0, 0, texture->width, texture->height, GL_RGBA, GL_UNSIGNED_BYTE, texture->buffer.pointer);
+
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			glBindTexture(GL_TEXTURE_2D, 0);
+			glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
+
+			glDeleteFramebuffers(1, &fbo);
+			glDeleteTextures(2, textures);
+			eglDestroyImageKHR(EGL::display, image);
 		}
 	}
 }

@@ -22,9 +22,10 @@ namespace Awning::Renderers
 			                 Draw        = Software                 ::Draw       ;
 			FillTextureFrom::SHMBuffer   = Software::FillTextureFrom::SHMBuffer  ;
 			FillTextureFrom::EGLImage    = Software::FillTextureFrom::EGLImage   ;
-			//FillTextureFrom::LinuxDMABuf = Software::FillTextureFrom::LinuxDMABuf;
+			FillTextureFrom::LinuxDMABuf = Software::FillTextureFrom::LinuxDMABuf;
 			break;
-		case API::OpenGL_ES_2:
+
+		case API::OpenGLES2:
 			GLES2::Init();
 			                 Draw        = GLES2                    ::Draw       ;
 			FillTextureFrom::SHMBuffer   = GLES2   ::FillTextureFrom::SHMBuffer  ;

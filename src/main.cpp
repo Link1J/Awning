@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 
 	Awning::Backend::Init(api_output, api_input);
 
-	Awning::Renderers::Init(Awning::Renderers::API::OpenGL_ES_2);
+	Awning::Renderers::Init(Awning::Renderers::API::OpenGLES2);
 
 	Awning::Protocols::WL  ::Compositor         ::Add(Awning::Server::data.display);
 	Awning::Protocols::WL  ::Seat               ::Add(Awning::Server::data.display);
@@ -162,7 +162,7 @@ int main(int argc, char* argv[])
 	int display = Awning::WM::X::Server::display;
 
 	setenv("DISPLAY", fmt::format(":{}", display).c_str(), 1);
-	//setenv("MOZ_ENABLE_WAYLAND", "1", 1);
+	setenv("MOZ_ENABLE_WAYLAND", "1", 1);
 
 	signal(SIGINT, on_term_signal);
 
