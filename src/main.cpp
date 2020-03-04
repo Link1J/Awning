@@ -89,42 +89,42 @@ uint32_t NextSerialNum()
 
 int main(int argc, char* argv[])
 {
-	bool noX = false;
-	Awning::Backend  ::API api_output  = Awning::Backend  ::API::DRM;
-	Awning::Backend  ::API api_input   = Awning::Backend  ::API::libinput;
-	Awning::Renderers::API api_drawing = Awning::Renderers::API::OpenGLES2;
+	bool                   startXWayland = true                             ;
+	Awning::Backend  ::API api_output    = Awning::Backend  ::API::DRM      ;
+	Awning::Backend  ::API api_input     = Awning::Backend  ::API::libinput ;
+	Awning::Renderers::API api_drawing   = Awning::Renderers::API::OpenGLES2;
 
 	for(int a = 0; a < argc; a++)
 	{
 		auto arg = std::string(argv[a]);
 		if (arg == "-noX")
 		{
-			noX = true;
+			startXWayland = false;
 		}
 		if (arg == "-x11")
 		{
-			api_output  = Awning::Backend  ::API::X11;
-			api_input   = Awning::Backend  ::API::X11;
+			api_output    = Awning::Backend  ::API::X11;
+			api_input     = Awning::Backend  ::API::X11;
 		}
 		if (arg == "-drm")
 		{
-			api_output  = Awning::Backend  ::API::DRM;
+			api_output    = Awning::Backend  ::API::DRM;
 		}
 		if (arg == "-libinput")
 		{
-			api_input   = Awning::Backend  ::API::libinput;
+			api_input     = Awning::Backend  ::API::libinput;
 		}
 		if (arg == "-evdev")
 		{
-			api_input   = Awning::Backend  ::API::EVDEV;
+			api_input     = Awning::Backend  ::API::EVDEV;
 		}
 		if (arg == "-soft")
 		{
-			api_drawing = Awning::Renderers::API::Software;
+			api_drawing   = Awning::Renderers::API::Software;
 		}
 		if (arg == "-GLES2")
 		{
-			api_drawing = Awning::Renderers::API::OpenGLES2;
+			api_drawing   = Awning::Renderers::API::OpenGLES2;
 		}
 	}
 
@@ -135,7 +135,6 @@ int main(int argc, char* argv[])
 	Awning::Server::data.client_listener.notify = client_created;
 
 	Awning::Server::data.event_loop = wl_display_get_event_loop(Awning::Server::data.display);
-	wl_display_add_protocol_logger(Awning::Server::data.display, ProtocolLogger, nullptr);
 	wl_display_add_client_created_listener(Awning::Server::data.display, &Awning::Server::data.client_listener);
 
 	Awning::Backend::Init(api_output, api_input);
@@ -143,7 +142,7 @@ int main(int argc, char* argv[])
 
 	Awning::Protocols::WL  ::Compositor         ::Add(Awning::Server::data.display);
 	Awning::Protocols::WL  ::Seat               ::Add(Awning::Server::data.display);
-	Awning::Protocols::WL  ::Shell              ::Add(Awning::Server::data.display);
+	//Awning::Protocols::WL  ::Shell              ::Add(Awning::Server::data.display);
 	Awning::Protocols::XDG ::WM_Base            ::Add(Awning::Server::data.display);
 	Awning::Protocols::ZXDG::Decoration_Manager ::Add(Awning::Server::data.display);
 	Awning::Protocols::WL  ::Data_Device_Manager::Add(Awning::Server::data.display);
@@ -155,10 +154,7 @@ int main(int argc, char* argv[])
 
 	wl_display_init_shm(Awning::Server::data.display);
 
-	if (!noX)
-	{
-		Awning::WM::X::Server::Setup();
-	}
+	if (startXWayland) Awning::WM::X::Server::Setup();
 
 	const char* launchArgs1[] = { "falkon", "-platform", "wayland", NULL };
     const char* launchArgs2[] = { "weston-terminal", NULL };
@@ -203,19 +199,6 @@ int main(int argc, char* argv[])
 
 void on_term_signal(int signal_number)
 {
-}
-
-void ProtocolLogger(void* user_data, wl_protocol_logger_type direction, const wl_protocol_logger_message* message)
-{
-	const char* direction_strings[] = { 
-		"REQUEST", 
-		"EVENT  "
-	};
-
-	//if (direction == 1)
-	//	return;
-
-	//std::cout << "[" << direction_strings[direction] << "] " << message->resource->object.interface->name << ": " << message->message->name << "\n";
 }
 
 void client_created(struct wl_listener* listener, void* data)

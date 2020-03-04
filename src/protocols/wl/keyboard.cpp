@@ -7,76 +7,15 @@
 
 #include <xkbcommon/xkbcommon.h>
 
+#include "utils/shm.hpp"
+
 #include <chrono>
 #include <iostream>
 
-#include <errno.h>
-#include <fcntl.h>
-#include <string.h>
-#include <sys/mman.h>
-#include <time.h>
-#include <unistd.h>
-
 uint32_t NextSerialNum();
-
-static void randname(char *buf) 
-{
-	struct timespec ts;
-	clock_gettime(CLOCK_REALTIME, &ts);
-	long r = ts.tv_nsec;
-	for (int i = 0; i < 6; ++i) {
-		buf[i] = 'A'+(r&15)+(r&16)*2;
-		r >>= 5;
-	}
-}
-
-int create_shm_file(void) {
-	int retries = 100;
-	do {
-		char name[] = "/Awning-XXXXXX";
-		randname(name + strlen(name) - 6);
-
-		--retries;
-		// CLOEXEC is guaranteed to be set by shm_open
-		int fd = shm_open(name, O_RDWR | O_CREAT | O_EXCL, 0600);
-		if (fd >= 0) {
-			shm_unlink(name);
-			return fd;
-		}
-	} while (retries > 0 && errno == EEXIST);
-
-	return -1;
-}
-
-int allocate_shm_file(size_t size) 
-{
-	int fd = create_shm_file();
-	if (fd < 0) {
-		return -1;
-	}
-
-	int ret;
-	do {
-		ret = ftruncate(fd, size);
-	} while (ret < 0 && errno == EINTR);
-	if (ret < 0) {
-		close(fd);
-		return -1;
-	}
-
-	return fd;
-}
 
 namespace Awning::Protocols::WL::Keyboard
 {
-	struct xkb_context* ctx;
-	struct xkb_keymap* keymap;
-	char* keymap_string;
-	int keymap_size;
-	int keymap_fd;
-	void* keymap_ptr;
-	struct xkb_state* state;
-
 	wl_resource* surface;
 
 	const struct wl_keyboard_interface interface = {
@@ -88,6 +27,14 @@ namespace Awning::Protocols::WL::Keyboard
 
 	Data data;
 
+	static struct xkb_context* ctx;
+	struct xkb_keymap* keymap;
+	char* keymap_string;
+	int keymap_size;
+	int keymap_fd;
+	void* keymap_ptr;
+	struct xkb_state* state;
+
 	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id)
 	{
 		Log::Function::Called("Protocols::WL::Keyboard");
@@ -97,6 +44,7 @@ namespace Awning::Protocols::WL::Keyboard
 			wl_client_post_no_memory(wl_client);
 			return resource;
 		}
+		wl_resource_set_implementation(resource, &interface, nullptr, nullptr);
 
 		if (!ctx)
 		{
@@ -110,17 +58,17 @@ namespace Awning::Protocols::WL::Keyboard
 			
 			ctx = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
 			keymap = xkb_keymap_new_from_names(ctx, &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
+			state = xkb_state_new(keymap);
+			
 			keymap_string = xkb_keymap_get_as_string(keymap, XKB_KEYMAP_FORMAT_TEXT_V1);
 			keymap_size = strlen(keymap_string) + 1;
-			keymap_fd = allocate_shm_file(keymap_size);
+			keymap_fd = Utils::SHM::AllocateFile(keymap_size);
 			keymap_ptr = mmap(NULL, keymap_size, PROT_READ | PROT_WRITE, MAP_SHARED, keymap_fd, 0);
-			state = xkb_state_new(keymap);
 
 			memcpy(keymap_ptr, keymap_string, keymap_size);
 			munmap(keymap_ptr, keymap_size);
+			close(keymap_fd);
 		}
-
-		wl_resource_set_implementation(resource, &interface, nullptr, nullptr);
 		
 		wl_keyboard_send_keymap(resource, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1, keymap_fd, keymap_size);
 
