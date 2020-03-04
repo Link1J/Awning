@@ -238,7 +238,6 @@ namespace Awning::Renderers::GLES2
 
 	void Draw()
 	{
-		auto list     = WM::Window::Manager::windowList;
 		auto displays = Backend::GetDisplays();
 		auto [nW, nH] = Backend::Size(displays);
 
@@ -267,9 +266,23 @@ namespace Awning::Renderers::GLES2
 		glViewport(0, 0, width, height);
 		glClearColor(238 / 255., 238 / 255., 238 / 255., 1);
 		glClear(GL_COLOR_BUFFER_BIT);
+		
+		int layerOrder[] = {
+				(int)WM::Window::Manager::Layer::Background,
+				(int)WM::Window::Manager::Layer::Bottom,
+				(int)WM::Window::Manager::Layer::Application,
+				(int)WM::Window::Manager::Layer::Top,
+				(int)WM::Window::Manager::Layer::Overlay,
+		};
 
-		for (auto& window : reverse(list))
-			RenderWindow(window);
+		for (int a = 0; a < sizeof(layerOrder) / sizeof(*layerOrder); a++)
+		{
+			auto list = WM::Window::Manager::layers[layerOrder[a]];
+			for (auto& window : reverse(list))
+			{
+				RenderWindow(window);
+			}
+		}
 
 		if (Awning::Protocols::WL::Pointer::data.window)
 			RenderWindow(Awning::Protocols::WL::Pointer::data.window, 0, 0);

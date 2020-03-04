@@ -13,8 +13,18 @@ namespace Awning::WM
 		class Manager
 		{
 		public:
-			static std::list<Window*> windowList;
-			static Window* hoveredOver;
+			enum class Layer {
+				Background,
+				Bottom,
+				Top,
+				Overlay,
+				Application,
+				END,
+			};
+
+			static std::list<Window*> windowList                  ;
+			static Window*            hoveredOver                 ;
+			static std::list<Window*> layers     [(int)Layer::END];
 
 			struct Functions
 			{
@@ -23,8 +33,8 @@ namespace Awning::WM
 				typedef void (*Moved  )(void* data, int x, int y         );
 			};
 
-			static void Manage  (Window*& window);
-			static void Unmanage(Window*& window);
+			static void Manage  (Window*& window, Layer layer = Layer::Application);
+			static void Unmanage(Window*& window                                  );
 
 			static void Raise (Window*& window                      );
 			static void Move  (Window*& window, int xPos , int yPos );
@@ -57,6 +67,8 @@ namespace Awning::WM
 
 		std::vector<Window*> subwindows;
 		bool drawingManaged = false;
+
+		Manager::Layer layer;
 
 	public:		
 		static Window* Create        (void* client   );

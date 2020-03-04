@@ -199,7 +199,6 @@ namespace Awning::Renderers::Software
 
 	void Draw()
 	{
-		auto list     = WM::Window::Manager::windowList;
 		auto displays = Backend::GetDisplays();
 		auto [nW, nH] = Backend::Size(displays);
 
@@ -220,8 +219,22 @@ namespace Awning::Renderers::Software
 
 		memset(buffer, 0xEE, size);
 
-		for (auto& window : reverse(list))
-			RenderWindow(window);
+		int layerOrder[] = {
+			(int)WM::Window::Manager::Layer::Background,
+			(int)WM::Window::Manager::Layer::Bottom,
+			(int)WM::Window::Manager::Layer::Application,
+			(int)WM::Window::Manager::Layer::Top,
+			(int)WM::Window::Manager::Layer::Overlay,
+		};
+
+		for (int a = 0; a < sizeof(layerOrder) / sizeof(*layerOrder); a++)
+		{
+			auto list = WM::Window::Manager::layers[layerOrder[a]];
+			for (auto& window : reverse(list))
+			{
+				RenderWindow(window);
+			}
+		}
 
 		if (Awning::Protocols::WL::Pointer::data.window)
 		{

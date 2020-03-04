@@ -33,6 +33,7 @@
 #include "protocols/zxdg/output.hpp"
 
 #include "protocols/wlr/output_manager.hpp"
+#include "protocols/wlr/layer_shell.hpp"
 
 #include "protocols/zwp/dmabuf.hpp"
 
@@ -151,6 +152,7 @@ int main(int argc, char* argv[])
 	Awning::Protocols::ZWP ::Linux_Dmabuf       ::Add(Awning::Server::data.display);
 	Awning::Protocols::WL  ::Subcompositor      ::Add(Awning::Server::data.display);
 	Awning::Protocols::KDE ::Decoration_Manager ::Add(Awning::Server::data.display);
+	Awning::Protocols::WLR ::Layer_Shell        ::Add(Awning::Server::data.display);
 
 	wl_display_init_shm(Awning::Server::data.display);
 
@@ -174,7 +176,7 @@ int main(int argc, char* argv[])
 	//launchApp(launchArgs2);
 	//launchApp(launchArgs3);
 	//launchApp(launchArgs4);
-	launchApp(launchArgs5);
+	//launchApp(launchArgs5);
 	//launchApp(launchArgs6);
 	
 	while(1)

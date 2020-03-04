@@ -59,18 +59,19 @@ namespace Awning::Protocols::WL::Keyboard
 			ctx = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
 			keymap = xkb_keymap_new_from_names(ctx, &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
 			state = xkb_state_new(keymap);
-			
-			keymap_string = xkb_keymap_get_as_string(keymap, XKB_KEYMAP_FORMAT_TEXT_V1);
-			keymap_size = strlen(keymap_string) + 1;
-			keymap_fd = Utils::SHM::AllocateFile(keymap_size);
-			keymap_ptr = mmap(NULL, keymap_size, PROT_READ | PROT_WRITE, MAP_SHARED, keymap_fd, 0);
 
-			memcpy(keymap_ptr, keymap_string, keymap_size);
-			munmap(keymap_ptr, keymap_size);
-			close(keymap_fd);
+			keymap_string = xkb_keymap_get_as_string(keymap, XKB_KEYMAP_FORMAT_TEXT_V1);
 		}
-		
+
+		keymap_size = strlen(keymap_string) + 1;
+		keymap_fd = Utils::SHM::AllocateFile(keymap_size);
+		keymap_ptr = mmap(NULL, keymap_size, PROT_READ | PROT_WRITE, MAP_SHARED, keymap_fd, 0);
+
 		wl_keyboard_send_keymap(resource, WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1, keymap_fd, keymap_size);
+
+		memcpy(keymap_ptr, keymap_string, keymap_size);
+		munmap(keymap_ptr, keymap_size);
+		close(keymap_fd);
 
 		if (version >= WL_KEYBOARD_REPEAT_INFO_SINCE_VERSION)
 			wl_keyboard_send_repeat_info(resource, 25, 1000);

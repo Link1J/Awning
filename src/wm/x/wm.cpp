@@ -264,7 +264,8 @@ namespace Awning::WM::X
 					Log::Function::Locate("WM::X", "CreateNotify");
 					windows[e->window] = Window::Create(xWaylandClient);
 					windows[e->window]->Data      ((void*)e->window);
-					Client::Bind::Surface(windows[e->window], surface);
+					Window::Manager::Manage (windows[e->window]         );
+					Client::Bind   ::Surface(windows[e->window], surface);
 				}
 				break;
 			case XCB_DESTROY_NOTIFY:

@@ -54,6 +54,8 @@ set(SOURCES
 	src/protocols/awn/config_output.cpp
 	
     src/protocols/wlr/output_manager.cpp
+    src/protocols/wlr/layer_shell.cpp
+    src/protocols/wlr/layer_surface.cpp
     
     src/protocols/zwp/dmabuf.cpp
 
@@ -68,6 +70,7 @@ set(SOURCE_WAYLAND
 	src/protocols/handler/wlr-output-management.c
     src/protocols/handler/xdg-output.c
     src/protocols/handler/server_decoration.c
+    src/protocols/handler/wlr-layer-shell.c
 
     src/protocols/handler/xdg-shell.h 
     src/protocols/handler/xdg-decoration.h
@@ -76,6 +79,7 @@ set(SOURCE_WAYLAND
 	src/protocols/handler/wlr-output-management.h
     src/protocols/handler/xdg-output.h
     src/protocols/handler/server_decoration.h
+    src/protocols/handler/wlr-layer-shell.h
 )
 
 #------------------------------------------------------------------------------

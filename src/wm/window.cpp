@@ -3,11 +3,14 @@
 
 namespace Awning::WM
 {
-	std::list<Window*> Window::Manager::windowList;
-	Window* Window::Manager::hoveredOver;
+	std::list<Window*> Window::Manager::windowList                  ;
+	Window*            Window::Manager::hoveredOver                 ;
+	std::list<Window*> Window::Manager::layers     [(int)Layer::END];
 
-	void Window::Manager::Manage(Window*& window)
+	void Window::Manager::Manage(Window*& window, Layer layer)
 	{
+		window->layer = layer;
+		layers[(int)layer].emplace_back(window);
 		windowList.emplace_back(window);
 	}
 
@@ -20,6 +23,24 @@ namespace Awning::WM
 				break;
 			curr++;
 		}
+
+		if (curr == windowList.end())
+			return;
+
+		if (window->layer < Layer::END)
+		{
+			auto curr = layers[(int)window->layer].begin();
+			while (curr != layers[(int)window->layer].end())
+			{
+				if (*curr == window)
+					break;
+				curr++;
+			}
+
+			if (curr != layers[(int)window->layer].end())
+				layers[(int)window->layer].erase(curr);
+		}
+
 		windowList.erase(curr);
 		Raise(*windowList.begin());
 	}
@@ -37,6 +58,23 @@ namespace Awning::WM
 
 		if (curr == windowList.end())
 			return;
+
+		if (window->layer < Layer::END)
+		{
+			auto curr = layers[(int)window->layer].begin();
+			while (curr != layers[(int)window->layer].end())
+			{
+				if (*curr == window)
+					break;
+				curr++;
+			}
+
+			if (curr != layers[(int)window->layer].end())
+			{
+				layers[(int)window->layer].erase(curr);
+				layers[(int)window->layer].emplace_front(window);
+			}
+		}
 
 		Protocols::WL::Keyboard::ChangeWindow(
 			(wl_client  *)(*star)->Client(), 
@@ -99,6 +137,7 @@ namespace Awning::WM
 		window->minSize.y = 1;
 		window->maxSize.x = INT32_MAX;
 		window->maxSize.y = INT32_MAX;
+		window->layer     = Manager::Layer::END;
 
 		Client::Bind::Window(client, window);
 

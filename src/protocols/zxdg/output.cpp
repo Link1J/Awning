@@ -71,7 +71,7 @@ namespace Awning::Protocols::ZXDG::Output_Manager
 		void Get_Xdg_Output(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* output)
 		{
 			Log::Function::Called("Protocols::ZXDG::Output_Manager::Interface");
-			Output::Create(client, 1, id, output);
+			Output::Create(client, wl_resource_get_version(resource), id, output);
 		}
 	}
 
@@ -89,6 +89,6 @@ namespace Awning::Protocols::ZXDG::Output_Manager
 
 	wl_global* Add(struct wl_display* display, void* data)
 	{
-		return wl_global_create(display, &zxdg_output_manager_v1_interface, 1, data, Bind);
+		return wl_global_create(display, &zxdg_output_manager_v1_interface, 2, data, Bind);
 	}
 }

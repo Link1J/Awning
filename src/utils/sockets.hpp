@@ -17,6 +17,8 @@
 
 #include "log.hpp"
 
+#include <fmt/format.h>
+
 namespace Awning::Utils::Sockets
 {
 	static bool SetCloexec(int fd, bool cloexec) 
