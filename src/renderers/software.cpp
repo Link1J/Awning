@@ -98,10 +98,12 @@ namespace Awning::Renderers::Software
 		auto winOffX  = window->XOffset();
 		auto winOffY  = window->YOffset();
 
-		int posX    = winPosX  - winOffX                     ;
-		int posY    = winPosY  - winOffY                     ;
-		int sizeX   = winSizeX + winOffX * std::max(count, 0);
-		int sizeY   = winSizeY + winOffY * std::max(count, 0);
+		int posX    = winPosX ;
+		int posY    = winPosY ;
+		int sizeX   = winSizeX;
+		int sizeY   = winSizeY;
+		int offX    = winOffX ;
+		int offY    = winOffY ;
 
 		int frameSX = Frame::Size::left   * frame;
 		int frameSY = Frame::Size::top    * frame;
@@ -120,15 +122,15 @@ namespace Awning::Renderers::Software
 				if ((posY + y) >= height)
 					continue;
 
-				int windowOffset = (x) * (texture->bitsPerPixel / 8)
-								 + (y) *  texture->bytesPerLine    ;
+				int windowOffset = (x + offX - 1) * (texture->bitsPerPixel / 8)
+								 + (y + offY - 1) *  texture->bytesPerLine    ;
 
 				int framebOffset = (posX + x) * (bitsPerPixel / 8)
 								 + (posY + y) *  bytesPerLine    ;
 
 				uint8_t red, green, blue, alpha;
 
-				if (x < sizeX && y < sizeY && x >= 0 && y >= 0)
+				if (x < texture->width && y < texture->height && x >= 0 && y >= 0)
 				{
 					if (texture->buffer.pointer != nullptr && windowOffset < texture->size)
 					{
@@ -169,9 +171,9 @@ namespace Awning::Renderers::Software
 					uint8_t& buffer_green = buffer[framebOffset + 1];
 					uint8_t& buffer_blue  = buffer[framebOffset + 0];
 
-					buffer_red   = red   * (alpha / 256.) + buffer_red   * (1 - alpha / 256.);
-					buffer_green = green * (alpha / 256.) + buffer_green * (1 - alpha / 256.);
-					buffer_blue  = blue  * (alpha / 256.) + buffer_blue  * (1 - alpha / 256.);
+					buffer_red   = red  ; // * (alpha / 256.) + buffer_red   * (1 - alpha / 256.);
+					buffer_green = green; // * (alpha / 256.) + buffer_green * (1 - alpha / 256.);
+					buffer_blue  = blue ; // * (alpha / 256.) + buffer_blue  * (1 - alpha / 256.);
 				}
 			}
 		

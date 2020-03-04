@@ -90,8 +90,9 @@ uint32_t NextSerialNum()
 int main(int argc, char* argv[])
 {
 	bool noX = false;
-	Awning::Backend::API api_output = Awning::Backend::API::DRM;
-	Awning::Backend::API api_input  = Awning::Backend::API::libinput;
+	Awning::Backend  ::API api_output  = Awning::Backend  ::API::DRM;
+	Awning::Backend  ::API api_input   = Awning::Backend  ::API::libinput;
+	Awning::Renderers::API api_drawing = Awning::Renderers::API::OpenGLES2;
 
 	for(int a = 0; a < argc; a++)
 	{
@@ -102,20 +103,28 @@ int main(int argc, char* argv[])
 		}
 		if (arg == "-x11")
 		{
-			api_output = Awning::Backend::API::X11;
-			api_input  = Awning::Backend::API::X11;
+			api_output  = Awning::Backend  ::API::X11;
+			api_input   = Awning::Backend  ::API::X11;
 		}
 		if (arg == "-drm")
 		{
-			api_output = Awning::Backend::API::DRM;
+			api_output  = Awning::Backend  ::API::DRM;
 		}
 		if (arg == "-libinput")
 		{
-			api_input  = Awning::Backend::API::libinput;
+			api_input   = Awning::Backend  ::API::libinput;
 		}
 		if (arg == "-evdev")
 		{
-			api_input  = Awning::Backend::API::EVDEV;
+			api_input   = Awning::Backend  ::API::EVDEV;
+		}
+		if (arg == "-soft")
+		{
+			api_drawing = Awning::Renderers::API::Software;
+		}
+		if (arg == "-GLES2")
+		{
+			api_drawing = Awning::Renderers::API::OpenGLES2;
 		}
 	}
 
@@ -130,8 +139,7 @@ int main(int argc, char* argv[])
 	wl_display_add_client_created_listener(Awning::Server::data.display, &Awning::Server::data.client_listener);
 
 	Awning::Backend::Init(api_output, api_input);
-
-	Awning::Renderers::Init(Awning::Renderers::API::OpenGLES2);
+	Awning::Renderers::Init(api_drawing);
 
 	Awning::Protocols::WL  ::Compositor         ::Add(Awning::Server::data.display);
 	Awning::Protocols::WL  ::Seat               ::Add(Awning::Server::data.display);
@@ -164,7 +172,7 @@ int main(int argc, char* argv[])
 	setenv("DISPLAY", fmt::format(":{}", display).c_str(), 1);
 	setenv("MOZ_ENABLE_WAYLAND", "1", 1);
 
-	signal(SIGINT, on_term_signal);
+	//signal(SIGINT, on_term_signal);
 
 	//launchApp(launchArgs1);
 	//launchApp(launchArgs2);
