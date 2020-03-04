@@ -200,7 +200,7 @@ namespace Awning::Renderers::GLES2
 		glDeleteShader(pixelShaderOES);
 		glDeleteShader(pixelShader2D );
 
-		auto list     = WM::Manager::Window::Get();
+		auto list     = WM::Window::Manager::windowList;
 		auto displays = Backend::GetDisplays();
 		auto [nW, nH] = Backend::Size(displays);
 
@@ -238,7 +238,7 @@ namespace Awning::Renderers::GLES2
 
 	void Draw()
 	{
-		auto list     = WM::Manager::Window::Get();
+		auto list     = WM::Window::Manager::windowList;
 		auto displays = Backend::GetDisplays();
 		auto [nW, nH] = Backend::Size(displays);
 

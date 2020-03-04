@@ -14,7 +14,9 @@
 			],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
-			"environment": [],
+			"environment": [
+				{"name":"AWNING_DISPLAYS_COUNT", "value": "2"}
+			],
 			"externalConsole": false,
 			"MIMode": "gdb",
 			"setupCommands": [

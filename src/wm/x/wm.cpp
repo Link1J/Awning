@@ -263,11 +263,7 @@ namespace Awning::WM::X
 					auto e = (xcb_create_notify_event_t*)event;
 					Log::Function::Locate("WM::X", "CreateNotify");
 					windows[e->window] = Window::Create(xWaylandClient);
-					windows[e->window]->Frame     (true            );
 					windows[e->window]->Data      ((void*)e->window);
-					windows[e->window]->SetResized(Resized         );
-					windows[e->window]->SetRaised (Raised          );
-					windows[e->window]->SetMoved  (Moved           );
 					Client::Bind::Surface(windows[e->window], surface);
 				}
 				break;
@@ -300,8 +296,12 @@ namespace Awning::WM::X
 					xcb_configure_window(xcb_conn, e->window, mask, values);
 					xcb_flush(xcb_conn);
 
-					windows[e->window]->ConfigPos (e->x    , e->y     );
-					windows[e->window]->ConfigSize(e->width, e->height);
+					WM::Window::Manager::Move  (windows[e->window], e->x    , e->y     );
+					WM::Window::Manager::Resize(windows[e->window], e->width, e->height);
+
+					windows[e->window]->SetResized(Resized);
+					windows[e->window]->SetRaised (Raised );
+					windows[e->window]->SetMoved  (Moved  );
 				}
 				break;
 			case XCB_MAP_REQUEST:
@@ -313,16 +313,18 @@ namespace Awning::WM::X
 					xcb_change_window_attributes_checked(xcb_conn, e->window, XCB_CW_EVENT_MASK, &value_list);
 					xcb_map_window_checked(xcb_conn, e->window);
 
+					windows[e->window]->Frame(true);
+
 					auto display = Backend::GetDisplays()[0];
 					auto [sx, sy] = WM::Output::Get::Mode::Resolution(display.output, display.mode);
 
 					if (windows[e->window]->XPos() == INT32_MIN)
-						windows[e->window]->ConfigPos(sx/2. - windows[e->window]->XSize()/2., windows[e->window]->YPos());
+						WM::Window::Manager::Move(windows[e->window], sx/2. - windows[e->window]->XSize()/2., windows[e->window]->YPos());
 					if (windows[e->window]->YPos() == INT32_MIN)
-						windows[e->window]->ConfigPos(windows[e->window]->XPos(), sy/2. - windows[e->window]->YSize()/2.);
+						WM::Window::Manager::Move(windows[e->window], windows[e->window]->XPos(), sy/2. - windows[e->window]->YSize()/2.);
 
         			windows[e->window]->Mapped(true);
-					WM::Manager::Window::Raise(windows[e->window]);
+					WM::Window::Manager::Raise(windows[e->window]);
 				}
 				break;
 			case XCB_MAP_NOTIFY:

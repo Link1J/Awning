@@ -3,22 +3,46 @@
 #include "client.hpp"
 
 #include <vector>
+#include <list>
 
 namespace Awning::WM
 {
 	class Window
 	{
-		friend void  Manager::Window::Raise (       Awning::WM::Window* window        );
-		friend void  Manager::Window::Resize(       Awning::WM::Window* window,int,int);
+	public:
+		class Manager
+		{
+		public:
+			static std::list<Window*> windowList;
+			static Window* hoveredOver;
+
+			struct Functions
+			{
+				typedef void (*Resized)(void* data, int width, int height);
+				typedef void (*Raised )(void* data                       );
+				typedef void (*Moved  )(void* data, int x, int y         );
+			};
+
+			static void Manage  (Window*& window);
+			static void Unmanage(Window*& window);
+
+			static void Raise (Window*& window                      );
+			static void Move  (Window*& window, int xPos , int yPos );
+			static void Resize(Window*& window, int xSize, int ySize);
+			static void Offset(Window*& window, int xOff , int yOff );
+		};
+	
+	private:
+		friend Manager;
+
 		friend void  Client::Bind::Window(void* id, Awning::WM::Window* window        );
 		friend void  Client::Unbind::Window(        Awning::WM::Window* window        );
 		friend void* Client::Get::Surface(          Awning::WM::Window* window        );
 		friend void  Client::Bind::Surface(         Awning::WM::Window* window, void* );
-		friend void  Manager::Window::Reposition(   Awning::WM::Window* window,int,int);
 
-		Manager::Functions::Window::Resized Resized;
-		Manager::Functions::Window::Raised  Raised ;
-		Manager::Functions::Window::Moved   Moved  ;
+		Manager::Functions::Resized Resized;
+		Manager::Functions::Raised  Raised ;
+		Manager::Functions::Moved   Moved  ;
 
 		WM::Texture* texture;
 		WM::Window * parent;
@@ -34,9 +58,8 @@ namespace Awning::WM
 		std::vector<Window*> subwindows;
 		bool drawingManaged = false;
 
-	public:
+	public:		
 		static Window* Create        (void* client   );
-		static Window* CreateUnmanged(void* client   );
 		static void    Destory       (Window*& window);
 
 		WM::Texture*         Texture       (                                       );
@@ -48,8 +71,6 @@ namespace Awning::WM
 		int                  YSize         (                                       );
 		void                 Frame         (bool frame                             );
 		bool                 Frame         (                                       );
-		void                 ConfigPos     (int xPos, int yPos, bool offset = false);
-		void                 ConfigSize    (int xSize, int ySize                   );
 		void                 Data          (void* data                             );
 		void*                Client        (                                       );
 		int                  XOffset       (                                       );
@@ -62,8 +83,8 @@ namespace Awning::WM
 		std::vector<Window*> GetSubwindows (                                       );
 		bool                 DrawingManaged(                                       );
 
-		void SetRaised (Manager::Functions::Window::Raised  raised );
-		void SetResized(Manager::Functions::Window::Resized resized);
-		void SetMoved  (Manager::Functions::Window::Moved   moved  );
+		void SetRaised (Manager::Functions::Raised  raised );
+		void SetResized(Manager::Functions::Resized resized);
+		void SetMoved  (Manager::Functions::Moved   moved  );
 	};
 }

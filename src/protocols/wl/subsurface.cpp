@@ -39,7 +39,7 @@ namespace Awning::Protocols::WL::Subsurface
 		void Set_Position(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y)
 		{
 			Log::Function::Called("Protocols::WL::Subsurface::Interface");
-			data.instances[resource].window->ConfigPos(x, y);
+			WM::Window::Manager::Move(data.instances[resource].window, x, y);
 		}
 
 		void Place_Above(struct wl_client* client, struct wl_resource* resource, struct wl_resource* sibling)

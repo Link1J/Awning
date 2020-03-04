@@ -24,11 +24,7 @@ namespace Awning::Protocols::WL::Pointer
 
 			if (data.window)
 			{
-				int xpos = data.window->XPos();
-				int ypos = data.window->YPos();
-
-				data.window->ConfigPos(hotspot_x, hotspot_y, true);
-				data.window->ConfigPos(xpos, ypos, false);
+				WM::Window::Manager::Offset(data.window, hotspot_x, hotspot_y);
 
 				auto texture = Awning::Protocols::WL::Surface::data.surfaces[surface].texture;
 
@@ -36,7 +32,7 @@ namespace Awning::Protocols::WL::Pointer
 					return;
 					
 				data.window->Texture(texture);
-				data.window->ConfigSize(texture->width, texture->height);
+				WM::Window::Manager::Resize(data.window, texture->width, texture->height);
 
 				data.pointers[resource].inUse = true;	
 				data.inUse = resource;
@@ -69,7 +65,7 @@ namespace Awning::Protocols::WL::Pointer
 
 		if (!data.window)
 		{
-			data.window = WM::Window::CreateUnmanged(0);
+			data.window = WM::Window::Create(0);
 			data.window->Mapped(true);
 			data.inUse = nullptr;
 		}
@@ -93,7 +89,7 @@ namespace Awning::Protocols::WL::Pointer
 	{
 		if (data.window)
 		{
-			data.window->ConfigPos(tx, ty);
+			WM::Window::Manager::Move(data.window, tx, ty);
 		}
 
 		if (!surface)
@@ -119,7 +115,7 @@ namespace Awning::Protocols::WL::Pointer
 	{
 		if (data.window)
 		{
-			data.window->ConfigPos(tx, ty);
+			WM::Window::Manager::Move(data.window, tx, ty);
 		}
 
 		int xPoint = wl_fixed_from_double(x);
@@ -134,7 +130,7 @@ namespace Awning::Protocols::WL::Pointer
 	{
 		if (data.window)
 		{
-			data.window->ConfigPos(x, y);
+			WM::Window::Manager::Move(data.window, x, y);
 		}
 	}
 

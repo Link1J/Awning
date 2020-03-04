@@ -52,13 +52,6 @@ namespace Awning::WM::Manager::Functions
 			typedef void (*Released)(void* data, uint32_t key);
 		}
 	}
-
-	namespace Window
-	{
-		typedef void (*Resized)(void* data, int width, int height);
-		typedef void (*Raised )(void* data                       );
-		typedef void (*Moved  )(void* data, int x, int y         );
-	}
 }
 
 namespace Awning::WM::Manager
@@ -101,16 +94,5 @@ namespace Awning::WM::Manager
 
 			void Lock(WindowAction action, WindowSide side = TOP);
 		}
-	}
-
-	namespace Window
-	{
-		void Add       (Awning::WM::Window* window                      );
-		void Remove    (Awning::WM::Window* window                      );
-		void Raise     (Awning::WM::Window* window                      );
-		void Resize    (Awning::WM::Window* window, int xSize, int ySize);
-		void Reposition(Awning::WM::Window* window, int xPos , int yPos );
-
-		std::list<Awning::WM::Window*> Get();
 	}
 }

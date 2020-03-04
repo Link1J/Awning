@@ -12,9 +12,6 @@
 #include <linux/input.h>
 #include "protocols/handler/xdg-shell.h"
 
-static std::list<Awning::WM::Window*> windowList;
-static Awning::WM::Window* hoveredOver;
-
 namespace Awning::WM::Manager
 {
 	namespace Handle
@@ -38,22 +35,22 @@ namespace Awning::WM::Manager
 				
 				void Scroll(int axis, float step)
 				{
-					if (hoveredOver && action == APPLCATION)
+					if (Window::Manager::hoveredOver && action == APPLCATION)
 					{
 						Protocols::WL::Pointer::Axis(
-							(wl_client*)hoveredOver->Client(),
+							(wl_client*)Window::Manager::hoveredOver->Client(),
 							axis, step
 						);
 						Protocols::WL::Pointer::Frame(
-							(wl_client*)hoveredOver->Client()
+							(wl_client*)Window::Manager::hoveredOver->Client()
 						);
 					}
 				}
 
 				void Moved(int x, int y)
 				{
-					auto curr = windowList.begin();
-					while (curr != windowList.end() && input == UNLOCK)
+					auto curr = Window::Manager::windowList.begin();
+					while (curr != Window::Manager::windowList.end() && input == UNLOCK)
 					{
 						if((*curr)->XPos()                    <= x 
 						&& (*curr)->YPos()                    <= y
@@ -164,20 +161,20 @@ namespace Awning::WM::Manager
 						curr++;
 					}
 
-					if (hoveredOver != *curr && input == UNLOCK)
+					if (Window::Manager::hoveredOver != *curr && input == UNLOCK)
 					{
-						if (hoveredOver)
+						if (Window::Manager::hoveredOver)
 						{
 							Protocols::WL::Pointer::Leave(
-								(wl_client  *)hoveredOver->Client(), 
-								(wl_resource*)Client::Get::Surface(hoveredOver)
+								(wl_client  *)Window::Manager::hoveredOver->Client(), 
+								(wl_resource*)Client::Get::Surface(Window::Manager::hoveredOver)
 							);
 							Protocols::WL::Pointer::Frame(
-								(wl_client*)hoveredOver->Client()
+								(wl_client*)Window::Manager::hoveredOver->Client()
 							);
 						}
 
-						if (curr != windowList.end())
+						if (curr != Window::Manager::windowList.end())
 						{
 							int localX = x - (*curr)->XPos() - (*curr)->XOffset();
 							int localY = y - (*curr)->YPos() - (*curr)->YOffset();
@@ -192,43 +189,43 @@ namespace Awning::WM::Manager
 							);
 						}
 
-						if (curr == windowList.end())
+						if (curr == Window::Manager::windowList.end())
 						{
-							hoveredOver = nullptr;
+							Window::Manager::hoveredOver = nullptr;
 						}
 						else
 						{
-							hoveredOver = *curr;
+							Window::Manager::hoveredOver = *curr;
 						}
 					}
-					else if (hoveredOver && action == APPLCATION)
+					else if (Window::Manager::hoveredOver && action == APPLCATION)
 					{
-						int localX = x - hoveredOver->XPos() + hoveredOver->XOffset();
-						int localY = y - hoveredOver->YPos() + hoveredOver->YOffset();
+						int localX = x - Window::Manager::hoveredOver->XPos() + Window::Manager::hoveredOver->XOffset();
+						int localY = y - Window::Manager::hoveredOver->YPos() + Window::Manager::hoveredOver->YOffset();
 
 						Protocols::WL::Pointer::Moved(
-							(wl_client*)hoveredOver->Client(),
+							(wl_client*)Window::Manager::hoveredOver->Client(),
 							localX, localY, x, y
 						);
 						Protocols::WL::Pointer::Frame(
-							(wl_client*)hoveredOver->Client()
+							(wl_client*)Window::Manager::hoveredOver->Client()
 						);
 					}
-					else if (hoveredOver && action == MOVE && input == LOCK)
+					else if (Window::Manager::hoveredOver && action == MOVE && input == LOCK)
 					{
-						int newX = hoveredOver->XPos() + (x - preX);
-						int newY = hoveredOver->YPos() + (y - preY);
-						Manager::Window::Reposition(hoveredOver, newX, newY);
+						int newX = Window::Manager::hoveredOver->XPos() + (x - preX);
+						int newY = Window::Manager::hoveredOver->YPos() + (y - preY);
+						Window::Manager::Move(Window::Manager::hoveredOver, newX, newY);
 						Protocols::WL::Pointer::Moved(nullptr, x, y, x, y);
 					}
-					else if (hoveredOver && action == RESIZE && input == LOCK)
+					else if (Window::Manager::hoveredOver && action == RESIZE && input == LOCK)
 					{
 						int deltaX = (x - preX);
 						int deltaY = (y - preY);
-						int XSize = hoveredOver->XSize();
-						int YSize = hoveredOver->YSize();
-						int XPos = hoveredOver->XPos();
-						int YPos = hoveredOver->YPos();
+						int XSize = Window::Manager::hoveredOver->XSize();
+						int YSize = Window::Manager::hoveredOver->YSize();
+						int XPos = Window::Manager::hoveredOver->XPos();
+						int YPos = Window::Manager::hoveredOver->YPos();
 
 						switch (side)
 						{
@@ -268,15 +265,15 @@ namespace Awning::WM::Manager
 							break;
 						}
 
-						int preX = hoveredOver->XSize();
-						int preY = hoveredOver->YSize();
+						int preX = Window::Manager::hoveredOver->XSize();
+						int preY = Window::Manager::hoveredOver->YSize();
 
-						Manager::Window::Resize(hoveredOver, XSize, YSize);
+						Window::Manager::Resize(Window::Manager::hoveredOver, XSize, YSize);
 
-						if (preX != hoveredOver->XSize())
-							Manager::Window::Reposition(hoveredOver, XPos, hoveredOver->YPos());
-						if (preY != hoveredOver->YSize())
-							Manager::Window::Reposition(hoveredOver, hoveredOver->XPos(), YPos);
+						if (preX != Window::Manager::hoveredOver->XSize())
+							Window::Manager::Move(Window::Manager::hoveredOver, XPos, Window::Manager::hoveredOver->YPos());
+						if (preY != Window::Manager::hoveredOver->YSize())
+							Window::Manager::Move(Window::Manager::hoveredOver, Window::Manager::hoveredOver->XPos(), YPos);
 
 						Protocols::WL::Pointer::Moved(nullptr, XPos, YPos, x, y);
 					}
@@ -294,27 +291,27 @@ namespace Awning::WM::Manager
 						lockButton = button;
 					}
 
-					if (hoveredOver != windowList.front())
+					if (Window::Manager::hoveredOver != Window::Manager::windowList.front())
 					{
-						if (hoveredOver)
-							Manager::Window::Raise(hoveredOver);
+						if (Window::Manager::hoveredOver)
+							Window::Manager::Raise(Window::Manager::hoveredOver);
 						return;
 					}
-					else if (hoveredOver && action == APPLCATION)
+					else if (Window::Manager::hoveredOver && action == APPLCATION)
 					{
 						Protocols::WL::Pointer::Button(
-							(wl_client*)hoveredOver->Client(),
+							(wl_client*)Window::Manager::hoveredOver->Client(),
 							button, true
 						);
 					}
 					else if (action == MOVE || action == RESIZE)
 					{
-						if (hoveredOver)
+						if (Window::Manager::hoveredOver)
 						{
-							Manager::Window::Raise(hoveredOver);
+							Window::Manager::Raise(Window::Manager::hoveredOver);
 							Protocols::WL::Pointer::Leave(
-								(wl_client  *)hoveredOver->Client(), 
-								(wl_resource*)Client::Get::Surface(hoveredOver)
+								(wl_client  *)Window::Manager::hoveredOver->Client(), 
+								(wl_resource*)Client::Get::Surface(Window::Manager::hoveredOver)
 							);
 						}
 						input = LOCK;
@@ -323,10 +320,10 @@ namespace Awning::WM::Manager
 
 				void Released(uint32_t button)
 				{
-					if (hoveredOver && action == APPLCATION)
+					if (Window::Manager::hoveredOver && action == APPLCATION)
 					{
 						Protocols::WL::Pointer::Button(
-							(wl_client*)hoveredOver->Client(),
+							(wl_client*)Window::Manager::hoveredOver->Client(),
 							button, false
 						);
 					}
@@ -334,15 +331,15 @@ namespace Awning::WM::Manager
 					{
 						if (button == lockButton)
 						{
-							if (hoveredOver)
+							if (Window::Manager::hoveredOver)
 							{
 								Protocols::WL::Pointer::Leave(
-									(wl_client  *)hoveredOver->Client(), 
-									(wl_resource*)Client::Get::Surface(hoveredOver)
+									(wl_client  *)Window::Manager::hoveredOver->Client(), 
+									(wl_resource*)Client::Get::Surface(Window::Manager::hoveredOver)
 								);
 							}
 
-							hoveredOver = nullptr;
+							Window::Manager::hoveredOver = nullptr;
 							input = UNLOCK;
 							action = APPLCATION;
 						}
@@ -354,7 +351,7 @@ namespace Awning::WM::Manager
 			{
 				void Pressed(uint32_t key)
 				{
-					auto window = windowList.front();
+					auto window = Window::Manager::windowList.front();
 					if (window)
 					{
 						Protocols::WL::Keyboard::Button(
@@ -366,7 +363,7 @@ namespace Awning::WM::Manager
 
 				void Released(uint32_t key)
 				{
-					auto window = windowList.front();
+					auto window = Window::Manager::windowList.front();
 					if (window)
 					{
 						Protocols::WL::Keyboard::Button(
@@ -386,85 +383,6 @@ namespace Awning::WM::Manager
 				Mouse::input  = LOCK  ;
 				Mouse::side   = side  ;
 			}
-		}
-	}
-
-	namespace Window
-	{
-		void Add(Awning::WM::Window* window)
-		{
-			windowList.emplace_back(window);
-		}
-
-		void Remove(Awning::WM::Window* window)
-		{
-			auto curr = windowList.begin();
-			while (curr != windowList.end())
-			{
-				if (*curr == window)
-					break;
-				curr++;
-			}
-			windowList.erase(curr);
-			Raise(*windowList.begin());
-		}
-
-		void Raise(Awning::WM::Window* window)
-		{
-			auto star = windowList.begin();
-			auto curr = windowList.begin();
-			while (curr != windowList.end())
-			{
-				if (*curr == window)
-					break;
-				curr++;
-			}
-
-			if (curr == windowList.end())
-				return;
-
-			Protocols::WL::Keyboard::ChangeWindow(
-				(wl_client  *)(*star)->Client(), 
-				(wl_resource*)Client::Get::Surface(*star),
-				(wl_client  *)(*curr)->Client(), 
-				(wl_resource*)Client::Get::Surface(*curr)
-			);
-
-			windowList.erase(curr);
-			windowList.emplace_front(window);
-
-			if (window->Raised)
-				window->Raised(window->data);
-		}
-
-		void Resize(Awning::WM::Window* window, int xSize, int ySize)
-		{
-			if (xSize < window->minSize.x)
-				xSize = window->minSize.x;
-			if (ySize < window->minSize.y)
-				ySize = window->minSize.y;
-			if (xSize > window->maxSize.x)
-				xSize = window->maxSize.x;
-			if (ySize > window->maxSize.y)
-				ySize = window->maxSize.y;
-			
-			if (window->Resized)
-				window->Resized(window->data, xSize, ySize);
-
-			window->ConfigSize(xSize, ySize);
-		}
-
-		void Reposition(Awning::WM::Window* window, int xPos, int yPos)
-		{
-			if (window->Moved)
-				window->Moved(window->data, xPos, yPos);
-
-			window->ConfigPos(xPos, yPos);
-		}
-
-		std::list<Awning::WM::Window*> Get()
-		{
-			return windowList;
 		}
 	}
 }

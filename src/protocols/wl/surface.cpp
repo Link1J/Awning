@@ -135,7 +135,7 @@ namespace Awning::Protocols::WL::Surface
 				if (surface.window)
 				{
 					surface.window->Texture(surface.texture);
-					WM::Manager::Window::Raise(surface.window);
+					WM::Window::Manager::Raise(surface.window);
 				}
 				if (surface.type == 1)
 				{
@@ -153,7 +153,7 @@ namespace Awning::Protocols::WL::Surface
 				if (!surface.window->Texture())
 				{
 					surface.window->Texture(surface.texture);
-					WM::Manager::Window::Raise(surface.window);
+					WM::Window::Manager::Raise(surface.window);
 				}
 			}
 
@@ -170,7 +170,7 @@ namespace Awning::Protocols::WL::Surface
 			if (surface.window)
 			{
 				if ((surface.window->XSize() == 0 && surface.window->YSize() == 0) || surface.type == 2 || surface.type == 3)
-					surface.window->ConfigSize(surface.texture->width, surface.texture->height);
+					WM::Window::Manager::Resize(surface.window, surface.texture->width, surface.texture->height);
 
 				surface.window->Mapped(true);
 			}

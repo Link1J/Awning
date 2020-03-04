@@ -1,29 +1,91 @@
 #include "window.hpp"
+#include "protocols/wl/keyboard.hpp"
 
 namespace Awning::WM
 {
-	Window* Window::Create(void* client)
+	std::list<Window*> Window::Manager::windowList;
+	Window* Window::Manager::hoveredOver;
+
+	void Window::Manager::Manage(Window*& window)
 	{
-		Window* window = new Window();
-
-		window->data      = nullptr;
-		window->texture   = nullptr;
-		window->parent    = nullptr;
-		window->mapped    = false;
-		window->pos.x     = INT32_MIN;
-		window->pos.y     = INT32_MIN;
-		window->minSize.x = 1;
-		window->minSize.y = 1;
-		window->maxSize.x = INT32_MAX;
-		window->maxSize.y = INT32_MAX;
-
-		Manager::Window::Add(window);
-		Client::Bind::Window(client, window);
-
-		return window;
+		windowList.emplace_back(window);
 	}
 
-	Window* Window::CreateUnmanged(void* client)
+	void Window::Manager::Unmanage(Window*& window)
+	{
+		auto curr = windowList.begin();
+		while (curr != windowList.end())
+		{
+			if (*curr == window)
+				break;
+			curr++;
+		}
+		windowList.erase(curr);
+		Raise(*windowList.begin());
+	}
+
+	void Window::Manager::Raise(Window*& window)
+	{
+		auto star = windowList.begin();
+		auto curr = windowList.begin();
+		while (curr != windowList.end())
+		{
+			if (*curr == window)
+				break;
+			curr++;
+		}
+
+		if (curr == windowList.end())
+			return;
+
+		Protocols::WL::Keyboard::ChangeWindow(
+			(wl_client  *)(*star)->Client(), 
+			(wl_resource*)Client::Get::Surface(*star),
+			(wl_client  *)(*curr)->Client(), 
+			(wl_resource*)Client::Get::Surface(*curr)
+		);
+
+		windowList.erase(curr);
+		windowList.emplace_front(window);
+
+		if (window->Raised)
+			window->Raised(window->data);
+	}
+
+	void Window::Manager::Resize(Window*& window, int xSize, int ySize)
+	{
+		if (xSize < window->minSize.x)
+			xSize = window->minSize.x;
+		if (ySize < window->minSize.y)
+			ySize = window->minSize.y;
+		if (xSize > window->maxSize.x)
+			xSize = window->maxSize.x;
+		if (ySize > window->maxSize.y)
+			ySize = window->maxSize.y;
+		
+		if (window->Resized)
+			window->Resized(window->data, xSize, ySize);
+
+		window->size.x = xSize;
+		window->size.y = ySize;
+	}
+
+	void Window::Manager::Move(Window*& window, int xPos, int yPos)
+	{
+		if (window->Moved)
+			window->Moved(window->data, xPos, yPos);
+
+		window->pos.x = xPos;
+		window->pos.y = yPos;
+	}
+
+	void Window::Manager::Offset(Window*& window, int xOff, int yOff)
+	{
+		window->offset.x = xOff;
+		window->offset.y = yOff;
+	}
+
+	Window* Window::Create(void* client)
 	{
 		Window* window = new Window();
 
@@ -56,7 +118,7 @@ namespace Awning::WM
 			}
 			window->parent->subwindows.erase(curr);
 		}
-		Manager::Window::Remove(window);
+		Manager::Unmanage(window);
 		Client::Unbind::Window(window);
 		delete window;
 		window = nullptr;
@@ -113,27 +175,7 @@ namespace Awning::WM
 		return needsFrame;
 	}
 
-	void Window::ConfigPos(int xPos, int yPos, bool offset)
-	{
-		if (offset)
-		{
-			this->offset.x = xPos;
-			this->offset.y = yPos;
-		}
-		else
-		{
-			this->pos.x  = xPos;
-			this->pos.y  = yPos;
-		}
-	}
-
-	void Window::ConfigSize(int xSize, int ySize)
-	{
-		this->size.x = xSize;
-		this->size.y = ySize;
-	}
-
-	void Window::SetRaised(Manager::Functions::Window::Raised raised)
+	void Window::SetRaised(Manager::Functions::Raised raised)
 	{
 		Raised = raised;
 	}
@@ -148,7 +190,7 @@ namespace Awning::WM
 		return client;
 	}
 
-	void Window::SetResized(Manager::Functions::Window::Resized resized)
+	void Window::SetResized(Manager::Functions::Resized resized)
 	{
 		Resized = resized;
 	}
@@ -215,7 +257,7 @@ namespace Awning::WM
 		return drawingManaged;                                       
 	}
 
-	void Window::SetMoved(Manager::Functions::Window::Moved moved)
+	void Window::SetMoved(Manager::Functions::Moved moved)
 	{
 		Moved = moved;
 	}

@@ -194,7 +194,9 @@ void Awning::Backend::X11::Start()
 
 	int xOffset = 0;
 
-	for (int a = 1; a <= 1; a++)
+	int displays = atoi(getenv("AWNING_DISPLAYS_COUNT") ? getenv("AWNING_DISPLAYS_COUNT") : "1");
+
+	for (int a = 1; a <= displays; a++)
 	{
 		WindowData data;
 		Window window = XCreateWindow(display, root, 0, 0, width, height, 0, CopyFromParent, InputOutput, CopyFromParent, CWEventMask, &attribs);

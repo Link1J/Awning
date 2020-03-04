@@ -108,7 +108,8 @@ namespace Awning::Protocols::WL::Shell_Surface
 		data.shells[resource].window = WM::Window::Create(wl_client);
 		Surface::data.surfaces[surface].window = data.shells[resource].window;
 
-		WM::Manager::Window::Raise(data.shells[resource].window);
+		WM::Window::Manager::Manage(data.shells[resource].window);
+		WM::Window::Manager::Raise(data.shells[resource].window);
 
 		if (WM::X::surface == nullptr)
 			WM::X::surface = surface;

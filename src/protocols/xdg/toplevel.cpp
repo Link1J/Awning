@@ -141,6 +141,8 @@ namespace Awning::Protocols::XDG::TopLevel
 		data.toplevels[resource].surface = surface;
 		data.toplevels[resource].window = WM::Window::Create(wl_client);
 
+		WM::Window::Manager::Manage(data.toplevels[resource].window);
+
 		WL::Surface::data.surfaces[surface_wl].window = data.toplevels[resource].window;
 		    Surface::data.surfaces[surface   ].window = data.toplevels[resource].window;
 

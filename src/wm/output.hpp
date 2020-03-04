@@ -43,7 +43,6 @@ namespace Awning::WM::Output
 		std::tuple<int,int> Position    (ID id);
 		std::string         Name        (ID id);
 		std::string         Description (ID id);
-		 
 
 		namespace Mode
 		{

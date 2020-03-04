@@ -54,9 +54,10 @@ namespace Awning::Protocols::XDG::Popup
 
 		WL::Surface::data.surfaces[surface_wl].type = 2;
 
+		WM::Window::Manager::Move  (data.popups[resource].window, pointer.x, pointer.y);
+		WM::Window::Manager::Resize(data.popups[resource].window, pointer.width, pointer.height);
+
 		data.popups[resource].window->Data(resource);
-		data.popups[resource].window->ConfigPos(pointer.x, pointer.y);
-		data.popups[resource].window->ConfigSize(pointer.width, pointer.height);
 		data.popups[resource].window->Parent(Surface::data.surfaces[parent].window, true);
 		Surface::data.surfaces[resource].configured = true;
 

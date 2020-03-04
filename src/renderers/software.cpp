@@ -199,7 +199,7 @@ namespace Awning::Renderers::Software
 
 	void Draw()
 	{
-		auto list     = WM::Manager::Window::Get();
+		auto list     = WM::Window::Manager::windowList;
 		auto displays = Backend::GetDisplays();
 		auto [nW, nH] = Backend::Size(displays);
 
