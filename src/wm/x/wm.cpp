@@ -190,7 +190,8 @@ namespace Awning::WM::X
 		xcb_change_property(xcb_conn, XCB_PROP_MODE_REPLACE, screen->root, atoms[_NET_SUPPORTING_WM_CHECK], XCB_ATOM_WINDOW, 32, 1, &window);
 		xcb_change_property(xcb_conn, XCB_PROP_MODE_REPLACE, window, atoms[_NET_SUPPORTING_WM_CHECK], XCB_ATOM_WINDOW, 32, 1, &window);
 		xcb_set_selection_owner(xcb_conn, window, atoms[WM_S0], XCB_CURRENT_TIME);
-		xcb_set_selection_owner(xcb_conn, window, atoms[NET_WM_CM_S0], XCB_CURRENT_TIME); 
+		xcb_set_selection_owner(xcb_conn, window, atoms[NET_WM_CM_S0], XCB_CURRENT_TIME);
+		xcb_unmap_window_checked(xcb_conn, window);
 		
 		xcb_flush(xcb_conn);
 	}
