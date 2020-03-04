@@ -33,6 +33,8 @@ struct Output
 	std::vector<Mode> modes       ;
 	int	              currentMode ;
 	Position          position    ;
+	std::string       name        ;
+	std::string       description ;
 };
 
 namespace Awning
@@ -109,6 +111,18 @@ namespace Awning::WM::Output
 			output->position.y = y;
 		}
 
+		void Name(ID id, std::string name)
+		{
+			::Output* output = (::Output*)id;
+			output->name = name;
+		}
+
+		void Description(ID id, std::string description)
+		{
+			::Output* output = (::Output*)id;
+			output->description = description;
+		}
+
 		namespace Mode
 		{
 			void Resolution(ID id, int mode, int width, int height)
@@ -181,6 +195,18 @@ namespace Awning::WM::Output
 				output->position.x,
 				output->position.y
 			};
+		}
+
+		std::string Name(ID id)
+		{
+			::Output* output = (::Output*)id;
+			return output->name;
+		}
+
+		std::string Description(ID id)
+		{
+			::Output* output = (::Output*)id;
+			return output->description;
 		}
 
 		namespace Mode

@@ -35,14 +35,14 @@ namespace Awning::Protocols::ZXDG::Output
 		auto [sx, sy] = WM::Output::Get::Mode::Resolution(outputID, WM::Output::Get::CurrentMode(outputID));
 
 		if (version >= ZXDG_OUTPUT_V1_NAME_SINCE_VERSION       )
-			zxdg_output_v1_send_name       (resource, WM::Output::Get::Model       (outputID).c_str());
+			zxdg_output_v1_send_name       (resource, WM::Output::Get::Name       (outputID).c_str());
 		if (version >= ZXDG_OUTPUT_V1_DESCRIPTION_SINCE_VERSION)
-			zxdg_output_v1_send_description(resource, WM::Output::Get::Manufacturer(outputID).c_str());
+			zxdg_output_v1_send_description(resource, WM::Output::Get::Description(outputID).c_str());
 
 		zxdg_output_v1_send_logical_position(resource, px, py);
 		zxdg_output_v1_send_logical_size    (resource, sx, sy);
 
-		zxdg_output_v1_send_done(resource);
+		//zxdg_output_v1_send_done(resource);
 
 		return resource;
 	}

@@ -38,7 +38,7 @@ namespace Awning::Protocols::WLR::Head
 		void Destroy(struct wl_client* client, struct wl_resource* resource);
 	}
 
-	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, WM::Output::ID outputId);
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, WM::Output::ID outputId, wl_resource* manager);
 	void Destroy(struct wl_resource* resource);
 	void SendData(wl_resource* resource);
 }
@@ -59,7 +59,7 @@ namespace Awning::Protocols::WLR::Mode
 		void Destroy(struct wl_client* client, struct wl_resource* resource);
 	}
 
-	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, WM::Output::ID outputId, int mode);
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, WM::Output::ID outputId, int mode, wl_resource* head);
 	void Destroy(struct wl_resource* resource);
 	void SendData(wl_resource* resource);
 }

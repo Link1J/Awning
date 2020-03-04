@@ -45,6 +45,17 @@ namespace Awning::WM
 
 	void Window::Destory(Window*& window)
 	{
+		if (window->parent)
+		{
+			auto curr = window->parent->subwindows.begin();
+			while (curr != window->parent->subwindows.end())
+			{
+				if (*curr == window)
+					break;
+				curr++;
+			}
+			window->parent->subwindows.erase(curr);
+		}
 		Manager::Window::Remove(window);
 		Client::Unbind::Window(window);
 		delete window;

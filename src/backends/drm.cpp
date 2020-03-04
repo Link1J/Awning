@@ -163,6 +163,8 @@ void CheckData()
 				Output::Set::Model       (output, "N/A"                        );
 				Output::Set::Size        (output, conn.mm_width, conn.mm_height);
 				Output::Set::Position    (output, 0, 0                         );
+				Output::Set::Name        (output, "N/A"                        );
+				Output::Set::Description (output, "N/A"                        );
 
 				drm_mode_modeinfo* mode_ptr = (drm_mode_modeinfo*)conn.modes_ptr;
 				for (int a = 0; a < conn.count_modes; a++)

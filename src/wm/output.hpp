@@ -20,7 +20,9 @@ namespace Awning::WM::Output
 		void Manufacturer(ID id, std::string manufacturer);
 		void Size        (ID id, int width, int height   );
 		void Position    (ID id, int x, int y            );
-
+		void Name        (ID id, std::string name        );
+		void Description (ID id, std::string description );
+		 
 		namespace Mode
 		{
 			void Resolution (ID id, int mode, int width, int height);
@@ -39,6 +41,9 @@ namespace Awning::WM::Output
 		std::string         Manufacturer(ID id);
 		std::tuple<int,int> Size        (ID id);
 		std::tuple<int,int> Position    (ID id);
+		std::string         Name        (ID id);
+		std::string         Description (ID id);
+		 
 
 		namespace Mode
 		{

@@ -1,6 +1,9 @@
 #include "output_manager.hpp"
 #include "log.hpp"
 #include "backends/manager.hpp"
+#include <unistd.h>
+
+extern uint32_t NextSerialNum();
 
 namespace Awning::Protocols::WLR::Output_Manager
 {
@@ -15,7 +18,7 @@ namespace Awning::Protocols::WLR::Output_Manager
 		void Create_Configuration(struct wl_client* client, struct wl_resource* resource, uint32_t id, uint32_t serial)
 		{
 			Log::Function::Called("Protocols::WLR::Output_Manager::Interface");
-			Output_Configuration::Create(client, 1, id);
+			Output_Configuration::Create(client, wl_resource_get_version(resource), id);
 		}
 
 		void Stop(struct wl_client* client, struct wl_resource* resource)
@@ -46,22 +49,11 @@ namespace Awning::Protocols::WLR::Output_Manager
 		auto displays = Backend::GetDisplays();
 		for (auto display : displays)
 		{
-			auto head = Head::Create(wl_client, version, 0, display.output);
-			zwlr_output_manager_v1_send_head(resource, head);
+			auto head = Head::Create(wl_client, version, 0, display.output, resource);
 			Head::SendData(head);
-
-			for (int a = 0; a < WM::Output::Get::NumberOfModes(display.output); a++)
-			{
-				auto mode = Mode::Create(wl_client, version, 0, display.output, a);
-				zwlr_output_head_v1_send_mode(head, mode);
-				Mode::SendData(mode);
-
-				if (WM::Output::Get::Mode::Current(display.output, a))
-					zwlr_output_head_v1_send_current_mode(head, mode);
-			}
-
-			//zwlr_output_head_v1_send_finished(resource);
 		}
+
+		zwlr_output_manager_v1_send_done(resource, NextSerialNum());
 	}
 }
 
@@ -80,17 +72,28 @@ namespace Awning::Protocols::WLR::Head
 
 		auto [mX, mY] = WM::Output::Get::Size        (outputId);
 		auto [pX, pY] = WM::Output::Get::Position    (outputId);
-		auto manuf    = WM::Output::Get::Manufacturer(outputId);
-		auto model    = WM::Output::Get::Model       (outputId);
+		auto manuf    = WM::Output::Get::Description (outputId);
+		auto model    = WM::Output::Get::Name        (outputId);
 
 		zwlr_output_head_v1_send_name(resource, model.c_str());
 		zwlr_output_head_v1_send_description(resource, manuf.c_str());
-		zwlr_output_head_v1_send_position(resource, pX, pY);
 		zwlr_output_head_v1_send_enabled(resource, true);
+		zwlr_output_head_v1_send_position(resource, pX, pY);
+		zwlr_output_head_v1_send_scale(resource, wl_fixed_from_int(1));
+		zwlr_output_head_v1_send_transform(resource, WL_OUTPUT_TRANSFORM_NORMAL);
 		zwlr_output_head_v1_send_physical_size(resource, mX, mY);
+
+		for (int a = 0; a < WM::Output::Get::NumberOfModes(outputId); a++)
+		{
+			auto mode = Mode::Create(wl_resource_get_client(resource), wl_resource_get_version(resource), 0, outputId, a, resource);
+			Mode::SendData(mode);
+
+			if (WM::Output::Get::Mode::Current(outputId, a))
+				zwlr_output_head_v1_send_current_mode(resource, mode);
+		}
 	}
 
-	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, WM::Output::ID outputId)
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, WM::Output::ID outputId, wl_resource* manager)
 	{
 		Log::Function::Called("Protocols::WLR::Head");
 		
@@ -100,6 +103,7 @@ namespace Awning::Protocols::WLR::Head
 			return resource;
 		}
 		wl_resource_set_implementation(resource, nullptr, nullptr, Destroy);
+		zwlr_output_manager_v1_send_head(manager, resource);
 
 		Head::data.resource_to_outputId[resource] = outputId;
 		Head::data.outputId_to_resource[outputId].emplace(resource);
@@ -140,13 +144,13 @@ namespace Awning::Protocols::WLR::Mode
 		zwlr_output_mode_v1_send_size     (resource, mX, mY );
 		zwlr_output_mode_v1_send_refresh  (resource, refresh);
 
-		if (WM::Output::Get::Mode::Prefered(outputId, mode))
-			zwlr_output_mode_v1_send_preferred(resource);
+		//if (WM::Output::Get::Mode::Prefered(outputId, mode))
+		//	zwlr_output_mode_v1_send_preferred(resource);
 
 		//zwlr_output_mode_v1_send_finished(resource);
 	}
 
-	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, WM::Output::ID outputId, int mode)
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, WM::Output::ID outputId, int mode, wl_resource* head)
 	{
 		Log::Function::Called("Protocols::WLR::Mode");
 		
@@ -156,6 +160,7 @@ namespace Awning::Protocols::WLR::Mode
 			return resource;
 		}
 		wl_resource_set_implementation(resource, nullptr, nullptr, Destroy);
+		zwlr_output_head_v1_send_mode(head, resource);
 
 		Mode::data.resource_to_outputId[resource] = outputId;
 		Mode::data.outputId_to_resource[outputId].emplace(resource);
