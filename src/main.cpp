@@ -36,6 +36,8 @@
 
 #include "protocols/zwp/dmabuf.hpp"
 
+#include "protocols/kde/decoration.hpp"
+
 #include "wm/x/wm.hpp"
 #include "wm/window.hpp"
 #include "wm/client.hpp"
@@ -141,13 +143,13 @@ int main(int argc, char* argv[])
 	Awning::Protocols::ZXDG::Output_Manager     ::Add(Awning::Server::data.display);
 	Awning::Protocols::ZWP ::Linux_Dmabuf       ::Add(Awning::Server::data.display);
 	Awning::Protocols::WL  ::Subcompositor      ::Add(Awning::Server::data.display);
+	Awning::Protocols::KDE ::Decoration_Manager ::Add(Awning::Server::data.display);
 
 	wl_display_init_shm(Awning::Server::data.display);
 
 	if (!noX)
 	{
 		Awning::WM::X::Server::Setup();
-		Awning::WM::X::Server::Run  ();
 	}
 
 	const char* launchArgs1[] = { "falkon", "-platform", "wayland", NULL };
@@ -160,7 +162,7 @@ int main(int argc, char* argv[])
 	int display = Awning::WM::X::Server::display;
 
 	setenv("DISPLAY", fmt::format(":{}", display).c_str(), 1);
-	setenv("MOZ_ENABLE_WAYLAND", "1", 1);
+	//setenv("MOZ_ENABLE_WAYLAND", "1", 1);
 
 	signal(SIGINT, on_term_signal);
 

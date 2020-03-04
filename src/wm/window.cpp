@@ -10,8 +10,8 @@ namespace Awning::WM
 		window->texture   = nullptr;
 		window->parent    = nullptr;
 		window->mapped    = false;
-		window->pos.x     = 0;
-		window->pos.y     = 0;
+		window->pos.x     = INT32_MIN;
+		window->pos.y     = INT32_MIN;
 		window->minSize.x = 1;
 		window->minSize.y = 1;
 		window->maxSize.x = INT32_MAX;
@@ -31,8 +31,8 @@ namespace Awning::WM
 		window->texture   = nullptr;
 		window->parent    = nullptr;
 		window->mapped    = false;
-		window->pos.x     = 0;
-		window->pos.y     = 0;
+		window->pos.x     = INT32_MIN;
+		window->pos.y     = INT32_MIN;
 		window->minSize.x = 1;
 		window->minSize.y = 1;
 		window->maxSize.x = INT32_MAX;

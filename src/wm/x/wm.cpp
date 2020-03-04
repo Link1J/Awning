@@ -8,6 +8,8 @@
 #include "protocols/wl/surface.hpp"
 
 #include "renderers/manager.hpp"
+#include "wm/output.hpp"
+#include "backends/manager.hpp"
 
 #include <fmt/format.h>
 
@@ -191,30 +193,6 @@ namespace Awning::WM::X
 		xcb_set_selection_owner(xcb_conn, window, atoms[NET_WM_CM_S0], XCB_CURRENT_TIME); 
 		
 		xcb_flush(xcb_conn);
-	}	
-
-	void UpdateTexture(::Window e)
-	{
-		return;
-
-		//XWindowAttributes attr;
-		//XGetWindowAttributes(display, e, &attr);
-//
-		//if (!windows[e]->Texture())
-		//	windows[e]->Texture(new WM::Texture());
-//
-		//auto window = windows[e];
-		//auto texture = window->Texture();
-//
-		//XRenderPictFormat* format = XRenderFindVisualFormat(display, attr.visual);
-		//bool hasAlpha             = (format->type == PictTypeDirect && format->direct.alphaMask);
-		//int x                     = attr.x;
-		//int y                     = attr.y;
-		//int width                 = attr.width;
-		//int height                = attr.height;
-
-		//Manager::Window::Reposition(window, x    , y     );
-		//Manager::Window::Resize    (window, width, height);
 	}
 
 	void Resized(void* data, int width, int height)
@@ -311,11 +289,18 @@ namespace Awning::WM::X
 						XCB_CONFIG_WINDOW_BORDER_WIDTH;
 
 					uint32_t values[] = {e->x, e->y, e->width, e->height, 0};
+
+					auto display = Backend::GetDisplays()[0];
+					auto [sx, sy] = WM::Output::Get::Mode::Resolution(display.output, display.mode);
+
+					if (e->x == 0) e->x = sx/2. - e->width /2.;
+					if (e->y == 0) e->y = sy/2. - e->height/2.;
+
 					xcb_configure_window(xcb_conn, e->window, mask, values);
 					xcb_flush(xcb_conn);
 
-					Manager::Window::Reposition(windows[e->window], e->x    , e->y     );
-					Manager::Window::Resize    (windows[e->window], e->width, e->height);
+					windows[e->window]->ConfigPos (e->x    , e->y     );
+					windows[e->window]->ConfigSize(e->width, e->height);
 				}
 				break;
 			case XCB_MAP_REQUEST:
@@ -326,6 +311,14 @@ namespace Awning::WM::X
 					const uint32_t value_list = XCB_EVENT_MASK_FOCUS_CHANGE | XCB_EVENT_MASK_PROPERTY_CHANGE;
 					xcb_change_window_attributes_checked(xcb_conn, e->window, XCB_CW_EVENT_MASK, &value_list);
 					xcb_map_window_checked(xcb_conn, e->window);
+
+					auto display = Backend::GetDisplays()[0];
+					auto [sx, sy] = WM::Output::Get::Mode::Resolution(display.output, display.mode);
+
+					if (windows[e->window]->XPos() == INT32_MIN)
+						windows[e->window]->ConfigPos(sx/2. - windows[e->window]->XSize()/2., windows[e->window]->YPos());
+					if (windows[e->window]->YPos() == INT32_MIN)
+						windows[e->window]->ConfigPos(windows[e->window]->XPos(), sy/2. - windows[e->window]->YSize()/2.);
 
         			windows[e->window]->Mapped(true);
 					WM::Manager::Window::Raise(windows[e->window]);
