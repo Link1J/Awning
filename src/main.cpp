@@ -1,6 +1,8 @@
 #define MESA_EGL_NO_X11_HEADERS
 #define EGL_NO_X11
 
+#include <fmt/format.h>
+
 #include "backends/manager.hpp"
 
 #include <wayland-server.h>
@@ -45,11 +47,9 @@
 #include "wm/manager.hpp"
 #include "wm/x/server.hpp"
 
-#include "log.hpp"
+#include <spdlog/spdlog.h>
 
 #include "renderers/manager.hpp"
-
-#include <fmt/format.h>
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 
 	Awning::Server::data.display = wl_display_create(); 
 	const char* socket = wl_display_add_socket_auto(Awning::Server::data.display);
-	std::cout << "Wayland Socket: " << socket << std::endl;
+	spdlog::info("Wayland Socket: {}", socket);
 
 	Awning::Server::data.client_listener.notify = client_created;
 
@@ -205,8 +205,6 @@ void on_term_signal(int signal_number)
 
 void client_created(struct wl_listener* listener, void* data)
 {
-	Log::Function::Called("");
-
 	Awning::WM::Client::Create(data);
 }
 

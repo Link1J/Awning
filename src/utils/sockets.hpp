@@ -15,7 +15,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "log.hpp"
+#include <spdlog/spdlog.h>
 
 #include <fmt/format.h>
 
@@ -45,12 +45,10 @@ namespace Awning::Utils::Sockets
 
 		fd = socket(PF_LOCAL, SOCK_STREAM | SOCK_CLOEXEC, 0);
 		if (fd < 0) {
-			Log::Report::Error(
-				fmt::format(
-					"Failed to create socket {}{}",
-					addr->sun_path[0] ? addr->sun_path[0] : '@',
-					addr->sun_path + 1
-				)
+			spdlog::error(
+				"Failed to create socket {}{}",
+				addr->sun_path[0] ? addr->sun_path[0] : '@',
+				addr->sun_path + 1
 			);
 			return -1;
 		}
@@ -60,23 +58,19 @@ namespace Awning::Utils::Sockets
 		}
 		if (bind(fd, (struct sockaddr*)addr, size) < 0) {
 			rc = errno;
-			Log::Report::Error(
-				fmt::format(
-					"Failed to bind socket {}{}",
-					addr->sun_path[0] ? addr->sun_path[0] : '@',
-					addr->sun_path + 1
-				)
+			spdlog::error(
+				"Failed to bind socket {}{}",
+				addr->sun_path[0] ? addr->sun_path[0] : '@',
+				addr->sun_path + 1
 			);
 			goto cleanup;
 		}
 		if (listen(fd, 1) < 0) {
 			rc = errno;
-			Log::Report::Error(
-				fmt::format(
-					"Failed to listen to socket {}{}",
-					addr->sun_path[0] ? addr->sun_path[0] : '@',
-					addr->sun_path + 1
-				)
+			spdlog::error(
+				"Failed to listen to socket {}{}",
+				addr->sun_path[0] ? addr->sun_path[0] : '@',
+				addr->sun_path + 1
 			);
 			goto cleanup;
 		}

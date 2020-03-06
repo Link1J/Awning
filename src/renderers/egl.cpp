@@ -32,14 +32,14 @@ namespace Awning::Renderers::EGL
 	EGLSurface surface;
 
 	static void eglLog(EGLenum error, const char *command, EGLint msg_type, EGLLabelKHR thread, EGLLabelKHR obj, const char *msg) {
-		std::cout << fmt::format("[EGL] command: {}, error: 0x{:X}, message: \"{}\"\n", command, error, msg);
+		spdlog::error("[EGL] command: {}, error: 0x{:X}, message: \"{}\"\n", command, error, msg);
 	}
 
 	void loadEGLProc(void* proc_ptr, const char* name)
 	{
 		void* proc = (void*)eglGetProcAddress(name);
 		if (proc == NULL) {
-			Log::Report::Error(fmt::format("eglGetProcAddress({}) failed", name));
+			spdlog::error("eglGetProcAddress({}) failed", name);
 			abort();
 		}
 		*(void**)proc_ptr = proc;
@@ -133,13 +133,13 @@ namespace Awning::Renderers::EGL
 
 		auto extensions = std::string(eglQueryString(display, EGL_EXTENSIONS));
 
-		std::cout << "EGL Vendor    : " << eglQueryString(display, EGL_VENDOR     ) << "\n";
-		std::cout << "EGL Version   : " << eglQueryString(display, EGL_VERSION    ) << "\n";
-		//std::cout << "EGL Extensions: " << extensions                               << "\n";
-		std::cout << "GL Vendor     : " << glGetString(GL_VENDOR                  ) << "\n";
-		std::cout << "GL Renderer   : " << glGetString(GL_RENDERER                ) << "\n";
-		std::cout << "GL Version    : " << glGetString(GL_VERSION                 ) << "\n";
-		std::cout << "GLSL Version  : " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
+		spdlog::info("EGL Vendor    : {}", eglQueryString(display, EGL_VENDOR     ));
+		spdlog::info("EGL Version   : {}", eglQueryString(display, EGL_VERSION    ));
+		//spdlog::info("EGL Extensions: {}", extensions                              );
+		spdlog::info("GL Vendor     : {}", glGetString(GL_VENDOR                  ));
+		spdlog::info("GL Renderer   : {}", glGetString(GL_RENDERER                ));
+		spdlog::info("GL Version    : {}", glGetString(GL_VERSION                 ));
+		spdlog::info("GLSL Version  : {}", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
 		if (extensions.find("EGL_KHR_image_base") == std::string::npos)
 			 std::cerr << "EGL Context does not support \'" "EGL_KHR_image_base" "\'\n";
@@ -161,7 +161,7 @@ namespace Awning::Renderers::EGL
 		{
 		    glGetShaderInfoLog(shader, 512, NULL, infoLog);
 
-		    Log::Report::Error(fmt::format("Shader Compilation Failed {}", infoLog), function);
+		    spdlog::error("({}:{}) Shader Compilation Failed {}", function.file_name(), function.line(), infoLog);
 		}
 	}	
 
@@ -180,7 +180,7 @@ namespace Awning::Renderers::EGL
 		{
 		    glGetShaderInfoLog(program, 512, NULL, infoLog);
 
-		    Log::Report::Error(fmt::format("Program Linking Failed {}", infoLog), function);
+			spdlog::error("({}:{}) Program Linking Failed {}", function.file_name(), function.line(), infoLog);
 		}
 	}
 }

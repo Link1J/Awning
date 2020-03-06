@@ -5,7 +5,6 @@ project (Awning VERSION 1.0 LANGUAGES CXX C)
 
 set(SOURCES
     src/main.cpp
-    src/log.cpp
 
     src/backends/X11.cpp
     src/backends/manager.cpp
@@ -84,7 +83,9 @@ set(SOURCE_WAYLAND
 
 #------------------------------------------------------------------------------
 
-add_subdirectory(external/fmt-6.1.2)
+add_subdirectory(external/fmt)
+add_subdirectory(external/spdlog)
+add_subdirectory(external/Lyra)
 
 #------------------------------------------------------------------------------
 
@@ -97,7 +98,6 @@ find_package(Wayland COMPONENTS Client Server Cursor Egl REQUIRED)
 find_package(UDev REQUIRED)
 find_package(Libinput REQUIRED)
 find_package(OpenGL REQUIRED)
-#find_package(fmt REQUIRED)
 find_package(EGL REQUIRED)
 find_package(XCB COMPONENTS XCB ATOM COMPOSITE DRI2 DRI3 EWMH ICCCM XFIXES XKB RENDER SHAPE REQUIRED)
 
@@ -192,6 +192,7 @@ target_link_libraries(Awning PRIVATE
     XCB::XKB
     XCB::RENDER
     XCB::SHAPE
+    spdlog::spdlog
 
     gbm
     GLESv2

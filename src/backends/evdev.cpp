@@ -1,7 +1,7 @@
 #include "protocols/wl/pointer.hpp"
 #include "protocols/wl/keyboard.hpp"
 
-#include "log.hpp"
+#include <spdlog/spdlog.h>
 
 #include <linux/fb.h>
 #include <linux/kd.h>

@@ -1,7 +1,7 @@
 #include "pointer.hpp"
 #include "shell_surface.hpp"
 #include "surface.hpp"
-#include "log.hpp"
+#include <spdlog/spdlog.h>
 
 #include <linux/input.h>
 
@@ -15,8 +15,6 @@ namespace Awning::Protocols::WL::Pointer
 	const struct wl_pointer_interface interface = {
 		.set_cursor = [](struct wl_client *client, struct wl_resource *resource, uint32_t serial, struct wl_resource *surface, int32_t hotspot_x, int32_t hotspot_y) 
 		{
-			Log::Function::Called("Protocols::WL::Pointer::interface.set_cursor");
-
 			if (data.inUse)
 			{
 				data.pointers[data.inUse].inUse = false;	
@@ -40,7 +38,6 @@ namespace Awning::Protocols::WL::Pointer
 		},
 		.release    = [](struct wl_client* client, struct wl_resource* resource) 
 		{
-			Log::Function::Called("Protocols::WL::Pointer::interface.release");
 			Awning::Protocols::WL::Pointer::Destroy(resource);
 		},
 	};
@@ -49,8 +46,6 @@ namespace Awning::Protocols::WL::Pointer
 
 	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id)
 	{
-		Log::Function::Called("Protocols::WL::Pointer");
-
 		struct wl_resource* resource = wl_resource_create(wl_client, &wl_pointer_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);

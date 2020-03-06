@@ -1,5 +1,5 @@
 #include "data_device_manager.hpp"
-#include "log.hpp"
+#include <spdlog/spdlog.h>
 
 #include "backends/manager.hpp"
 
@@ -19,21 +19,17 @@ namespace Awning::Protocols::WL::Data_Device_Manager
 	{
 		void Create_Data_Source(struct wl_client* client, struct wl_resource* resource, uint32_t id)
         {
-		    Log::Function::Called("Protocols::WL::Data_Device_Manager::Interface");
 			Data_Source::Create(client, wl_resource_get_version(resource), id);
         }
 
 		void Get_Data_Device(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* seat)
         {
-		    Log::Function::Called("Protocols::WL::Data_Device_Manager::Interface");
 			Data_Device::Create(client, wl_resource_get_version(resource), id, seat);
         }
     }
 
 	void Bind(struct wl_client* wl_client, void* data, uint32_t version, uint32_t id) 
-	{
-		Log::Function::Called("Protocols::WL::Data_Device_Manager");
-		
+	{		
 		struct wl_resource* resource = wl_resource_create(wl_client, &wl_data_device_manager_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);

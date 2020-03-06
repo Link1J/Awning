@@ -1,5 +1,5 @@
 #include "output_manager.hpp"
-#include "log.hpp"
+#include <spdlog/spdlog.h>
 #include "backends/manager.hpp"
 #include <unistd.h>
 
@@ -17,13 +17,11 @@ namespace Awning::Protocols::WLR::Output_Manager
 	{
 		void Create_Configuration(struct wl_client* client, struct wl_resource* resource, uint32_t id, uint32_t serial)
 		{
-			Log::Function::Called("Protocols::WLR::Output_Manager::Interface");
 			Output_Configuration::Create(client, wl_resource_get_version(resource), id);
 		}
 
 		void Stop(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("Protocols::WLR::Output_Manager::Interface");
 			Output_Manager::data.sendDisplays[resource] = false;
 		}
 	}
@@ -35,8 +33,6 @@ namespace Awning::Protocols::WLR::Output_Manager
 
 	void Bind(struct wl_client* wl_client, void* data, uint32_t version, uint32_t id)
 	{
-		Log::Function::Called("Protocols::WLR::Output_Manager");
-
 		struct wl_resource* resource = wl_resource_create(wl_client, &zwlr_output_manager_v1_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
@@ -63,7 +59,9 @@ namespace Awning::Protocols::WLR::Head
 
 	namespace Interface
 	{
-		void Destroy(struct wl_client* client, struct wl_resource* resource);
+		void Destroy(struct wl_client* client, struct wl_resource* resource)
+		{
+		}
 	}
 
 	void SendData(wl_resource* resource)
@@ -94,9 +92,7 @@ namespace Awning::Protocols::WLR::Head
 	}
 
 	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, WM::Output::ID outputId, wl_resource* manager)
-	{
-		Log::Function::Called("Protocols::WLR::Head");
-		
+	{		
 		struct wl_resource* resource = wl_resource_create(wl_client, &zwlr_output_head_v1_interface, version, 0);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
@@ -113,8 +109,6 @@ namespace Awning::Protocols::WLR::Head
 
 	void Destroy(struct wl_resource* resource)
 	{
-		Log::Function::Called("Protocols::WLR::Head");
-
 		if (!data.resource_to_outputId.contains(resource))
 			return;
 
@@ -130,7 +124,9 @@ namespace Awning::Protocols::WLR::Mode
 
 	namespace Interface
 	{
-		void Destroy(struct wl_client* client, struct wl_resource* resource);
+		void Destroy(struct wl_client* client, struct wl_resource* resource)
+		{			
+		}
 	}
 
 	void SendData(wl_resource* resource)
@@ -151,9 +147,7 @@ namespace Awning::Protocols::WLR::Mode
 	}
 
 	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, WM::Output::ID outputId, int mode, wl_resource* head)
-	{
-		Log::Function::Called("Protocols::WLR::Mode");
-		
+	{		
 		struct wl_resource* resource = wl_resource_create(wl_client, &zwlr_output_mode_v1_interface, version, 0);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
@@ -171,8 +165,6 @@ namespace Awning::Protocols::WLR::Mode
 
 	void Destroy(struct wl_resource* resource)
 	{
-		Log::Function::Called("Protocols::WLR::Mode");
-
 		if (!data.resource_to_outputId.contains(resource))
 			return;
 
@@ -199,34 +191,27 @@ namespace Awning::Protocols::WLR::Output_Configuration
 	{
 		void Enable_Head(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* head)
 		{
-			Log::Function::Called("Protocols::WLR::Output_Configuration::Interface");
 		}
 
 		void Disable_Head(struct wl_client* client, struct wl_resource* resource, struct wl_resource* head)
 		{
-			Log::Function::Called("Protocols::WLR::Output_Configuration::Interface");
 		}
 
 		void Apply(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("Protocols::WLR::Output_Configuration::Interface");
 		}
 
 		void Test(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("Protocols::WLR::Output_Configuration::Interface");
 		}
 
 		void Destroy(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("Protocols::WLR::Output_Configuration::Interface");
 		}
 	}
 
 	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id)
-	{
-		Log::Function::Called("Protocols::WLR::Output_Configuration");
-		
+	{		
 		struct wl_resource* resource = wl_resource_create(wl_client, &zwlr_output_configuration_v1_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
@@ -239,6 +224,5 @@ namespace Awning::Protocols::WLR::Output_Configuration
 
 	void Destroy(struct wl_resource* resource)
 	{
-		Log::Function::Called("Protocols::WLR::Output_Configuration");
 	}
 }

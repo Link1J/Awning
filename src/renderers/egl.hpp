@@ -9,7 +9,9 @@
 
 #include <gbm.h>
 
-#include "log.hpp"
+#include <spdlog/spdlog.h>
+
+#include <experimental/source_location>
 
 extern PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXT;
 extern PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC eglCreatePlatformWindowSurfaceEXT;

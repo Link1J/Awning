@@ -1,5 +1,5 @@
 #include "config.hpp"
-#include "log.hpp"
+#include <spdlog/spdlog.h>
 
 #include "config_output.hpp"
 
@@ -17,24 +17,19 @@ namespace Awning::Protocols::AWN::Config
 	{
 		void Destroy(struct wl_client *client,struct wl_resource *resource)
 		{
-			Log::Function::Called("Protocols::AWN::Config::Interface");
 		}
 
 		void Renderer(struct wl_client *client, struct wl_resource *resource, uint32_t id)
 		{
-			Log::Function::Called("Protocols::AWN::Config::Interface");
 		}
 
 		void Output(struct wl_client *client, struct wl_resource *resource, uint32_t id)
 		{
-			Log::Function::Called("Protocols::AWN::Config::Interface");
 		}
 	}
 
 	void Bind(struct wl_client* wl_client, void* data, uint32_t version, uint32_t id) 
 	{
-		Log::Function::Called("Protocols::AWN::Config");
-
 		struct wl_resource* resource = wl_resource_create(wl_client, &awn_config_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);

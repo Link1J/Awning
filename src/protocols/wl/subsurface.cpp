@@ -1,5 +1,5 @@
 #include "subsurface.hpp"
-#include "log.hpp"
+#include <spdlog/spdlog.h>
 #include "renderers/manager.hpp"
 #include "wm/window.hpp"
 #include "surface.hpp"
@@ -32,41 +32,33 @@ namespace Awning::Protocols::WL::Subsurface
 	{
 		void Destroy(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("Protocols::WL::Subsurface::Interface");
 			Subsurface::Destroy(resource);
 		}
 
 		void Set_Position(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y)
 		{
-			Log::Function::Called("Protocols::WL::Subsurface::Interface");
 			WM::Window::Manager::Move(data.instances[resource].window, x, y);
 		}
 
 		void Place_Above(struct wl_client* client, struct wl_resource* resource, struct wl_resource* sibling)
 		{
-			Log::Function::Called("Protocols::WL::Subsurface::Interface");
 		}
 
 		void Place_Below(struct wl_client* client, struct wl_resource* resource, struct wl_resource* sibling)
 		{
-			Log::Function::Called("Protocols::WL::Subsurface::Interface");
 		}
 
 		void Set_Sync(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("Protocols::WL::Subsurface::Interface");
 		}
 
 		void Set_Desync(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("Protocols::WL::Subsurface::Interface");
 		}
 	}
 
 	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, struct wl_resource* surface, struct wl_resource* parent) 
 	{
-		Log::Function::Called("Protocols::WL::Subsurface");
-
 		struct wl_resource* resource = wl_resource_create(wl_client, &wl_subsurface_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
@@ -87,8 +79,6 @@ namespace Awning::Protocols::WL::Subsurface
 
 	void Destroy(struct wl_resource* resource)
 	{
-		Log::Function::Called("Protocols::WL::Subsurface");
-
 		if (!data.instances.contains(resource))
 			return;
 

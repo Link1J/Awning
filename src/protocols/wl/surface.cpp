@@ -1,5 +1,5 @@
 #include "surface.hpp"
-#include "log.hpp"
+#include <spdlog/spdlog.h>
 #include "protocols/handler/xdg-shell.h"
 #include "renderers/manager.hpp"
 
@@ -72,21 +72,16 @@ namespace Awning::Protocols::WL::Surface
 	{
 		void Destroy(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("Protocols::WL::Surface::Interface");
 			Surface::Destroy(resource);
 		}
 
 		void Attach(struct wl_client* client, struct wl_resource* resource, struct wl_resource* buffer, int32_t x, int32_t y)
 		{
-			Log::Function::Called("Protocols::WL::Surface::Interface");
-
 			data.surfaces[resource].buffer = buffer;
 		}
 
 		void Damage(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
 		{
-			Log::Function::Called("Protocols::WL::Surface::Interface");
-
 			auto& surface = data.surfaces[resource];
 			surface.damage.xp = x;
 			surface.damage.yp = y;
@@ -96,14 +91,11 @@ namespace Awning::Protocols::WL::Surface
 
 		void Release_Callback(struct wl_resource* resource)
 		{
-			Log::Function::Called("Protocols::WL::Surface::Interface");
 			frameCallbacks[resource].alive = false;
 		}
 
 		void Frame(struct wl_client* client, struct wl_resource* resource, uint32_t callback)
 		{
-			Log::Function::Called("Protocols::WL::Surface::Interface");
-
 			struct wl_resource* resource_cp = wl_resource_create(client, &wl_callback_interface, 1, callback);
 			if (resource == nullptr) {
 				wl_client_post_no_memory(client);
@@ -116,18 +108,14 @@ namespace Awning::Protocols::WL::Surface
 
 		void Set_Opaque_Region(struct wl_client* client, struct wl_resource* resource, struct wl_resource* region)
 		{
-			Log::Function::Called("Protocols::WL::Surface::Interface");
 		}
 
 		void Set_Input_Region(struct wl_client* client, struct wl_resource* resource, struct wl_resource* region)
 		{
-			Log::Function::Called("Protocols::WL::Surface::Interface");
 		}
 
 		void Commit(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("Protocols::WL::Surface::Interface");
-
 			auto& surface = data.surfaces[resource];
 
 			if (surface.buffer == nullptr)
@@ -181,18 +169,14 @@ namespace Awning::Protocols::WL::Surface
 
 		void Set_Buffer_Transform(struct wl_client* client, struct wl_resource* resource, int32_t transform)
 		{
-			Log::Function::Called("Protocols::WL::Surface::Interface");
 		}
 
 		void Set_Buffer_Scale(struct wl_client* client, struct wl_resource* resource, int32_t scale)
 		{
-			Log::Function::Called("Protocols::WL::Surface::Interface");
 		}
 
 		void Damage_Buffer(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
 		{
-			Log::Function::Called("Protocols::WL::Surface::Interface");
-
 			auto& surface = data.surfaces[resource];
 			surface.damage.xp = x;
 			surface.damage.yp = y;
@@ -203,8 +187,6 @@ namespace Awning::Protocols::WL::Surface
 
 	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id) 
 	{
-		Log::Function::Called("Protocols::WL::Surface");
-
 		struct wl_resource* resource = wl_resource_create(wl_client, &wl_surface_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
@@ -221,8 +203,6 @@ namespace Awning::Protocols::WL::Surface
 
 	void Destroy(struct wl_resource* resource)
 	{
-		Log::Function::Called("Protocols::WL::Surface");
-
 		if (!data.surfaces.contains(resource))
 			return;
 

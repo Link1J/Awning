@@ -3,7 +3,7 @@
 
 #include <unordered_map>
 
-#include "log.hpp"
+#include <spdlog/spdlog.h>
 #include "../window.hpp"
 #include "protocols/wl/surface.hpp"
 
@@ -125,7 +125,7 @@ namespace Awning::WM::X
 
 		int rc = xcb_connection_has_error(xcb_conn);
 		if (rc) {
-			Log::Report::Error(fmt::format("xcb connect failed: {}", rc));
+			spdlog::error("xcb connect failed: {}", rc);
 			close(Server::wm_fd[0]);
 			return;
 		}
@@ -152,7 +152,7 @@ namespace Awning::WM::X
 			free(reply);
 			if (error)
 			{
-				Log::Report::Error(fmt::format("Could not resolve atom {}, x11 error code {}", atom_map[i], error->error_code));
+				spdlog::warn("Could not resolve atom {}, x11 error code {}", atom_map[i], error->error_code);
 				free(error);
 			}
 		}
@@ -261,7 +261,7 @@ namespace Awning::WM::X
 			case XCB_CREATE_NOTIFY:
 				{
 					auto e = (xcb_create_notify_event_t*)event;
-					Log::Function::Locate("WM::X", "CreateNotify");
+					
 					windows[e->window] = Window::Create(xWaylandClient);
 					windows[e->window]->Data      ((void*)e->window);
 					Window::Manager::Manage (windows[e->window]         );
@@ -271,7 +271,7 @@ namespace Awning::WM::X
 			case XCB_DESTROY_NOTIFY:
 				{
 					auto e = (xcb_destroy_notify_event_t*)event;
-					Log::Function::Locate("WM::X", "DestroyNotify");
+
 					auto window = windows[e->window];
 					windows.erase(e->window);
 					Window::Destory(window);
@@ -280,7 +280,6 @@ namespace Awning::WM::X
 			case XCB_CONFIGURE_REQUEST:
 				{
 					auto e = (xcb_configure_request_event_t*)event;
-					Log::Function::Locate("WM::X", "ConfigureRequest");
   					
 					uint32_t mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
 						XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
@@ -308,8 +307,7 @@ namespace Awning::WM::X
 			case XCB_MAP_REQUEST:
 				{
 					auto e = (xcb_map_request_event_t*)event;
-					Log::Function::Locate("WM::X", "MapRequest");
-
+					
 					const uint32_t value_list = XCB_EVENT_MASK_FOCUS_CHANGE | XCB_EVENT_MASK_PROPERTY_CHANGE;
 					xcb_change_window_attributes_checked(xcb_conn, e->window, XCB_CW_EVENT_MASK, &value_list);
 					xcb_map_window_checked(xcb_conn, e->window);
@@ -331,29 +329,23 @@ namespace Awning::WM::X
 			case XCB_MAP_NOTIFY:
 				{
 					auto e = (xcb_map_notify_event_t*)event;
-					Log::Function::Locate("WM::X", "MapNotify");
 				}
 				break;
 			case XCB_UNMAP_NOTIFY:
 				{
 					auto e = (xcb_unmap_notify_event_t*)event;
-					Log::Function::Locate("WM::X", "UnmapNotify");
 				}
 				break;
 			case XCB_PROPERTY_NOTIFY:
 				{
 					auto e = (xcb_property_notify_event_t*)event;
-					Log::Function::Locate("WM::X", "PropertyNotify");
 				}
 				break;
 			case XCB_CLIENT_MESSAGE:
 				{
 					auto e = (xcb_client_message_event_t*)event;
-					Log::Function::Locate("WM::X", "ClientMessage");
 					if (e->type == atoms[WL_SURFACE_ID])
 					{
-						Log::Function::Locate("WM::X", "ClientMessage.WL_SURFACE_ID");
-
 						uint32_t id = e->data.data32[0];
 						struct wl_resource* resource = wl_client_get_object(xWaylandClient, id);
 						Awning::Protocols::WL::Surface::data.surfaces[resource].window = windows[e->window];

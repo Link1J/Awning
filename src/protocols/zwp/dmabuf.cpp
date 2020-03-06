@@ -1,5 +1,5 @@
 #include "dmabuf.hpp"
-#include "log.hpp"
+#include <spdlog/spdlog.h>
 
 #include "renderers/egl.hpp"
 
@@ -21,20 +21,16 @@ namespace Awning::Protocols::ZWP::Linux_Dmabuf
 	{
 		void Destroy(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("Protocols::ZWP::Linux_Dmabuf");
 		}
 
 		void Create_Params(struct wl_client* client, struct wl_resource* resource, uint32_t id)
 		{
-			Log::Function::Called("Protocols::ZWP::Linux_Dmabuf");
 			Linux_Buffer_Params::Create(client, wl_resource_get_version(resource), id);
 		}
 	}
 
 	void Bind(struct wl_client* wl_client, void* data, uint32_t version, uint32_t id) 
 	{
-		Log::Function::Called("Protocols::ZWP::Linux_Dmabuf");
-
 		struct wl_resource* resource = wl_resource_create(wl_client, &zwp_linux_dmabuf_v1_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
@@ -108,14 +104,11 @@ namespace Awning::Protocols::ZWP::Linux_Buffer_Params
 	{
 		void Destroy(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("Protocols::ZWP::Linux_Buffer_Params::Interface");
 			Linux_Buffer_Params::Destroy(resource);
 		}
 
 		void Add(struct wl_client* client, struct wl_resource* resource, int32_t fd, uint32_t plane_idx, uint32_t offset, uint32_t stride, uint32_t modifier_hi, uint32_t modifier_lo)
 		{
-			Log::Function::Called("Protocols::ZWP::Linux_Buffer_Params::Interface");
-
 			if (!data.instances.contains(resource))
 			{
 				close(fd);
@@ -158,14 +151,11 @@ namespace Awning::Protocols::ZWP::Linux_Buffer_Params
 
 		void Create(struct wl_client* client, struct wl_resource* resource, int32_t width, int32_t height, uint32_t format, uint32_t flags)
 		{
-			Log::Function::Called("Protocols::ZWP::Linux_Buffer_Params::Interface");
 			CreateBuffer(client, resource, 0, width, height, format, flags);
-			
 		}
 
 		void Create_Immed(struct wl_client* client, struct wl_resource* resource, uint32_t buffer_id, int32_t width, int32_t height, uint32_t format, uint32_t flags)
 		{
-			Log::Function::Called("Protocols::ZWP::Linux_Buffer_Params::Interface");
 			CreateBuffer(client, resource, buffer_id, width, height, format, flags);
 		}
 	}
@@ -208,8 +198,6 @@ namespace Awning::Protocols::ZWP::Linux_Buffer_Params
 
 	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id) 
 	{
-		Log::Function::Called("Protocols::ZWP::Linux_Buffer_Params");
-
 		struct wl_resource* resource = wl_resource_create(wl_client, &zwp_linux_buffer_params_v1_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
@@ -224,8 +212,6 @@ namespace Awning::Protocols::ZWP::Linux_Buffer_Params
 
 	void Destroy(struct wl_resource* resource)
 	{
-		Log::Function::Called("Protocols::ZWP::Linux_Buffer_Params");
-
 		if (!data.instances.contains(resource))
 			return;
 

@@ -1,7 +1,7 @@
 #include "seat.hpp"
 #include "pointer.hpp"
 #include "keyboard.hpp"
-#include "log.hpp"
+#include <spdlog/spdlog.h>
 
 namespace Awning::Protocols::WL::Seat
 {
@@ -18,31 +18,25 @@ namespace Awning::Protocols::WL::Seat
 	{
 		void Get_Pointer(struct wl_client* client, struct wl_resource* resource, uint32_t id)
 		{
-			Log::Function::Called("Protocols::WL::Seat::Interface");
 			Pointer::Create(client, wl_resource_get_version(resource), id);
 		}
 
 		void Get_Keyboard(struct wl_client* client, struct wl_resource* resource, uint32_t id)
 		{
-			Log::Function::Called("Protocols::WL::Seat::Interface");
 			Keyboard::Create(client, wl_resource_get_version(resource), id);
 		}
 
 		void Get_Touch(struct wl_client* client, struct wl_resource* resource, uint32_t id)
 		{
-			Log::Function::Called("Protocols::WL::Seat::Interface");
 		}
 
 		void Release(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("Protocols::WL::Seat::Interface");
 		}
 	}
 
 	void Bind(struct wl_client* wl_client, void* data, uint32_t version, uint32_t id) 
 	{
-		Log::Function::Called("Protocols::WL::Seat");
-
 		struct wl_resource* resource = wl_resource_create(wl_client, &wl_seat_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);

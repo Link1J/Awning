@@ -1,7 +1,7 @@
 #include "keyboard.hpp"
 #include "pointer.hpp"
 #include "surface.hpp"
-#include "log.hpp"
+#include <spdlog/spdlog.h>
 
 #include "wm/client.hpp"
 
@@ -14,6 +14,22 @@
 
 uint32_t NextSerialNum();
 
+void xcbLog(struct xkb_context *context, enum xkb_log_level level, const char* form, va_list args)
+{
+	std::string format = form;
+
+	if (level == XKB_LOG_LEVEL_CRITICAL)
+		spdlog::critical(format);
+	if (level == XKB_LOG_LEVEL_ERROR)
+		spdlog::error(format);
+	if (level == XKB_LOG_LEVEL_WARNING)
+		spdlog::warn(format);
+	if (level == XKB_LOG_LEVEL_INFO)
+		spdlog::info(format);
+	if (level == XKB_LOG_LEVEL_DEBUG)
+		spdlog::debug(format);
+}
+
 namespace Awning::Protocols::WL::Keyboard
 {
 	wl_resource* surface;
@@ -21,7 +37,6 @@ namespace Awning::Protocols::WL::Keyboard
 	const struct wl_keyboard_interface interface = {
 		.release = [](struct wl_client *client, struct wl_resource *resource) 
 		{
-			Log::Function::Called("Protocols::WL::Keyboard::interface.release");
 		},
 	};
 
@@ -37,8 +52,6 @@ namespace Awning::Protocols::WL::Keyboard
 
 	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id)
 	{
-		Log::Function::Called("Protocols::WL::Keyboard");
-
 		struct wl_resource* resource = wl_resource_create(wl_client, &wl_keyboard_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
@@ -57,6 +70,9 @@ namespace Awning::Protocols::WL::Keyboard
 			};
 			
 			ctx = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+
+			xkb_context_set_log_fn(ctx, xcbLog);
+
 			keymap = xkb_keymap_new_from_names(ctx, &names, XKB_KEYMAP_COMPILE_NO_FLAGS);
 			state = xkb_state_new(keymap);
 

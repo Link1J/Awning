@@ -1,7 +1,9 @@
 #include "protocols/wl/pointer.hpp"
 #include "protocols/wl/keyboard.hpp"
 
-#include "log.hpp"
+#include <fmt/format.h>
+
+#include <spdlog/spdlog.h>
 
 #include <sys/ioctl.h>
 #include <sys/mman.h>
@@ -24,8 +26,6 @@
 #include "manager.hpp"
 
 #include "wm/output.hpp"
-
-#include <fmt/format.h>
 
 #include <algorithm> 
 #include <cctype>

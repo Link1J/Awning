@@ -4,7 +4,7 @@
 
 #include "window.hpp"
 #include "client.hpp"
-#include "log.hpp"
+#include <spdlog/spdlog.h>
 
 #include "protocols/wl/pointer.hpp"
 #include "protocols/wl/keyboard.hpp"

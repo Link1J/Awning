@@ -1,5 +1,5 @@
 #include "popup.hpp"
-#include "log.hpp"
+#include <spdlog/spdlog.h>
 
 #include "surface.hpp"
 
@@ -20,20 +20,16 @@ namespace Awning::Protocols::XDG::Popup
 	{
 		void Destroy(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("Protocols::XDG::Popup::Interface");
 			Popup::Destroy(resource);
 		}
 
 		void Grab(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
 		{
-			Log::Function::Called("Protocols::XDG::Popup::Interface");
 		}
 	}
 
 	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* surface, wl_resource* parent, wl_resource* point) 
 	{
-		Log::Function::Called("Protocols::XDG::Popup");
-
 		struct wl_resource* resource = wl_resource_create(wl_client, &xdg_popup_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
@@ -68,8 +64,6 @@ namespace Awning::Protocols::XDG::Popup
 
 	void Destroy(struct wl_resource* resource)
 	{
-		Log::Function::Called("Protocols::XDG::Popup");
-
 		if (!data.popups.contains(resource))
 			return;
 

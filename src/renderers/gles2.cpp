@@ -1,5 +1,5 @@
 #include "gles2.hpp"
-#include "log.hpp"
+#include <spdlog/spdlog.h>
 
 #include "backends/manager.hpp"
 

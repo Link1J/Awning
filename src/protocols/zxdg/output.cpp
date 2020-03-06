@@ -1,5 +1,5 @@
 #include "output.hpp"
-#include "log.hpp"
+#include <spdlog/spdlog.h>
 
 #include "protocols/wl/output.hpp"
 
@@ -14,14 +14,11 @@ namespace Awning::Protocols::ZXDG::Output
 	{
 		void Destroy(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("Protocols::ZXDG::Output::Interface");
 		}
 	}
 
 	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* output)
 	{
-		Log::Function::Called("Protocols::ZXDG::Output");
-
 		struct wl_resource* resource = wl_resource_create(wl_client, &zxdg_output_v1_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
@@ -65,20 +62,16 @@ namespace Awning::Protocols::ZXDG::Output_Manager
 	{
 		void Destroy(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("Protocols::ZXDG::Output_Manager::Interface");
 		}
 
 		void Get_Xdg_Output(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* output)
 		{
-			Log::Function::Called("Protocols::ZXDG::Output_Manager::Interface");
 			Output::Create(client, wl_resource_get_version(resource), id, output);
 		}
 	}
 
 	void Bind(struct wl_client* wl_client, void* data, uint32_t version, uint32_t id)
 	{
-		Log::Function::Called("Protocols::ZXDG::Output_Manager");
-
 		struct wl_resource* resource = wl_resource_create(wl_client, &zxdg_output_manager_v1_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);

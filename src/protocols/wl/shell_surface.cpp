@@ -1,7 +1,7 @@
 #include "shell_surface.hpp"
 #include "surface.hpp"
 #include "pointer.hpp"
-#include "log.hpp"
+#include <spdlog/spdlog.h>
 
 #include "wm/x/wm.hpp"
 
@@ -26,19 +26,15 @@ namespace Awning::Protocols::WL::Shell_Surface
 	{
 		void Pong(struct wl_client* client, struct wl_resource* resource, uint32_t serial)
 		{
-			Log::Function::Called("Protocols::WL::Shell_Surface::Interface");
 		}
 
 		void Move(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
 		{
-			Log::Function::Called("Protocols::WL::Shell_Surface::Interface");
 			WM::Manager::Handle::Input::Lock(WM::Manager::Handle::Input::MOVE);
 		}
 
 		void Resize(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, uint32_t edges)
 		{
-			Log::Function::Called("Protocols::WL::Shell_Surface::Interface");
-
 			WM::Manager::Handle::Input::WindowSide side;
 			switch (edges)
 			{
@@ -57,44 +53,35 @@ namespace Awning::Protocols::WL::Shell_Surface
 
 		void Set_Toplevel(struct wl_client* client, struct wl_resource* resource)
 		{
-			Log::Function::Called("Protocols::WL::Shell_Surface::Interface");
 		}
 
 		void Set_Transient(struct wl_client* client, struct wl_resource* resource, struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags)
 		{
-			Log::Function::Called("Protocols::WL::Shell_Surface::Interface");
 		}
 
 		void Set_Fullscreen(struct wl_client* client, struct wl_resource* resource, uint32_t method, uint32_t framerate, struct wl_resource* output)
 		{
-			Log::Function::Called("Protocols::WL::Shell_Surface::Interface");
 		}
 
 		void Set_Popup(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags)
 		{
-			Log::Function::Called("Protocols::WL::Shell_Surface::Interface");
 		}
 
 		void Set_Maximized(struct wl_client* client, struct wl_resource* resource, struct wl_resource* output)
 		{
-			Log::Function::Called("Protocols::WL::Shell_Surface::Interface");
 		}
 
 		void Set_Title(struct wl_client* client, struct wl_resource* resource, const char* title)
 		{
-			Log::Function::Called("Protocols::WL::Shell_Surface::Interface");
 		}
 
 		void Set_Class(struct wl_client* client, struct wl_resource* resource, const char* class_)
 		{
-			Log::Function::Called("Protocols::WL::Shell_Surface::Interface");
 		}
 	}
 
 	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, struct wl_resource* surface) 
 	{
-		Log::Function::Called("Protocols::WL::Shell_Surface");
-
 		struct wl_resource* resource = wl_resource_create(wl_client, &wl_shell_surface_interface, version, id);
 		if (resource == nullptr) {
 			wl_client_post_no_memory(wl_client);
@@ -119,8 +106,6 @@ namespace Awning::Protocols::WL::Shell_Surface
 
 	void Destroy(struct wl_resource* resource)
 	{
-		Log::Function::Called("Protocols::WL::Shell_Surface");
-
 		if (!data.shells.contains(resource))
 			return;
 

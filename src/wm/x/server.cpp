@@ -1,6 +1,6 @@
 #include "server.hpp"
 #include "wm.hpp"
-#include "log.hpp"
+#include <spdlog/spdlog.h>
 
 #include "utils/sockets.hpp"
 
@@ -115,7 +115,7 @@ namespace Awning::WM::X::Server
 		}
 
 		if (display > 32) {
-			Log::Report::Error("No display available in the first 33");
+			spdlog::error("No display available in the first 33");
 			return -1;
 		}
 
@@ -128,7 +128,6 @@ namespace Awning::WM::X::Server
 
 	int XWM_Start(int signal_number, void* data)
 	{
-		Log::Function::Called("WM::X::Server");
 		Awning::WM::X::Init();
 		return 0;
 	}
@@ -144,8 +143,6 @@ namespace Awning::WM::X::Server
 
 	void LaunchXwayland(int signal_number)
 	{
-		Log::Function::Called("WM::X::Server");
-
 		Utils::Sockets::SetCloexec(x_fd [0], false);
 		Utils::Sockets::SetCloexec(x_fd [1], false);
 		Utils::Sockets::SetCloexec(wm_fd[1], false);
@@ -169,12 +166,12 @@ namespace Awning::WM::X::Server
 		FillArg(&(XWaylandArgs[7]), "{}", x_fd [1]);
 		FillArg(&(XWaylandArgs[9]), "{}", wm_fd[1]);
 
-		Log::Report::Info(fmt::format("WAYLAND_SOCKET={} Xwayland :{} -rootless -terminate -listen {} -listen {} -wm {}",
-		wl_fd[1], display, x_fd[0], x_fd[1], wm_fd[1]));
+		spdlog::info("WAYLAND_SOCKET={} Xwayland :{} -rootless -terminate -listen {} -listen {} -wm {}",
+		wl_fd[1], display, x_fd[0], x_fd[1], wm_fd[1]);
 
 		int fd = open("/dev/null", O_RDWR);
-		//dup2(fd, STDOUT_FILENO);
-		//dup2(fd, STDERR_FILENO);
+		dup2(fd, STDOUT_FILENO);
+		dup2(fd, STDERR_FILENO);
 
 		int ret = execvp("Xwayland", XWaylandArgs);
 		printf("Xwayland did not launch! %d %s\n", ret, strerror(errno));

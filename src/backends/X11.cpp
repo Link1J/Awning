@@ -13,8 +13,6 @@
 #include "wm/manager.hpp"
 #include "wm/output.hpp"
 
-#include "log.hpp"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,6 +22,8 @@
 #include <iostream>
 
 #include <fmt/format.h>
+
+#include <spdlog/spdlog.h>
 
 #include "X11.hpp"
 #include "manager.hpp"
@@ -118,7 +118,7 @@ namespace Awning::Backend::X11
 }
 
 static void eglLog(EGLenum error, const char *command, EGLint msg_type, EGLLabelKHR thread, EGLLabelKHR obj, const char *msg) {
-	std::cout << fmt::format("[X EGL] command: {}, error: 0x{:X}, message: \"{}\"\n", command, error, msg);
+	spdlog::error("[X EGL] command: {}, error: 0x{:X}, message: \"{}\"\n", command, error, msg);
 }
 
 static GLuint vertexShader, pixelShader, program;
