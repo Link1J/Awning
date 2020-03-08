@@ -7,5 +7,4 @@ namespace Awning::WM::X::Server
 	extern int x_fd[2], wl_fd[2], wm_fd[2], display;
 	
 	void Setup();
-	void Run();
 }

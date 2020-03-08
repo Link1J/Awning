@@ -27,6 +27,8 @@ namespace Awning
 
 namespace Awning::WM::X::Server
 {
+	void LaunchXwayland(int signal_number);
+
 	bool OpenSockets(int socks[2], int display) 
 	{
 		struct sockaddr_un addr = { .sun_family = AF_LOCAL };
@@ -141,6 +143,34 @@ namespace Awning::WM::X::Server
 		mempcpy(*arg, string.c_str(), string.length());
 	}
 
+	void Setup()
+	{
+		display = OpenSockets(x_fd);
+		socketpair(AF_UNIX, SOCK_STREAM, 0, wl_fd);
+		socketpair(AF_UNIX, SOCK_STREAM, 0, wm_fd);
+
+		Utils::Sockets::SetCloexec(wl_fd[0], true);
+		Utils::Sockets::SetCloexec(wl_fd[1], true);
+		Utils::Sockets::SetCloexec(wm_fd[0], true);
+		Utils::Sockets::SetCloexec(wm_fd[1], true);
+
+		xWaylandClient = wl_client_create(Awning::Server::data.display, wl_fd[0]);
+		
+		sigusr1 = wl_event_loop_add_signal(Awning::Server::data.event_loop, SIGUSR1, XWM_Start, nullptr);
+
+		int pidT = fork();
+		if (pidT == 0) 
+		{
+			signal(SIGUSR1, SIG_IGN);
+			LaunchXwayland(0);
+		}
+
+		close(wl_fd[1]);
+		close(wm_fd[1]);
+	}
+
+#pragma GCC diagnostic ignored "-Wwrite-strings"
+
 	void LaunchXwayland(int signal_number)
 	{
 		Utils::Sockets::SetCloexec(x_fd [0], false);
@@ -176,43 +206,5 @@ namespace Awning::WM::X::Server
 		int ret = execvp("Xwayland", XWaylandArgs);
 		printf("Xwayland did not launch! %d %s\n", ret, strerror(errno));
 		exit(ret);
-	}
-
-	void Setup()
-	{
-		display = OpenSockets(x_fd);
-		socketpair(AF_UNIX, SOCK_STREAM, 0, wl_fd);
-		socketpair(AF_UNIX, SOCK_STREAM, 0, wm_fd);
-
-		Utils::Sockets::SetCloexec(wl_fd[0], true);
-		Utils::Sockets::SetCloexec(wl_fd[1], true);
-		Utils::Sockets::SetCloexec(wm_fd[0], true);
-		Utils::Sockets::SetCloexec(wm_fd[1], true);
-
-		xWaylandClient = wl_client_create(Awning::Server::data.display, wl_fd[0]);
-		
-		sigusr1 = wl_event_loop_add_signal(Awning::Server::data.event_loop, SIGUSR1, XWM_Start, nullptr);
-
-		int pidT = fork();
-		if (pidT == 0) 
-		{
-			signal(SIGUSR1, SIG_IGN);
-			LaunchXwayland(0);
-		}
-
-		close(wl_fd[1]);
-		close(wm_fd[1]);
-	}
-
-	void Run()
-	{
-		if (pid == 0)
-			return;
-
-		//kill(pid, SIGUSR2);
-
-		//close(wl_fd[1]);
-		//close(wm_fd[1]);
-		//wl_fd[1] = wm_fd[1] = -1;
 	}
 }

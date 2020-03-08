@@ -192,7 +192,7 @@ namespace Awning::Protocols::ZWP::Linux_Buffer_Params
 	{
 		if (!resource->data)
 			return;
-		delete resource->data;
+		delete (char*)resource->data;
 		resource->data = nullptr;
 	}
 
