@@ -23,6 +23,19 @@
 #include <xcb/composite.h>
 #include <xcb/xfixes.h>
 
+#define _NET_WM_MOVERESIZE_SIZE_TOPLEFT      0
+#define _NET_WM_MOVERESIZE_SIZE_TOP          1
+#define _NET_WM_MOVERESIZE_SIZE_TOPRIGHT     2
+#define _NET_WM_MOVERESIZE_SIZE_RIGHT        3
+#define _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT  4
+#define _NET_WM_MOVERESIZE_SIZE_BOTTOM       5
+#define _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT   6
+#define _NET_WM_MOVERESIZE_SIZE_LEFT         7
+#define _NET_WM_MOVERESIZE_MOVE              8   /* movement only */
+#define _NET_WM_MOVERESIZE_SIZE_KEYBOARD     9   /* size via keyboard */
+#define _NET_WM_MOVERESIZE_MOVE_KEYBOARD    10   /* move via keyboard */
+#define _NET_WM_MOVERESIZE_CANCEL           11   /* cancel operation */
+
 std::unordered_map<xcb_window_t, Awning::WM::Window*> windows;
 
 #include <iostream>
@@ -137,10 +150,13 @@ namespace Awning::WM::X
 
 		int i = 0;
 		xcb_intern_atom_cookie_t cookies[ATOM_LAST];
-		for (i = 0; i < ATOM_LAST; i++) {
+		for (i = 0; i < ATOM_LAST; i++) 
+		{
 			cookies[i] = xcb_intern_atom(xcb_conn, 0, strlen(atom_map[i]), atom_map[i]);
 		}
-		for (i = 0; i < ATOM_LAST; i++) {
+
+		for (i = 0; i < ATOM_LAST; i++) 
+		{
 			xcb_intern_atom_reply_t* reply;
 			xcb_generic_error_t* error;
 
@@ -334,22 +350,89 @@ namespace Awning::WM::X
 			case XCB_UNMAP_NOTIFY:
 				{
 					auto e = (xcb_unmap_notify_event_t*)event;
+
+        			windows[e->window]->Mapped(false);
 				}
 				break;
 			case XCB_PROPERTY_NOTIFY:
 				{
 					auto e = (xcb_property_notify_event_t*)event;
+
+					for (int i = 0; i < ATOM_LAST; i++) 
+					{
+						if (e->atom == atoms[i])
+						{
+							spdlog::debug("X Window {} has property {}", e->window, atom_map[i]);
+						}
+					}
 				}
 				break;
 			case XCB_CLIENT_MESSAGE:
 				{
 					auto e = (xcb_client_message_event_t*)event;
+
+					for (int i = 0; i < ATOM_LAST; i++) 
+					{
+						if (e->type == atoms[i])
+						{
+							spdlog::debug("X Window {} has send message {}", e->window, atom_map[i]);
+						}
+					}
+
 					if (e->type == atoms[WL_SURFACE_ID])
 					{
 						uint32_t id = e->data.data32[0];
 						struct wl_resource* resource = wl_client_get_object(xWaylandClient, id);
 						Awning::Protocols::WL::Surface::data.surfaces[resource].window = windows[e->window];
 					}
+					if (e->type == atoms[_NET_WM_MOVERESIZE])
+					{
+						Awning::WM::Manager::Handle::Input::WindowAction action;
+						Awning::WM::Manager::Handle::Input::WindowSide   side  ;
+
+						switch (e->data.data32[2])
+						{
+						case _NET_WM_MOVERESIZE_SIZE_TOPLEFT    :
+							action = Manager::Handle::Input::RESIZE;
+							side   = Manager::Handle::Input::TOP_LEFT;
+							break;
+						case _NET_WM_MOVERESIZE_SIZE_TOP        :
+							action = Manager::Handle::Input::RESIZE;
+							side   = Manager::Handle::Input::TOP;
+							break;
+						case _NET_WM_MOVERESIZE_SIZE_TOPRIGHT   :
+							action = Manager::Handle::Input::RESIZE;
+							side   = Manager::Handle::Input::TOP_RIGHT;
+							break;
+						case _NET_WM_MOVERESIZE_SIZE_RIGHT      :
+							action = Manager::Handle::Input::RESIZE;
+							side   = Manager::Handle::Input::RIGHT;
+							break;
+						case _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT:
+							action = Manager::Handle::Input::RESIZE;
+							side   = Manager::Handle::Input::BOTTOM_RIGHT;
+							break;
+						case _NET_WM_MOVERESIZE_SIZE_BOTTOM     :
+							action = Manager::Handle::Input::RESIZE;
+							side   = Manager::Handle::Input::BOTTOM;
+							break;
+						case _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT :
+							action = Manager::Handle::Input::RESIZE;
+							side   = Manager::Handle::Input::BOTTOM_LEFT;
+							break;
+						case _NET_WM_MOVERESIZE_SIZE_LEFT       :
+							action = Manager::Handle::Input::RESIZE;
+							side   = Manager::Handle::Input::LEFT;
+							break;
+						case _NET_WM_MOVERESIZE_MOVE            :
+							action = Manager::Handle::Input::MOVE;
+							side   = Manager::Handle::Input::TOP;
+							break;
+						}
+
+						WM::Manager::Handle::Input::Lock(action, side);
+					}
+					
 				}
 				break;
 			}

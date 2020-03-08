@@ -161,7 +161,7 @@ namespace Awning::WM::Manager
 						curr++;
 					}
 
-					if (Window::Manager::hoveredOver != *curr && input == UNLOCK)
+					if (Window::Manager::hoveredOver != *curr && input == UNLOCK && action != APPLCATION)
 					{
 						if (Window::Manager::hoveredOver)
 						{
@@ -172,8 +172,12 @@ namespace Awning::WM::Manager
 							Protocols::WL::Pointer::Frame(
 								(wl_client*)Window::Manager::hoveredOver->Client()
 							);
-						}
 
+							Window::Manager::hoveredOver = nullptr;
+						}
+					}
+					else if (Window::Manager::hoveredOver != *curr && input == UNLOCK && action == APPLCATION)
+					{
 						if (curr != Window::Manager::windowList.end())
 						{
 							int localX = x - (*curr)->XPos() - (*curr)->XOffset();
@@ -187,14 +191,7 @@ namespace Awning::WM::Manager
 							Protocols::WL::Pointer::Frame(
 								(wl_client*)(*curr)->Client()
 							);
-						}
 
-						if (curr == Window::Manager::windowList.end())
-						{
-							Window::Manager::hoveredOver = nullptr;
-						}
-						else
-						{
 							Window::Manager::hoveredOver = *curr;
 						}
 					}

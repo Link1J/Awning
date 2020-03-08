@@ -155,7 +155,10 @@ namespace Awning::WM
 					break;
 				curr++;
 			}
-			window->parent->subwindows.erase(curr);
+			if (curr != window->parent->subwindows.end())
+			{
+				window->parent->subwindows.erase(curr);
+			}
 		}
 		Manager::Unmanage(window);
 		Client::Unbind::Window(window);
