@@ -8,13 +8,21 @@ namespace Awning::Protocols::ZXDG::Output
 	const struct zxdg_output_v1_interface interface = {
 		.destroy    = Interface::Destroy,
 	};
+
 	Data data;
 
 	namespace Interface
 	{
 		void Destroy(struct wl_client* client, struct wl_resource* resource)
 		{
+			Output::Destroy(resource);
 		}
+	}
+
+	void Resize(void* data, int width, int height)
+	{
+		zxdg_output_v1_send_logical_size((wl_resource*)data, width, height);
+		zxdg_output_v1_send_done((wl_resource*)data);
 	}
 
 	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, wl_resource* output)
@@ -39,11 +47,24 @@ namespace Awning::Protocols::ZXDG::Output
 		zxdg_output_v1_send_logical_position(resource, px, py);
 		zxdg_output_v1_send_logical_size    (resource, sx, sy);
 
+		zxdg_output_v1_send_done(resource);
+
+		Awning::Output::AddResize(outputID, Resize, resource);
+
+		data.instances[resource].output = output;
+		data.instances[resource].id = outputID;
+
 		return resource;
 	}
 
 	void Destroy(struct wl_resource* resource)
 	{
+		if (!data.instances.contains(resource))
+			return;
+
+		Awning::Output::ID outputID = data.instances[resource].id;
+		Awning::Output::RemoveResize(outputID, Resize, resource);
+		data.instances.erase(resource);
 	}
 }
 

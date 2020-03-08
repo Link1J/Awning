@@ -5,12 +5,17 @@
 #include <string>
 #include <tuple>
 
+#include "functions.hpp"
+
 namespace Awning::Output
 {
 	typedef uintptr_t ID;
 
 	ID   Create (     );
 	void Destory(ID id);
+
+	void AddResize(ID id, Functions::Resized resized, void* data);
+	void RemoveResize(ID id, Functions::Resized resized, void* data);
 	
 	namespace Set
 	{

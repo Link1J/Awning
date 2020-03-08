@@ -25,16 +25,23 @@ struct Mode
 	bool current;
 };
 
+struct Resizes
+{
+	Awning::Functions::Resized Resized;
+	void* data;
+};
+
 struct Output
 {
-	std::string       manufacturer;
-	std::string       model       ;
-	Size              physical    ;
-	std::vector<Mode> modes       ;
-	int	              currentMode ;
-	Position          position    ;
-	std::string       name        ;
-	std::string       description ;
+	std::string          manufacturer;
+	std::string          model       ;
+	Size                 physical    ;
+	std::vector<Mode>    modes       ;
+	int	                 currentMode ;
+	Position             position    ;
+	std::string          name        ;
+	std::string          description ;
+	std::vector<Resizes> resizes     ;
 };
 
 namespace Awning
@@ -47,13 +54,6 @@ namespace Awning
 			wl_event_loop* event_loop;
 			wl_protocol_logger* logger; 
 			wl_listener client_listener;
-
-			struct {
-				EGLDisplay display;
-				EGLint major, minor;
-				EGLContext context;
-				EGLSurface surface;
-			} egl;
 		};
 		extern Data data;
 	}
@@ -77,6 +77,30 @@ namespace Awning::Output
 		delete (::Output*)output;
 	}
 
+	void AddResize(ID id, Functions::Resized resized, void* data)
+	{
+		::Output* output = (::Output*)id;
+
+		output->resizes.push_back({resized, data});
+	}
+
+	void RemoveResize(ID id, Functions::Resized resized, void* data)
+	{
+		::Output* output = (::Output*)id;
+
+		auto curr = output->resizes.begin();
+		while (curr != output->resizes.end())
+		{
+			if (curr->data == data && curr->Resized == resized)
+				break;
+			curr++;
+		}
+		if (curr != output->resizes.end())
+		{
+			output->resizes.erase(curr);
+		}
+	}
+	
 	namespace Set
 	{
 		void NumberOfModes(ID id, int number)
@@ -130,6 +154,12 @@ namespace Awning::Output
 				::Output* output = (::Output*)id;
 				output->modes[mode].resolution.width  = width ;
 				output->modes[mode].resolution.height = height;
+
+				if (output->modes[mode].current)
+				{
+					for (int a = 0; a < output->resizes.size(); a++)
+						output->resizes[a].Resized(output->resizes[a].data, width, height);
+				}
 			}
 
 			void RefreshRate(ID id, int mode, int refreshRate)
@@ -149,6 +179,18 @@ namespace Awning::Output
 				::Output* output = (::Output*)id;
 				output->modes[mode].current = current;
 				output->currentMode = current ? mode : output->currentMode;
+
+				if (current)
+				{
+					for (int a = 0; a < output->resizes.size(); a++)
+					{
+						output->resizes[a].Resized(
+							output->resizes[a].data,
+							output->modes[mode].resolution.width,
+							output->modes[mode].resolution.height
+						);
+					}
+				}
 			}
 		}
 	}

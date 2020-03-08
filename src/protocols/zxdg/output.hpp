@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <string>
 
+#include "wm/output.hpp"
+
 namespace Awning::Protocols::ZXDG::Output
 {
 	struct Data 
@@ -12,6 +14,7 @@ namespace Awning::Protocols::ZXDG::Output
 		struct Instance 
 		{
 			wl_resource* output;
+			Awning::Output::ID id;
 		};
 
 		std::unordered_map<wl_resource*, Instance> instances;

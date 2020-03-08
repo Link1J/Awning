@@ -280,7 +280,7 @@ void Awning::Backend::X11::Hand()
 		if (event.type == ConfigureNotify)
 		{
 			WindowData& data = windows[event.xconfigure.window];
-			if (data.framebuffer.width == event.xconfigure.width || data.framebuffer.height == event.xconfigure.height)
+			if (data.framebuffer.width == event.xconfigure.width && data.framebuffer.height == event.xconfigure.height)
 				continue;
 
 			data.framebuffer.width  = event.xconfigure.width ;

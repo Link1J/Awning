@@ -140,10 +140,8 @@ namespace Awning::Protocols::WLR::Mode
 		zwlr_output_mode_v1_send_size     (resource, mX, mY );
 		zwlr_output_mode_v1_send_refresh  (resource, refresh);
 
-		//if (Awning::Output::Get::Mode::Prefered(outputId, mode))
-		//	zwlr_output_mode_v1_send_preferred(resource);
-
-		//zwlr_output_mode_v1_send_finished(resource);
+		if (Awning::Output::Get::Mode::Prefered(outputId, mode))
+			zwlr_output_mode_v1_send_preferred(resource);
 	}
 
 	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, Awning::Output::ID outputId, int mode, wl_resource* head)

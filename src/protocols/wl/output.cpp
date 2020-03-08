@@ -19,6 +19,24 @@ namespace Awning::Protocols::WL::Output
 		}
 	}
 
+	void Resize(void* data, int width, int height)
+	{
+		auto id = Output::data.resource_to_outputId[(wl_resource*)data];
+
+		auto [sX, sY] = Awning::Output::Get::Mode::Resolution (id, Awning::Output::Get::CurrentMode(id));
+		auto refresh  = Awning::Output::Get::Mode::RefreshRate(id, Awning::Output::Get::CurrentMode(id));
+		auto prefered = Awning::Output::Get::Mode::Prefered   (id, Awning::Output::Get::CurrentMode(id));
+		auto current  = Awning::Output::Get::Mode::Current    (id, Awning::Output::Get::CurrentMode(id));
+
+		wl_output_send_mode((wl_resource*)data, 
+			(current  ? WL_OUTPUT_MODE_CURRENT   : 0) | 
+			(prefered ? WL_OUTPUT_MODE_PREFERRED : 0) , 
+			sX, sY, refresh
+		);
+
+		wl_output_send_done((wl_resource*)data);
+	}
+
 	void Bind(struct wl_client* wl_client, void* data, uint32_t version, uint32_t id) 
 	{		
 		struct wl_resource* resource = wl_resource_create(wl_client, &wl_output_interface, version, id);
@@ -63,6 +81,8 @@ namespace Awning::Protocols::WL::Output
 
 		Output::data.resource_to_outputId[resource] = outputId;
 		Output::data.outputId_to_resource[outputId].emplace(resource);
+
+		Awning::Output::AddResize(outputId, Resize, resource);
 	}
 
 	wl_global* Add(struct wl_display* display, void* data)
@@ -76,6 +96,9 @@ namespace Awning::Protocols::WL::Output
 			return;
 
 		auto id = data.resource_to_outputId[resource];
+
+		Awning::Output::RemoveResize(id, Resize, resource);
+
 		data.outputId_to_resource[id].erase(resource);
 		data.resource_to_outputId    .erase(resource);
 	}
