@@ -217,9 +217,9 @@ namespace Awning::WM::Manager
 					{
 						if (Window::Manager::hoveredOver)
 							Window::Manager::Raise(Window::Manager::hoveredOver);
-						return;
 					}
-					else if (Window::Manager::hoveredOver && action == APPLCATION)
+					
+					if (Window::Manager::hoveredOver && action == APPLCATION)
 					{
 						Protocols::WL::Pointer::Button(
 							(wl_client*)Window::Manager::hoveredOver->Client(),
@@ -230,7 +230,6 @@ namespace Awning::WM::Manager
 					{
 						if (Window::Manager::hoveredOver)
 						{
-							Window::Manager::Raise(Window::Manager::hoveredOver);
 							Protocols::WL::Pointer::Leave(
 								(wl_client  *)Window::Manager::hoveredOver->Client(), 
 								(wl_resource*)Client::Get::Surface(Window::Manager::hoveredOver)
