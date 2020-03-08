@@ -279,7 +279,7 @@ namespace Awning::X
 					auto e = (xcb_create_notify_event_t*)event;
 					
 					windows[e->window] = Window::Create(xWaylandClient);
-					windows[e->window]->Data      ((void*)e->window);
+					windows[e->window]->Data((void*) e->window          );
 					Window::Manager::Manage (windows[e->window]         );
 					Client::Bind   ::Surface(windows[e->window], surface);
 				}
@@ -288,32 +288,31 @@ namespace Awning::X
 				{
 					auto e = (xcb_destroy_notify_event_t*)event;
 
-					auto window = windows[e->window];
+					Window::Destory(windows[e->window]);
 					windows.erase(e->window);
-					Window::Destory(window);
 				}
 				break;
 			case XCB_CONFIGURE_REQUEST:
 				{
 					auto e = (xcb_configure_request_event_t*)event;
-  					
-					uint32_t mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
-						XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
-						XCB_CONFIG_WINDOW_BORDER_WIDTH;
-
-					uint32_t values[] = {e->x, e->y, e->width, e->height, 0};
 
 					auto display = Backend::GetDisplays()[0];
 					auto [sx,sy] = Output::Get::Mode::Resolution(display.output, display.mode);
 
 					if (e->x == 0) e->x = sx/2. - e->width /2.;
 					if (e->y == 0) e->y = sy/2. - e->height/2.;
+  					
+					uint32_t mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
+						XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
+						XCB_CONFIG_WINDOW_BORDER_WIDTH;
 
-					xcb_configure_window(xcb_conn, e->window, mask, values);
-					xcb_flush(xcb_conn);
+					uint32_t values[] = {e->x, e->y, e->width, e->height, 0};
 					
 					Window::Manager::Move  (windows[e->window], e->x    , e->y     );
 					Window::Manager::Resize(windows[e->window], e->width, e->height);
+
+					xcb_configure_window(xcb_conn, e->window, mask, values);
+					xcb_flush(xcb_conn);
 
 					windows[e->window]->SetResized(Resized);
 					windows[e->window]->SetRaised (Raised );
@@ -325,18 +324,20 @@ namespace Awning::X
 					auto e = (xcb_map_request_event_t*)event;
 					
 					const uint32_t value_list = XCB_EVENT_MASK_FOCUS_CHANGE | XCB_EVENT_MASK_PROPERTY_CHANGE;
+					
 					xcb_change_window_attributes_checked(xcb_conn, e->window, XCB_CW_EVENT_MASK, &value_list);
-					xcb_map_window_checked(xcb_conn, e->window);
-
-					windows[e->window]->Frame(true);
+					xcb_map_window_checked              (xcb_conn, e->window);
+					xcb_flush                           (xcb_conn);
 
 					auto display = Backend::GetDisplays()[0];
 					auto [sx,sy] = Output::Get::Mode::Resolution(display.output, display.mode);
 
 					if (windows[e->window]->XPos() == INT32_MIN) Window::Manager::Move(windows[e->window], sx/2. - windows[e->window]->XSize()/2., windows[e->window]->YPos());
 					if (windows[e->window]->YPos() == INT32_MIN) Window::Manager::Move(windows[e->window], windows[e->window]->XPos(), sy/2. - windows[e->window]->YSize()/2.);
-
+					
+					windows[e->window]->Frame (true);
         			windows[e->window]->Mapped(true);
+					
 					Window::Manager::Raise(windows[e->window]);
 				}
 				break;

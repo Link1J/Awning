@@ -217,7 +217,7 @@ namespace Awning
 		return needsFrame;
 	}
 
-	void Window::SetRaised(Manager::Functions::Raised raised)
+	void Window::SetRaised(Functions::Raised raised)
 	{
 		Raised = raised;
 	}
@@ -232,7 +232,7 @@ namespace Awning
 		return client;
 	}
 
-	void Window::SetResized(Manager::Functions::Resized resized)
+	void Window::SetResized(Functions::Resized resized)
 	{
 		Resized = resized;
 	}
@@ -299,7 +299,7 @@ namespace Awning
 		return drawingManaged;                                       
 	}
 
-	void Window::SetMoved(Manager::Functions::Moved moved)
+	void Window::SetMoved(Functions::Moved moved)
 	{
 		Moved = moved;
 	}

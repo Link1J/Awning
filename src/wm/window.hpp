@@ -1,6 +1,7 @@
 #pragma once
 #include "manager.hpp"
 #include "client.hpp"
+#include "functions.hpp"
 
 #include <vector>
 #include <list>
@@ -26,13 +27,6 @@ namespace Awning
 			static Window*            hoveredOver                 ;
 			static std::list<Window*> layers     [(int)Layer::END];
 
-			struct Functions
-			{
-				typedef void (*Resized)(void* data, int width, int height);
-				typedef void (*Raised )(void* data                       );
-				typedef void (*Moved  )(void* data, int x, int y         );
-			};
-
 			static void Manage  (Window*& window, Layer layer = Layer::Application);
 			static void Unmanage(Window*& window                                  );
 
@@ -50,9 +44,9 @@ namespace Awning
 		friend void* Client::Get::Surface(          Awning::Window* window        );
 		friend void  Client::Bind::Surface(         Awning::Window* window, void* );
 
-		Manager::Functions::Resized Resized;
-		Manager::Functions::Raised  Raised ;
-		Manager::Functions::Moved   Moved  ;
+		Functions::Resized Resized;
+		Functions::Raised  Raised ;
+		Functions::Moved   Moved  ;
 
 		Awning::Texture* texture;
 		Window* parent;
@@ -95,8 +89,8 @@ namespace Awning
 		std::vector<Window*> GetSubwindows (                            );
 		bool                 DrawingManaged(                            );
 
-		void SetRaised (Manager::Functions::Raised  raised );
-		void SetResized(Manager::Functions::Resized resized);
-		void SetMoved  (Manager::Functions::Moved   moved  );
+		void SetRaised (Functions::Raised  raised );
+		void SetResized(Functions::Resized resized);
+		void SetMoved  (Functions::Moved   moved  );
 	};
 }

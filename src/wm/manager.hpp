@@ -11,17 +11,17 @@ namespace Frame
 {
 	namespace Resize 
 	{
-		int const top    = 2;
-		int const bottom = 2;
-		int const left   = 2;
-		int const right  = 2;
+		int const top    = 4;
+		int const bottom = 4;
+		int const left   = 4;
+		int const right  = 4;
 	}
 	namespace Move 
 	{
-		int const top    = 8;
-		int const bottom = 0;
-		int const left   = 0;
-		int const right  = 0;
+		int const top    = 10;
+		int const bottom =  0;
+		int const left   =  0;
+		int const right  =  0;
 	}
 	namespace Size 
 	{
@@ -66,16 +66,18 @@ namespace Awning::WM::Manager
 				RESIZE,
 				MOVE,
 			};
+
 			enum WindowSide
 			{
-				TOP,
-				TOP_LEFT,
-				LEFT,
-				BOTTOM_LEFT,
-				BOTTOM,
-				BOTTOM_RIGHT,
-				RIGHT,
-				TOP_RIGHT,
+				NONE         = 0b0000,
+				TOP          = 0b1000,
+				LEFT         = 0b0010,
+				BOTTOM       = 0b0100,
+				RIGHT        = 0b0001,
+				TOP_LEFT     = 0b1010,
+				TOP_RIGHT    = 0b1001,
+				BOTTOM_LEFT  = 0b0110,
+				BOTTOM_RIGHT = 0b0101,
 			};
 
 			namespace Mouse

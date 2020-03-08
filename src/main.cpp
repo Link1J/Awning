@@ -90,6 +90,8 @@ uint32_t NextSerialNum()
 
 int main(int argc, char* argv[])
 {
+	spdlog::set_level(spdlog::level::debug);
+
 	bool                   startXWayland = true                             ;
 	Awning::Backend  ::API api_output    = Awning::Backend  ::API::DRM      ;
 	Awning::Backend  ::API api_input     = Awning::Backend  ::API::libinput ;
@@ -137,6 +139,8 @@ int main(int argc, char* argv[])
 
 	Awning::Server::data.event_loop = wl_display_get_event_loop(Awning::Server::data.display);
 	wl_display_add_client_created_listener(Awning::Server::data.display, &Awning::Server::data.client_listener);
+
+	wl_display_add_protocol_logger(Awning::Server::data.display, ProtocolLogger, nullptr);
 
 	Awning::Backend::Init(api_output, api_input);
 	Awning::Renderers::Init(api_drawing);
@@ -197,6 +201,16 @@ int main(int argc, char* argv[])
 	}
 
 	wl_display_destroy(Awning::Server::data.display);
+}
+
+void ProtocolLogger(void* user_data, wl_protocol_logger_type direction, const wl_protocol_logger_message* message)
+{
+	const char* direction_strings[] = { 
+		"REQUEST", 
+		"EVENT  "
+	};
+
+	//spdlog::debug("[{}] {}: {}", direction_strings[direction], message->resource->object.interface->name, message->message->name);
 }
 
 void on_term_signal(int signal_number)

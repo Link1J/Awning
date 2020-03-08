@@ -49,230 +49,155 @@ namespace Awning::WM::Manager
 
 				void Moved(int x, int y)
 				{
-					auto curr = Window::Manager::windowList.begin();
-					while (curr != Window::Manager::windowList.end() && input == UNLOCK)
+					if (input == UNLOCK)
 					{
-						if((*curr)->XPos()                    <= x 
-						&& (*curr)->YPos()                    <= y
-						&& (*curr)->XPos() + (*curr)->XSize() >  x
-						&& (*curr)->YPos() + (*curr)->YSize() >  y
-						)
+						auto curr = Window::Manager::windowList.begin();
+						bool found = false;
+
+						side = NONE;
+
+						while (curr != Window::Manager::windowList.end() && !found)
 						{
-							action = APPLCATION;
-							break;
+							if ((*curr)->XPos()                    < x 
+							&&  (*curr)->YPos()                    < y
+							&&  (*curr)->XPos() + (*curr)->XSize() > x
+							&&  (*curr)->YPos() + (*curr)->YSize() > y
+							)
+							{
+								action = APPLCATION;
+								found = true;
+							}
+
+							if ((*curr)->Frame())
+							{
+								if (x > (*curr)->XPos()                    - Frame::Move::left  
+								&&  y > (*curr)->YPos()                    - Frame::Move::top   
+								&&  x < (*curr)->XPos() + (*curr)->XSize() + Frame::Move::right 
+								&&  y < (*curr)->YPos() + (*curr)->YSize() + Frame::Move::bottom
+								&& !found)
+								{
+									action = MOVE;
+									found = true;
+								}
+
+								if (x > (*curr)->XPos()                    - Frame::Move::left   - Frame::Resize::left  
+								&&  y > (*curr)->YPos()                    - Frame::Move::top    - Frame::Resize::top   
+								&&  x < (*curr)->XPos() + (*curr)->XSize() + Frame::Move::right  + Frame::Resize::right 
+								&&  y < (*curr)->YPos() + (*curr)->YSize() + Frame::Move::bottom + Frame::Resize::bottom
+								&& !found)
+								{
+									action = RESIZE;
+									found = true;
+								}
+
+								if (action == RESIZE && found)
+								{
+									if ((*curr)->XPos()                    > x) side = (WindowSide)(side | LEFT  );
+									if ((*curr)->XPos() + (*curr)->XSize() < x) side = (WindowSide)(side | RIGHT );
+									if ((*curr)->YPos()                    > y) side = (WindowSide)(side | TOP   );
+									if ((*curr)->YPos() + (*curr)->YSize() < y) side = (WindowSide)(side | BOTTOM);
+								}
+							}
+
+							if (!found)
+								curr++;
 						}
 
-						// Top frame
-						if((*curr)->Frame()
-						&& (*curr)->XPos ()                                       <= x
-						&& (*curr)->YPos ()                    - Frame::Move::top <= y
-						&& (*curr)->XPos () + (*curr)->XSize()                    >  x
-						&& (*curr)->YPos ()                                       >  y
-						)
+						if (Window::Manager::hoveredOver != *curr)
 						{
-							action = MOVE;
-							break;
-						}
+							if (action != APPLCATION)
+							{
+								if (Window::Manager::hoveredOver)
+								{
+									Protocols::WL::Pointer::Leave(
+										(wl_client  *)Window::Manager::hoveredOver->Client(), 
+										(wl_resource*)Client::Get::Surface(Window::Manager::hoveredOver)
+									);
+									Protocols::WL::Pointer::Frame(
+										(wl_client*)Window::Manager::hoveredOver->Client()
+									);
+								}
+							}
+							else if (action == APPLCATION && found)
+							{
+								int localX = x - (*curr)->XPos() - (*curr)->XOffset();
+								int localY = y - (*curr)->YPos() - (*curr)->YOffset();
 
-						if((*curr)->Frame()
-						&& (*curr)->XPos ()                                                            <= x
-						&& (*curr)->YPos ()                    - Frame::Move::top - Frame::Resize::top <= y
-						&& (*curr)->XPos () + (*curr)->XSize()                                         >  x
-						&& (*curr)->YPos ()                    - Frame::Move::top                      >  y
-						)
-						{
-							action = RESIZE;
-							side = TOP;
-							break;
-						}
-						
-						// Bottom frame
-						if((*curr)->Frame()
-						&& (*curr)->XPos ()                                          <= x
-						&& (*curr)->YPos () + (*curr)->YSize()                       <= y
-						&& (*curr)->XPos () + (*curr)->XSize()                       >  x
-						&& (*curr)->YPos () + (*curr)->YSize() + Frame::Move::bottom >  y
-						)
-						{
-							action = MOVE;
-							break;
-						}
+								Protocols::WL::Pointer::Enter(
+									(wl_client  *)(*curr)->Client(), 
+									(wl_resource*)Client::Get::Surface(*curr),
+									localX, localY, x, y
+								);
+								Protocols::WL::Pointer::Frame(
+									(wl_client*)(*curr)->Client()
+								);
 
-						if((*curr)->Frame()
-						&& (*curr)->XPos ()                                                                  <= x
-						&& (*curr)->YPos () + (*curr)->YSize() + Frame::Move::bottom                         <= y
-						&& (*curr)->XPos () + (*curr)->XSize()                                               >  x
-						&& (*curr)->YPos () + (*curr)->YSize() + Frame::Move::bottom + Frame::Resize::bottom >  y
-						)
-						{
-							action = RESIZE;
-							side = BOTTOM;
-							break;
+								Window::Manager::hoveredOver = *curr;
+							}
 						}
-
-						// Left frame
-						if((*curr)->Frame()
-						&& (*curr)->XPos ()                    - Frame::Move::left <= x
-						&& (*curr)->YPos ()                                        <= y
-						&& (*curr)->XPos ()                                        >  x
-						&& (*curr)->YPos () + (*curr)->YSize()                     >  y
-						)
+						else if (Window::Manager::hoveredOver && action == APPLCATION)
 						{
-							action = MOVE;
-							break;
-						}
+							int localX = x - Window::Manager::hoveredOver->XPos() + Window::Manager::hoveredOver->XOffset();
+							int localY = y - Window::Manager::hoveredOver->YPos() + Window::Manager::hoveredOver->YOffset();
 
-						if((*curr)->Frame()
-						&& (*curr)->XPos ()                    - Frame::Move::left - Frame::Resize::left <= x
-						&& (*curr)->YPos ()                                                              <= y
-						&& (*curr)->XPos ()                    - Frame::Move::left                       >  x
-						&& (*curr)->YPos () + (*curr)->YSize()                                           >  y
-						)
-						{
-							action = RESIZE;
-							side = LEFT;
-							break;
-						}
-
-						// Right frame
-						if((*curr)->Frame()
-						&& (*curr)->XPos () + (*curr)->XSize()                      <= x
-						&& (*curr)->YPos ()                                         <= y
-						&& (*curr)->XPos () + (*curr)->XSize() + Frame::Move::right >  x
-						&& (*curr)->YPos () + (*curr)->YSize()                      >  y
-						)
-						{
-							action = MOVE;
-							break;
-						}
-
-						if((*curr)->Frame()
-						&& (*curr)->XPos () + (*curr)->XSize() + Frame::Move::right                        <= x
-						&& (*curr)->YPos ()                                                                <= y
-						&& (*curr)->XPos () + (*curr)->XSize() + Frame::Move::right + Frame::Resize::right >  x
-						&& (*curr)->YPos () + (*curr)->YSize()                                             >  y
-						)
-						{
-							action = RESIZE;
-							side = RIGHT;
-							break;
-						}
-
-						curr++;
-					}
-
-					if (Window::Manager::hoveredOver != *curr && input == UNLOCK && action != APPLCATION)
-					{
-						if (Window::Manager::hoveredOver)
-						{
-							Protocols::WL::Pointer::Leave(
-								(wl_client  *)Window::Manager::hoveredOver->Client(), 
-								(wl_resource*)Client::Get::Surface(Window::Manager::hoveredOver)
+							Protocols::WL::Pointer::Moved(
+								(wl_client*)Window::Manager::hoveredOver->Client(),
+								localX, localY, x, y
 							);
 							Protocols::WL::Pointer::Frame(
 								(wl_client*)Window::Manager::hoveredOver->Client()
 							);
-
-							Window::Manager::hoveredOver = nullptr;
 						}
 					}
-					else if (Window::Manager::hoveredOver != *curr && input == UNLOCK && action == APPLCATION)
+					else if (Window::Manager::hoveredOver)
 					{
-						if (curr != Window::Manager::windowList.end())
+						if (action == MOVE)
 						{
-							int localX = x - (*curr)->XPos() - (*curr)->XOffset();
-							int localY = y - (*curr)->YPos() - (*curr)->YOffset();
-
-							Protocols::WL::Pointer::Enter(
-								(wl_client  *)(*curr)->Client(), 
-								(wl_resource*)Client::Get::Surface(*curr),
-								localX, localY, x, y
-							);
-							Protocols::WL::Pointer::Frame(
-								(wl_client*)(*curr)->Client()
-							);
-
-							Window::Manager::hoveredOver = *curr;
+							int newX = Window::Manager::hoveredOver->XPos() + (x - preX);
+							int newY = Window::Manager::hoveredOver->YPos() + (y - preY);
+							Window::Manager::Move(Window::Manager::hoveredOver, newX, newY);
+							Protocols::WL::Pointer::Moved(nullptr, x, y, x, y);
 						}
-					}
-					else if (Window::Manager::hoveredOver && action == APPLCATION)
-					{
-						int localX = x - Window::Manager::hoveredOver->XPos() + Window::Manager::hoveredOver->XOffset();
-						int localY = y - Window::Manager::hoveredOver->YPos() + Window::Manager::hoveredOver->YOffset();
-
-						Protocols::WL::Pointer::Moved(
-							(wl_client*)Window::Manager::hoveredOver->Client(),
-							localX, localY, x, y
-						);
-						Protocols::WL::Pointer::Frame(
-							(wl_client*)Window::Manager::hoveredOver->Client()
-						);
-					}
-					else if (Window::Manager::hoveredOver && action == MOVE && input == LOCK)
-					{
-						int newX = Window::Manager::hoveredOver->XPos() + (x - preX);
-						int newY = Window::Manager::hoveredOver->YPos() + (y - preY);
-						Window::Manager::Move(Window::Manager::hoveredOver, newX, newY);
-						Protocols::WL::Pointer::Moved(nullptr, x, y, x, y);
-					}
-					else if (Window::Manager::hoveredOver && action == RESIZE && input == LOCK)
-					{
-						int deltaX = (x - preX);
-						int deltaY = (y - preY);
-						int XSize = Window::Manager::hoveredOver->XSize();
-						int YSize = Window::Manager::hoveredOver->YSize();
-						int XPos = Window::Manager::hoveredOver->XPos();
-						int YPos = Window::Manager::hoveredOver->YPos();
-
-						switch (side)
+						else if (action == RESIZE)
 						{
-						case TOP:
-							YPos += deltaY;
-							YSize -= deltaY;
-							break;
-						case BOTTOM:
-							YSize += deltaY;
-							break;
-						case LEFT:
-							XPos += deltaX;
-							XSize -= deltaX;
-							break;
-						case RIGHT:
-							XSize += deltaX;
-							break;
-						case TOP_LEFT:
-							YPos += deltaY;
-							YSize -= deltaY;
-							XPos += deltaX;
-							XSize -= deltaX;
-							break;
-						case TOP_RIGHT:
-							YPos += deltaY;
-							YSize -= deltaY;
-							XSize += deltaX;
-							break;
-						case BOTTOM_LEFT:
-							XPos += deltaX;
-							XSize -= deltaX;
-							YSize += deltaY;
-							break;
-						case BOTTOM_RIGHT:
-							XSize += deltaX;
-							YSize += deltaY;
-							break;
+							int deltaX = (x - preX);
+							int deltaY = (y - preY);
+							int XSize = Window::Manager::hoveredOver->XSize();
+							int YSize = Window::Manager::hoveredOver->YSize();
+							int XPos = Window::Manager::hoveredOver->XPos();
+							int YPos = Window::Manager::hoveredOver->YPos();
+
+							if ((side & TOP   ) != 0)
+							{
+								YPos += deltaY;
+								YSize -= deltaY;
+							}
+							if ((side & BOTTOM) != 0)
+							{
+								YSize += deltaY;
+							}
+							if ((side & LEFT  ) != 0)
+							{
+								XPos += deltaX;
+								XSize -= deltaX;
+							}
+							if ((side & RIGHT ) != 0)
+							{
+								XSize += deltaX;
+							}
+
+							int preX = Window::Manager::hoveredOver->XSize();
+							int preY = Window::Manager::hoveredOver->YSize();
+
+							Window::Manager::Resize(Window::Manager::hoveredOver, XSize, YSize);
+
+							if (preX != Window::Manager::hoveredOver->XSize())
+								Window::Manager::Move(Window::Manager::hoveredOver, XPos, Window::Manager::hoveredOver->YPos());
+							if (preY != Window::Manager::hoveredOver->YSize())
+								Window::Manager::Move(Window::Manager::hoveredOver, Window::Manager::hoveredOver->XPos(), YPos);
+
+							Protocols::WL::Pointer::Moved(nullptr, XPos, YPos, x, y);
 						}
-
-						int preX = Window::Manager::hoveredOver->XSize();
-						int preY = Window::Manager::hoveredOver->YSize();
-
-						Window::Manager::Resize(Window::Manager::hoveredOver, XSize, YSize);
-
-						if (preX != Window::Manager::hoveredOver->XSize())
-							Window::Manager::Move(Window::Manager::hoveredOver, XPos, Window::Manager::hoveredOver->YPos());
-						if (preY != Window::Manager::hoveredOver->YSize())
-							Window::Manager::Move(Window::Manager::hoveredOver, Window::Manager::hoveredOver->XPos(), YPos);
-
-						Protocols::WL::Pointer::Moved(nullptr, XPos, YPos, x, y);
 					}
 
 					Protocols::WL::Pointer::Moved(nullptr, x, y, x, y);
