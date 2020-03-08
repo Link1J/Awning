@@ -41,7 +41,7 @@ namespace Awning::Protocols::XDG::Popup
 
 		data.popups[resource].parent  = parent;
 		data.popups[resource].surface = surface;
-		data.popups[resource].window  = WM::Window::Create(wl_client);
+		data.popups[resource].window  = Window::Create(wl_client);
 
 		WL::Surface::data.surfaces[surface_wl].window = data.popups[resource].window;
 		    Surface::data.surfaces[surface   ].window = data.popups[resource].window;
@@ -50,8 +50,8 @@ namespace Awning::Protocols::XDG::Popup
 
 		WL::Surface::data.surfaces[surface_wl].type = 2;
 
-		WM::Window::Manager::Move  (data.popups[resource].window, pointer.x, pointer.y);
-		WM::Window::Manager::Resize(data.popups[resource].window, pointer.width, pointer.height);
+		Window::Manager::Move  (data.popups[resource].window, pointer.x, pointer.y);
+		Window::Manager::Resize(data.popups[resource].window, pointer.width, pointer.height);
 
 		data.popups[resource].window->Data(resource);
 		data.popups[resource].window->Parent(Surface::data.surfaces[parent].window, true);
@@ -75,7 +75,7 @@ namespace Awning::Protocols::XDG::Popup
 
 		data.popups[resource].window->Mapped (false  );
 		data.popups[resource].window->Texture(nullptr);
-		WM::Window::Destory(data.popups[resource].window);
+		Window::Destory(data.popups[resource].window);
 		data.popups.erase(resource);
 	}
 }

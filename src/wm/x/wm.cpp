@@ -36,7 +36,7 @@
 #define _NET_WM_MOVERESIZE_MOVE_KEYBOARD    10   /* move via keyboard */
 #define _NET_WM_MOVERESIZE_CANCEL           11   /* cancel operation */
 
-std::unordered_map<xcb_window_t, Awning::WM::Window*> windows;
+std::unordered_map<xcb_window_t, Awning::Window*> windows;
 
 #include <iostream>
 
@@ -55,7 +55,7 @@ namespace Awning
 	}
 };
 
-namespace Awning::WM::X
+namespace Awning::X
 {
 	wl_client* xWaylandClient = nullptr;
 	void* surface;
@@ -304,16 +304,16 @@ namespace Awning::WM::X
 					uint32_t values[] = {e->x, e->y, e->width, e->height, 0};
 
 					auto display = Backend::GetDisplays()[0];
-					auto [sx, sy] = WM::Output::Get::Mode::Resolution(display.output, display.mode);
+					auto [sx,sy] = Output::Get::Mode::Resolution(display.output, display.mode);
 
 					if (e->x == 0) e->x = sx/2. - e->width /2.;
 					if (e->y == 0) e->y = sy/2. - e->height/2.;
 
 					xcb_configure_window(xcb_conn, e->window, mask, values);
 					xcb_flush(xcb_conn);
-
-					WM::Window::Manager::Move  (windows[e->window], e->x    , e->y     );
-					WM::Window::Manager::Resize(windows[e->window], e->width, e->height);
+					
+					Window::Manager::Move  (windows[e->window], e->x    , e->y     );
+					Window::Manager::Resize(windows[e->window], e->width, e->height);
 
 					windows[e->window]->SetResized(Resized);
 					windows[e->window]->SetRaised (Raised );
@@ -331,15 +331,13 @@ namespace Awning::WM::X
 					windows[e->window]->Frame(true);
 
 					auto display = Backend::GetDisplays()[0];
-					auto [sx, sy] = WM::Output::Get::Mode::Resolution(display.output, display.mode);
+					auto [sx,sy] = Output::Get::Mode::Resolution(display.output, display.mode);
 
-					if (windows[e->window]->XPos() == INT32_MIN)
-						WM::Window::Manager::Move(windows[e->window], sx/2. - windows[e->window]->XSize()/2., windows[e->window]->YPos());
-					if (windows[e->window]->YPos() == INT32_MIN)
-						WM::Window::Manager::Move(windows[e->window], windows[e->window]->XPos(), sy/2. - windows[e->window]->YSize()/2.);
+					if (windows[e->window]->XPos() == INT32_MIN) Window::Manager::Move(windows[e->window], sx/2. - windows[e->window]->XSize()/2., windows[e->window]->YPos());
+					if (windows[e->window]->YPos() == INT32_MIN) Window::Manager::Move(windows[e->window], windows[e->window]->XPos(), sy/2. - windows[e->window]->YSize()/2.);
 
         			windows[e->window]->Mapped(true);
-					WM::Window::Manager::Raise(windows[e->window]);
+					Window::Manager::Raise(windows[e->window]);
 				}
 				break;
 			case XCB_MAP_NOTIFY:
@@ -387,49 +385,48 @@ namespace Awning::WM::X
 					}
 					if (e->type == atoms[_NET_WM_MOVERESIZE])
 					{
-						Awning::WM::Manager::Handle::Input::WindowAction action;
-						Awning::WM::Manager::Handle::Input::WindowSide   side  ;
+						WM::Manager::Handle::Input::WindowAction action;
+						WM::Manager::Handle::Input::WindowSide   side  ;
 
 						switch (e->data.data32[2])
 						{
 						case _NET_WM_MOVERESIZE_SIZE_TOPLEFT    :
-							action = Manager::Handle::Input::RESIZE;
-							side   = Manager::Handle::Input::TOP_LEFT;
+							action = WM::Manager::Handle::Input::RESIZE;
+							side   = WM::Manager::Handle::Input::TOP_LEFT;
 							break;
 						case _NET_WM_MOVERESIZE_SIZE_TOP        :
-							action = Manager::Handle::Input::RESIZE;
-							side   = Manager::Handle::Input::TOP;
+							action = WM::Manager::Handle::Input::RESIZE;
+							side   = WM::Manager::Handle::Input::TOP;
 							break;
 						case _NET_WM_MOVERESIZE_SIZE_TOPRIGHT   :
-							action = Manager::Handle::Input::RESIZE;
-							side   = Manager::Handle::Input::TOP_RIGHT;
+							action = WM::Manager::Handle::Input::RESIZE;
+							side   = WM::Manager::Handle::Input::TOP_RIGHT;
 							break;
 						case _NET_WM_MOVERESIZE_SIZE_RIGHT      :
-							action = Manager::Handle::Input::RESIZE;
-							side   = Manager::Handle::Input::RIGHT;
+							action = WM::Manager::Handle::Input::RESIZE;
+							side   = WM::Manager::Handle::Input::RIGHT;
 							break;
 						case _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT:
-							action = Manager::Handle::Input::RESIZE;
-							side   = Manager::Handle::Input::BOTTOM_RIGHT;
+							action = WM::Manager::Handle::Input::RESIZE;
+							side   = WM::Manager::Handle::Input::BOTTOM_RIGHT;
 							break;
 						case _NET_WM_MOVERESIZE_SIZE_BOTTOM     :
-							action = Manager::Handle::Input::RESIZE;
-							side   = Manager::Handle::Input::BOTTOM;
+							action = WM::Manager::Handle::Input::RESIZE;
+							side   = WM::Manager::Handle::Input::BOTTOM;
 							break;
 						case _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT :
-							action = Manager::Handle::Input::RESIZE;
-							side   = Manager::Handle::Input::BOTTOM_LEFT;
+							action = WM::Manager::Handle::Input::RESIZE;
+							side   = WM::Manager::Handle::Input::BOTTOM_LEFT;
 							break;
 						case _NET_WM_MOVERESIZE_SIZE_LEFT       :
-							action = Manager::Handle::Input::RESIZE;
-							side   = Manager::Handle::Input::LEFT;
+							action = WM::Manager::Handle::Input::RESIZE;
+							side   = WM::Manager::Handle::Input::LEFT;
 							break;
 						case _NET_WM_MOVERESIZE_MOVE            :
-							action = Manager::Handle::Input::MOVE;
-							side   = Manager::Handle::Input::TOP;
+							action = WM::Manager::Handle::Input::MOVE;
+							side   = WM::Manager::Handle::Input::TOP;
 							break;
 						}
-
 						WM::Manager::Handle::Input::Lock(action, side);
 					}
 					

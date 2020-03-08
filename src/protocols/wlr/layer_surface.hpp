@@ -17,7 +17,7 @@ namespace Awning::Protocols::WLR::Layer_Surface
 			std::string title;
 			std::string appid;
 			std::string name_space;
-			WM::Window* window;
+			Window* window;
 		};
 
 		std::unordered_map<wl_resource*, Instance> instances;

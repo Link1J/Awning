@@ -59,7 +59,7 @@ namespace Awning
 	}
 };
 
-namespace Awning::WM::Output
+namespace Awning::Output
 {
 	std::unordered_map<::Output*, wl_global*> globals;
 

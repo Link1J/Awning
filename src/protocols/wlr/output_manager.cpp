@@ -68,10 +68,10 @@ namespace Awning::Protocols::WLR::Head
 	{
 		auto outputId = data.resource_to_outputId[resource];
 
-		auto [mX, mY] = WM::Output::Get::Size        (outputId);
-		auto [pX, pY] = WM::Output::Get::Position    (outputId);
-		auto manuf    = WM::Output::Get::Description (outputId);
-		auto model    = WM::Output::Get::Name        (outputId);
+		auto [mX, mY] = Awning::Output::Get::Size        (outputId);
+		auto [pX, pY] = Awning::Output::Get::Position    (outputId);
+		auto manuf    = Awning::Output::Get::Description (outputId);
+		auto model    = Awning::Output::Get::Name        (outputId);
 
 		zwlr_output_head_v1_send_name(resource, model.c_str());
 		zwlr_output_head_v1_send_description(resource, manuf.c_str());
@@ -81,17 +81,17 @@ namespace Awning::Protocols::WLR::Head
 		zwlr_output_head_v1_send_transform(resource, WL_OUTPUT_TRANSFORM_NORMAL);
 		zwlr_output_head_v1_send_physical_size(resource, mX, mY);
 
-		for (int a = 0; a < WM::Output::Get::NumberOfModes(outputId); a++)
+		for (int a = 0; a < Awning::Output::Get::NumberOfModes(outputId); a++)
 		{
 			auto mode = Mode::Create(wl_resource_get_client(resource), wl_resource_get_version(resource), 0, outputId, a, resource);
 			Mode::SendData(mode);
 
-			if (WM::Output::Get::Mode::Current(outputId, a))
+			if (Awning::Output::Get::Mode::Current(outputId, a))
 				zwlr_output_head_v1_send_current_mode(resource, mode);
 		}
 	}
 
-	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, WM::Output::ID outputId, wl_resource* manager)
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, Awning::Output::ID outputId, wl_resource* manager)
 	{		
 		struct wl_resource* resource = wl_resource_create(wl_client, &zwlr_output_head_v1_interface, version, 0);
 		if (resource == nullptr) {
@@ -134,19 +134,19 @@ namespace Awning::Protocols::WLR::Mode
 		auto outputId = data.resource_to_outputId[resource];
 		auto mode     = data.resource_to_mode    [resource];
 
-		auto [mX, mY] = WM::Output::Get::Mode::Resolution (outputId, mode);
-		auto refresh  = WM::Output::Get::Mode::RefreshRate(outputId, mode);
+		auto [mX, mY] = Awning::Output::Get::Mode::Resolution (outputId, mode);
+		auto refresh  = Awning::Output::Get::Mode::RefreshRate(outputId, mode);
 
 		zwlr_output_mode_v1_send_size     (resource, mX, mY );
 		zwlr_output_mode_v1_send_refresh  (resource, refresh);
 
-		//if (WM::Output::Get::Mode::Prefered(outputId, mode))
+		//if (Awning::Output::Get::Mode::Prefered(outputId, mode))
 		//	zwlr_output_mode_v1_send_preferred(resource);
 
 		//zwlr_output_mode_v1_send_finished(resource);
 	}
 
-	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, WM::Output::ID outputId, int mode, wl_resource* head)
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, Awning::Output::ID outputId, int mode, wl_resource* head)
 	{		
 		struct wl_resource* resource = wl_resource_create(wl_client, &zwlr_output_mode_v1_interface, version, 0);
 		if (resource == nullptr) {

@@ -26,18 +26,18 @@ namespace Awning::Protocols::WLR::Layer_Surface
 	{
 		void Set_Size(struct wl_client* client, struct wl_resource* resource, uint32_t width, uint32_t height)
 		{
-			WM::Window::Manager::Resize(data.instances[resource].window, width, height);
+			Window::Manager::Resize(data.instances[resource].window, width, height);
 		}
 
 		void Set_Anchor(struct wl_client* client, struct wl_resource* resource, uint32_t anchor)
 		{
 			auto output_resource = data.instances[resource].output;
 			auto output = WL::Output::data.resource_to_outputId[output_resource];
-			auto [px, py] = WM::Output::Get::Position(output);
-			auto [sx, sy] = WM::Output::Get::Mode::Resolution(output, WM::Output::Get::CurrentMode(output));
+			auto [px, py] = Output::Get::Position(output);
+			auto [sx, sy] = Output::Get::Mode::Resolution(output, Output::Get::CurrentMode(output));
 
-			WM::Window::Manager::Move  (data.instances[resource].window, px, py);
-			WM::Window::Manager::Resize(data.instances[resource].window, sx, sy);
+			Window::Manager::Move  (data.instances[resource].window, px, py);
+			Window::Manager::Resize(data.instances[resource].window, sx, sy);
 		}
 
 		void Set_Exclusive_Zone(struct wl_client* client, struct wl_resource* resource, int32_t zone)
@@ -82,10 +82,10 @@ namespace Awning::Protocols::WLR::Layer_Surface
 		data.instances[resource] = Data::Instance();
 		data.instances[resource].surface = surface;
 		data.instances[resource].output  = output ;
-		data.instances[resource].window = WM::Window::Create(wl_client);
+		data.instances[resource].window = Window::Create(wl_client);
 
-		WM::Window::Manager::Manage(data.instances[resource].window, (WM::Window::Manager::Layer)layer);
-		WM::Window::Manager::Move  (data.instances[resource].window, 0, 0                             );
+		Window::Manager::Manage(data.instances[resource].window, (Window::Manager::Layer)layer);
+		Window::Manager::Move  (data.instances[resource].window, 0, 0                         );
 
 		WL::Surface::data.surfaces[surface].window = data.instances[resource].window;
 		WL::Surface::data.surfaces[surface].type = 0;
@@ -107,7 +107,7 @@ namespace Awning::Protocols::WLR::Layer_Surface
 
 		data.instances[resource].window->Mapped(false);
 		data.instances[resource].window->Texture(nullptr);
-		WM::Window::Destory(data.instances[resource].window);
+		Window::Destory(data.instances[resource].window);
 		data.instances.erase(resource);
 	}
 

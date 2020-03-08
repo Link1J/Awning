@@ -28,12 +28,12 @@ namespace Awning::Protocols::WL::Output
 		}
 		wl_resource_set_implementation(resource, &interface, data, Destroy);
 
-		WM::Output::ID outputId = (WM::Output::ID)data;
+		Awning::Output::ID outputId = (Awning::Output::ID)data;
 
-		auto [mX, mY] = WM::Output::Get::Size        (outputId);
-		auto [pX, pY] = WM::Output::Get::Position    (outputId);
-		auto manuf    = WM::Output::Get::Manufacturer(outputId);
-		auto model    = WM::Output::Get::Model       (outputId);
+		auto [mX, mY] = Awning::Output::Get::Size        (outputId);
+		auto [pX, pY] = Awning::Output::Get::Position    (outputId);
+		auto manuf    = Awning::Output::Get::Manufacturer(outputId);
+		auto model    = Awning::Output::Get::Model       (outputId);
 
 		wl_output_send_geometry(resource, 
 			pX, pY, mX, mY,
@@ -45,12 +45,12 @@ namespace Awning::Protocols::WL::Output
 
 		wl_output_send_scale(resource, 1);
 
-		for (int a = 0; a < WM::Output::Get::NumberOfModes(outputId); a++)
+		for (int a = 0; a < Awning::Output::Get::NumberOfModes(outputId); a++)
 		{		
-			auto [sX, sY] = WM::Output::Get::Mode::Resolution (outputId, a);
-			auto refresh  = WM::Output::Get::Mode::RefreshRate(outputId, a);
-			auto prefered = WM::Output::Get::Mode::Prefered   (outputId, a);
-			auto current  = WM::Output::Get::Mode::Current    (outputId, a);
+			auto [sX, sY] = Awning::Output::Get::Mode::Resolution (outputId, a);
+			auto refresh  = Awning::Output::Get::Mode::RefreshRate(outputId, a);
+			auto prefered = Awning::Output::Get::Mode::Prefered   (outputId, a);
+			auto current  = Awning::Output::Get::Mode::Current    (outputId, a);
 
 			wl_output_send_mode(resource, 
 				(current  ? WL_OUTPUT_MODE_CURRENT   : 0) | 

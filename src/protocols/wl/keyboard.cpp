@@ -94,7 +94,7 @@ namespace Awning::Protocols::WL::Keyboard
 
 		data.keyboards[wl_client].resource = resource;
 
-		WM::Client::Bind::Keyboard(wl_client, resource);
+		Client::Bind::Keyboard(wl_client, resource);
 
 		return resource;
 	}
@@ -120,7 +120,7 @@ namespace Awning::Protocols::WL::Keyboard
 		wl_array* states = new wl_array();
 		wl_array_init(states);
 
-		for (auto resource : WM::Client::Get::All::Keyboards(client))
+		for (auto resource : Client::Get::All::Keyboards(client))
 		{
 			wl_keyboard_send_enter((wl_resource*)resource, NextSerialNum(), surface, states);
 
@@ -139,12 +139,12 @@ namespace Awning::Protocols::WL::Keyboard
 		auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
 
 		//if (Surface::data.surfaces.contains(surface1))
-		//	for (auto resource : WM::Client::Get::All::Keyboards(client1))
+		//	for (auto resource : Client::Get::All::Keyboards(client1))
 		//	{
 		//		wl_keyboard_send_leave((wl_resource*)resource, NextSerialNum(), surface1);
 		//	}
 //
-		//for (auto resource : WM::Client::Get::All::Keyboards(client2))
+		//for (auto resource : Client::Get::All::Keyboards(client2))
 		//{
 		//	wl_array* states = new wl_array();
 		//	wl_array_init(states);

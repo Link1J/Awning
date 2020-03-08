@@ -37,7 +37,7 @@ namespace Awning::Protocols::WL::Subsurface
 
 		void Set_Position(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y)
 		{
-			WM::Window::Manager::Move(data.instances[resource].window, x, y);
+			Window::Manager::Move(data.instances[resource].window, x, y);
 		}
 
 		void Place_Above(struct wl_client* client, struct wl_resource* resource, struct wl_resource* sibling)
@@ -66,7 +66,7 @@ namespace Awning::Protocols::WL::Subsurface
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
-		data.instances[resource].window = WM::Window::Create(wl_client);
+		data.instances[resource].window = Window::Create(wl_client);
 		data.instances[resource].surface = surface;
 
 		Surface::data.surfaces[surface].window = data.instances[resource].window;
@@ -83,7 +83,7 @@ namespace Awning::Protocols::WL::Subsurface
 			return;
 
 		Surface::data.surfaces[data.instances[resource].surface].window = nullptr;
-		WM::Window::Destory(data.instances[resource].window);
+		Window::Destory(data.instances[resource].window);
 
 		data.instances.erase(resource);
 	}

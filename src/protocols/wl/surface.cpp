@@ -123,7 +123,7 @@ namespace Awning::Protocols::WL::Surface
 				if (surface.window)
 				{
 					surface.window->Texture(surface.texture);
-					WM::Window::Manager::Raise(surface.window);
+					Window::Manager::Raise(surface.window);
 				}
 				if (surface.type == 1)
 				{
@@ -141,7 +141,7 @@ namespace Awning::Protocols::WL::Surface
 				if (!surface.window->Texture())
 				{
 					surface.window->Texture(surface.texture);
-					WM::Window::Manager::Raise(surface.window);
+					Window::Manager::Raise(surface.window);
 				}
 			}
 
@@ -158,7 +158,7 @@ namespace Awning::Protocols::WL::Surface
 			if (surface.window)
 			{
 				if ((surface.window->XSize() == 0 && surface.window->YSize() == 0) || surface.type == 2 || surface.type == 3)
-					WM::Window::Manager::Resize(surface.window, surface.texture->width, surface.texture->height);
+					Window::Manager::Resize(surface.window, surface.texture->width, surface.texture->height);
 
 				surface.window->Mapped(true);
 			}
@@ -195,8 +195,8 @@ namespace Awning::Protocols::WL::Surface
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 		
 		data.surfaces[resource].client = wl_client;
-		data.surfaces[resource].texture = new WM::Texture();
-		memset(data.surfaces[resource].texture, 0, sizeof(WM::Texture));
+		data.surfaces[resource].texture = new Texture();
+		memset(data.surfaces[resource].texture, 0, sizeof(Texture));
 
 		return resource;
 	}

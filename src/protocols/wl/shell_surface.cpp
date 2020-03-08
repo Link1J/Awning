@@ -92,14 +92,14 @@ namespace Awning::Protocols::WL::Shell_Surface
 		data.shells[resource] = Data::Instance();
 
 		data.shells[resource].surface = surface;
-		data.shells[resource].window = WM::Window::Create(wl_client);
+		data.shells[resource].window = Window::Create(wl_client);
 		Surface::data.surfaces[surface].window = data.shells[resource].window;
 
-		WM::Window::Manager::Manage(data.shells[resource].window);
-		WM::Window::Manager::Raise(data.shells[resource].window);
+		Window::Manager::Manage(data.shells[resource].window);
+		Window::Manager::Raise(data.shells[resource].window);
 
-		if (WM::X::surface == nullptr)
-			WM::X::surface = surface;
+		if (X::surface == nullptr)
+			X::surface = surface;
 
 		return resource;
 	}
@@ -114,7 +114,7 @@ namespace Awning::Protocols::WL::Shell_Surface
 		
 		data.shells[resource].window->Mapped(false);
 		data.shells[resource].window->Texture(nullptr);
-		WM::Window::Destory(data.shells[resource].window);
+		Window::Destory(data.shells[resource].window);
 		data.shells.erase(resource);
 	}
 }

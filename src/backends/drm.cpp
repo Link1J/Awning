@@ -71,15 +71,15 @@ static inline std::string trim_copy(std::string s) {
 
 struct Connector
 {
-	int                     framebuffer = -1     ;
-	Awning::WM::Output::ID  output      = -1     ;
-	Awning::WM::Texture     texture              ;
-	int                     prefered    = -1     ;
-	uint32_t                handle      = -1     ;
-	uint32_t                encoder     = -1     ;
-	uint32_t                id          = -1     ;
-	drm_mode_modeinfo     * modes       = nullptr;
-	int                     current     = -1     ;
+	int                 framebuffer = -1     ;
+	Awning::Output::ID  output      = -1     ;
+	Awning::Texture     texture              ;
+	int                 prefered    = -1     ;
+	uint32_t            handle      = -1     ;
+	uint32_t            encoder     = -1     ;
+	uint32_t            id          = -1     ;
+	drm_mode_modeinfo * modes       = nullptr;
+	int                 current     = -1     ;
 };
 
 struct Card
@@ -182,7 +182,7 @@ struct DisplayDescriptor {
 
 void CheckData()
 {
-	using namespace Awning::WM;
+	using namespace Awning;
 
 	for (auto& card : cards)
 	{
@@ -258,7 +258,6 @@ void CheckData()
 
 						if (std::string(prop.name) == "EDID")
 						{
-							std::cout << "\n";
 							int offset[] = {54,72,90,108};
 							int count = 0;
 							for (int c = 0; c < 4; c++)
@@ -316,7 +315,7 @@ void CheckData()
 			{
 				if (card.connectors[i].output != -1)
 				{
-					Awning::WM::Output::Destory(card.connectors[i].output);
+					Awning::Output::Destory(card.connectors[i].output);
 					card.connectors[i].output = -1;
 				}
 			}
@@ -373,7 +372,7 @@ void SetMode(int cardID, int connectorID, int modeID)
 	struct drm_mode_get_encoder enc         = {0};
 	struct drm_mode_crtc        crtc        = {0};
 
-	auto [width, height] = Awning::WM::Output::Get::Mode::Resolution(connector.output, modeID);
+	auto [width, height] = Awning::Output::Get::Mode::Resolution(connector.output, modeID);
 
 	create_dumb.width  = width;
 	create_dumb.height = height;

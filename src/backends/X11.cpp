@@ -34,17 +34,17 @@
 
 struct WindowData
 {	
-	EGLSurface             surface            ;
-	bool 		           resized     = false;
-	Awning::WM::Texture    framebuffer        ;
-	Awning::WM::Output::ID id                 ;
-	GLuint                 texture            ;
+	EGLSurface         surface            ;
+	bool 		       resized     = false;
+	Awning::Texture    framebuffer        ;
+	Awning::Output::ID id                 ;
+	GLuint             texture            ;
 };
 
-static Display*		                          display    ;
-static EGLDisplay                             egl_display;
-static EGLContext                             egl_context;
-static std::unordered_map<Window, WindowData> windows    ;
+static Display*		                            display    ;
+static EGLDisplay                               egl_display;
+static EGLContext                               egl_context;
+static std::unordered_map<::Window, WindowData> windows    ;
 
 static Atom WM_DELETE_WINDOW;
 
@@ -83,7 +83,7 @@ void main()
 
 namespace Awning::Backend::X11
 {
-	void CreateBackingTexture(Window window)
+	void CreateBackingTexture(::Window window)
 	{
 		WindowData& data = windows[window];
 
@@ -101,7 +101,7 @@ namespace Awning::Backend::X11
 		data.framebuffer.buffer.pointer = new uint8_t[data.framebuffer.size];
 	}
 
-	void ReleaseBackingTexture(Window window)
+	void ReleaseBackingTexture(::Window window)
 	{
 		WindowData& data = windows[window];
 
@@ -199,7 +199,7 @@ void Awning::Backend::X11::Start()
 	for (int a = 1; a <= displays; a++)
 	{
 		WindowData data;
-		Window window = XCreateWindow(display, root, 0, 0, width, height, 0, CopyFromParent, InputOutput, CopyFromParent, CWEventMask, &attribs);
+		::Window window = XCreateWindow(display, root, 0, 0, width, height, 0, CopyFromParent, InputOutput, CopyFromParent, CWEventMask, &attribs);
 
 		XClassHint classHint {
 			(char*)"Awning",
@@ -214,7 +214,7 @@ void Awning::Backend::X11::Start()
 
 		data.surface = eglCreateWindowSurface(egl_display, ecfg, window, NULL);
 
-		data.framebuffer = Awning::WM::Texture {
+		data.framebuffer = Awning::Texture {
     	    .size         = (uintptr_t)width * height * 4,
     	    .bitsPerPixel = 32,
     	    .bytesPerLine = (uintptr_t)width * 4,
@@ -238,20 +238,20 @@ void Awning::Backend::X11::Start()
     	    .height       = (uintptr_t)height
     	};
 
-		data.id = WM::Output::Create();
-		WM::Output::Set::NumberOfModes(data.id, 1);
+		data.id = Output::Create();
+		Output::Set::NumberOfModes(data.id, 1);
 
-		WM::Output::Set::Manufacturer(data.id, "X.Org Foundation"     );
-		WM::Output::Set::Model       (data.id, "11.0"                 );
-		WM::Output::Set::Size        (data.id, 0, 0                   );
-		WM::Output::Set::Position    (data.id, xOffset, 0             );
-		WM::Output::Set::Name        (data.id, displayName            );
-		WM::Output::Set::Description (data.id, "X.Org Foundation 11.0");
+		Output::Set::Manufacturer(data.id, "X.Org Foundation"     );
+		Output::Set::Model       (data.id, "11.0"                 );
+		Output::Set::Size        (data.id, 0, 0                   );
+		Output::Set::Position    (data.id, xOffset, 0             );
+		Output::Set::Name        (data.id, displayName            );
+		Output::Set::Description (data.id, "X.Org Foundation 11.0");
 		
-		WM::Output::Set::Mode::Resolution (data.id, 0, data.framebuffer.width, data.framebuffer.height);
-		WM::Output::Set::Mode::RefreshRate(data.id, 0, 0                                              );
-		WM::Output::Set::Mode::Prefered   (data.id, 0, true                                           );
-		WM::Output::Set::Mode::Current    (data.id, 0, true                                           );
+		Output::Set::Mode::Resolution (data.id, 0, data.framebuffer.width, data.framebuffer.height);
+		Output::Set::Mode::RefreshRate(data.id, 0, 0                                              );
+		Output::Set::Mode::Prefered   (data.id, 0, true                                           );
+		Output::Set::Mode::Current    (data.id, 0, true                                           );
 
 		windows[window] = data;
 
@@ -292,19 +292,19 @@ void Awning::Backend::X11::Hand()
 			ReleaseBackingTexture(event.xconfigure.window);
 			CreateBackingTexture (event.xconfigure.window);
 
-			WM::Output::Set::Mode::Resolution(data.id, 0, data.framebuffer.width, data.framebuffer.height);
+			Output::Set::Mode::Resolution(data.id, 0, data.framebuffer.width, data.framebuffer.height);
 		}
 		else if (event.type == ClientMessage)
 		{
 			ReleaseBackingTexture(event.xclient.window);
 			//eglDestroySurface(egl_display, windows[event.xclient.window].surface);
-			WM::Output::Destory(windows[event.xclient.window].id);
+			Output::Destory(windows[event.xclient.window].id);
 			windows.erase(event.xclient.window);
 			XDestroyWindow(display, event.xclient.window);
 		}
 		else if (event.type == MotionNotify)
 		{
-			auto [px, py] = WM::Output::Get::Position(windows[event.xmotion.window].id);
+			auto [px, py] = Output::Get::Position(windows[event.xmotion.window].id);
 			Awning::WM::Manager::Handle::Input::Mouse::Moved(px + event.xmotion.x, py + event.xmotion.y);			
 		}
 		else if (event.type == ButtonPress)

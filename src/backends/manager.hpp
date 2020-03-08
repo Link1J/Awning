@@ -13,8 +13,8 @@ namespace Awning::Backend
 
 	struct Display
 	{
-		WM::Output::ID output ;
-		WM::Texture    texture;
+		Output::ID output ;
+		Texture    texture;
 		int            mode   ;
 	};
 	typedef std::vector<Display> Displays;

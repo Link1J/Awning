@@ -57,8 +57,8 @@ namespace Awning::Backend
 		int width = 0, height = 0;
 		for (auto display : displays)
 		{
-			auto [px, py] = WM::Output::Get::Position(display.output);
-			auto [sx, sy] = WM::Output::Get::Mode::Resolution(display.output, display.mode);
+			auto [px, py] = Output::Get::Position(display.output);
+			auto [sx, sy] = Output::Get::Mode::Resolution(display.output, display.mode);
 
 			if (width  < px + sx)
 				width  = px + sx;

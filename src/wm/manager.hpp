@@ -5,7 +5,7 @@
 #include <list>
 #include <stdint.h>
 
-namespace Awning::WM { class Window; }
+namespace Awning { class Window; }
 
 namespace Frame 
 {

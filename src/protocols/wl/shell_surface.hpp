@@ -12,7 +12,7 @@ namespace Awning::Protocols::WL::Shell_Surface
 		struct Instance 
 		{
 			wl_resource* surface;
-			WM::Window* window;
+			Window* window;
 		};
 
 		std::unordered_map<wl_resource*, Instance> shells;

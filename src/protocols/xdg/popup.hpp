@@ -13,7 +13,7 @@ namespace Awning::Protocols::XDG::Popup
 		{
 			wl_resource* surface;
 			wl_resource* parent;
-			WM::Window* window;
+			Window* window;
 		};
 
 		std::unordered_map<wl_resource*, Instance> popups;

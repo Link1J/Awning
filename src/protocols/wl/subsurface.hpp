@@ -11,7 +11,7 @@ namespace Awning::Protocols::WL::Subsurface
 	{
 		struct Instance 
 		{
-			WM::Window* window;
+			Window* window;
 			wl_resource* surface;
 		};
 

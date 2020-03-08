@@ -25,7 +25,7 @@ namespace Awning
 	}
 };
 
-namespace Awning::WM::X::Server
+namespace Awning::X::Server
 {
 	void LaunchXwayland(int signal_number);
 
@@ -130,7 +130,7 @@ namespace Awning::WM::X::Server
 
 	int XWM_Start(int signal_number, void* data)
 	{
-		Awning::WM::X::Init();
+		Awning::X::Init();
 		return 0;
 	}
 

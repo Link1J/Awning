@@ -1,7 +1,7 @@
 #pragma once
 #include <stdint.h>
 
-namespace Awning::WM
+namespace Awning
 {
 	struct Texture
 	{

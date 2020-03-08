@@ -109,7 +109,7 @@ namespace Awning::Renderers::GLES2
 
 	GLuint frameTexture;
 
-	void RenderWindow(WM::Window* window, int count = 2, int frame = 1, int depth = 0)
+	void RenderWindow(Window* window, int count = 2, int frame = 1, int depth = 0)
 	{
 		if (window->DrawingManaged() && depth == 0)
 			return;
@@ -200,7 +200,7 @@ namespace Awning::Renderers::GLES2
 		glDeleteShader(pixelShaderOES);
 		glDeleteShader(pixelShader2D );
 
-		auto list     = WM::Window::Manager::windowList;
+		auto list     = Window::Manager::windowList;
 		auto displays = Backend::GetDisplays();
 		auto [nW, nH] = Backend::Size(displays);
 
@@ -268,16 +268,16 @@ namespace Awning::Renderers::GLES2
 		glClear(GL_COLOR_BUFFER_BIT);
 		
 		int layerOrder[] = {
-				(int)WM::Window::Manager::Layer::Background,
-				(int)WM::Window::Manager::Layer::Bottom,
-				(int)WM::Window::Manager::Layer::Application,
-				(int)WM::Window::Manager::Layer::Top,
-				(int)WM::Window::Manager::Layer::Overlay,
+				(int)Window::Manager::Layer::Background,
+				(int)Window::Manager::Layer::Bottom,
+				(int)Window::Manager::Layer::Application,
+				(int)Window::Manager::Layer::Top,
+				(int)Window::Manager::Layer::Overlay,
 		};
 
 		for (int a = 0; a < sizeof(layerOrder) / sizeof(*layerOrder); a++)
 		{
-			auto list = WM::Window::Manager::layers[layerOrder[a]];
+			auto list = Window::Manager::layers[layerOrder[a]];
 			for (auto& window : reverse(list))
 			{
 				RenderWindow(window);
@@ -289,7 +289,7 @@ namespace Awning::Renderers::GLES2
 	
 		for (auto& display : displays)
 		{
-			auto [px, py] = WM::Output::Get::Position(display.output);
+			auto [px, py] = Output::Get::Position(display.output);
 
 			int sx = display.texture.bytesPerLine / (display.texture.bitsPerPixel / 8);
 			int sy = display.texture.height;
@@ -302,7 +302,7 @@ namespace Awning::Renderers::GLES2
 
 	namespace FillTextureFrom
 	{
-		void EGLImage(wl_resource* buffer, WM::Texture* texture, WM::Damage damage)
+		void EGLImage(wl_resource* buffer, Awning::Texture* texture, Awning::Damage damage)
 		{
 			eglMakeCurrent(EGL::display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL::context);
 
@@ -338,7 +338,7 @@ namespace Awning::Renderers::GLES2
 			eglDestroyImageKHR(EGL::display, image);
 		}
 
-		void SHMBuffer(wl_shm_buffer* shm_buffer, WM::Texture* texture, WM::Damage damage)
+		void SHMBuffer(wl_shm_buffer* shm_buffer, Awning::Texture* texture, Awning::Damage damage)
 		{
 			eglMakeCurrent(EGL::display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL::context);
 
@@ -371,7 +371,7 @@ namespace Awning::Renderers::GLES2
 			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 
-		void LinuxDMABuf(wl_resource* buffer, WM::Texture* texture, WM::Damage damage)
+		void LinuxDMABuf(wl_resource* buffer, Awning::Texture* texture, Awning::Damage damage)
 		{
 			eglMakeCurrent(EGL::display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL::context);
 

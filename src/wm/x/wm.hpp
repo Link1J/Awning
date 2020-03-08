@@ -4,7 +4,7 @@
 #include <xcb/xcb.h>
 #include <xcb/xcb_icccm.h>
 
-namespace Awning::WM::X
+namespace Awning::X
 {
 	enum atom_name {
 		WL_SURFACE_ID,

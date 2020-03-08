@@ -27,8 +27,8 @@ namespace Awning::Protocols::WLR::Head
 {
 	struct Data 
 	{
-		std::unordered_map<WM::Output::ID, std::unordered_set<wl_resource*>> outputId_to_resource;
-		std::unordered_map<wl_resource*, WM::Output::ID> resource_to_outputId;
+		std::unordered_map<Output::ID, std::unordered_set<wl_resource*>> outputId_to_resource;
+		std::unordered_map<wl_resource*, Output::ID> resource_to_outputId;
 	};
 
 	extern Data data;
@@ -38,7 +38,7 @@ namespace Awning::Protocols::WLR::Head
 		void Destroy(struct wl_client* client, struct wl_resource* resource);
 	}
 
-	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, WM::Output::ID outputId, wl_resource* manager);
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, Output::ID outputId, wl_resource* manager);
 	void Destroy(struct wl_resource* resource);
 	void SendData(wl_resource* resource);
 }
@@ -47,8 +47,8 @@ namespace Awning::Protocols::WLR::Mode
 {
 	struct Data 
 	{
-		std::unordered_map<WM::Output::ID, std::unordered_set<wl_resource*>> outputId_to_resource;
-		std::unordered_map<wl_resource*, WM::Output::ID> resource_to_outputId;
+		std::unordered_map<Output::ID, std::unordered_set<wl_resource*>> outputId_to_resource;
+		std::unordered_map<wl_resource*, Output::ID> resource_to_outputId;
 		std::unordered_map<wl_resource*, int> resource_to_mode;
 	};
 
@@ -59,7 +59,7 @@ namespace Awning::Protocols::WLR::Mode
 		void Destroy(struct wl_client* client, struct wl_resource* resource);
 	}
 
-	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, WM::Output::ID outputId, int mode, wl_resource* head);
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, Output::ID outputId, int mode, wl_resource* head);
 	void Destroy(struct wl_resource* resource);
 	void SendData(wl_resource* resource);
 }

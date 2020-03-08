@@ -44,7 +44,7 @@ namespace Awning::Protocols::XDG::WM_Base
 			return;
 		}
 		wl_resource_set_implementation(resource, &interface, data, nullptr);
-		WM::Client::SetWM(wl_client, resource);
+		Client::SetWM(wl_client, resource);
 	}
 
 	wl_global* Add(struct wl_display* display, void* data)

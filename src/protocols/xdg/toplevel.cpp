@@ -123,9 +123,9 @@ namespace Awning::Protocols::XDG::TopLevel
 
 		data.toplevels[resource] = Data::Instance();
 		data.toplevels[resource].surface = surface;
-		data.toplevels[resource].window = WM::Window::Create(wl_client);
+		data.toplevels[resource].window = Window::Create(wl_client);
 
-		WM::Window::Manager::Manage(data.toplevels[resource].window);
+		Window::Manager::Manage(data.toplevels[resource].window);
 
 		WL::Surface::data.surfaces[surface_wl].window = data.toplevels[resource].window;
 		    Surface::data.surfaces[surface   ].window = data.toplevels[resource].window;
@@ -152,7 +152,7 @@ namespace Awning::Protocols::XDG::TopLevel
 
 		data.toplevels[resource].window->Mapped(false);
 		data.toplevels[resource].window->Texture(nullptr);
-		WM::Window::Destory(data.toplevels[resource].window);
+		Window::Destory(data.toplevels[resource].window);
 		data.toplevels.erase(resource);
 	}
 

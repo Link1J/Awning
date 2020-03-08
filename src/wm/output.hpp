@@ -5,7 +5,7 @@
 #include <string>
 #include <tuple>
 
-namespace Awning::WM::Output
+namespace Awning::Output
 {
 	typedef uintptr_t ID;
 

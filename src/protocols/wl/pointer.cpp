@@ -22,7 +22,7 @@ namespace Awning::Protocols::WL::Pointer
 
 			if (data.window)
 			{
-				WM::Window::Manager::Offset(data.window, hotspot_x, hotspot_y);
+				Window::Manager::Offset(data.window, hotspot_x, hotspot_y);
 
 				auto texture = Awning::Protocols::WL::Surface::data.surfaces[surface].texture;
 
@@ -30,7 +30,7 @@ namespace Awning::Protocols::WL::Pointer
 					return;
 					
 				data.window->Texture(texture);
-				WM::Window::Manager::Resize(data.window, texture->width, texture->height);
+				Window::Manager::Resize(data.window, texture->width, texture->height);
 
 				data.pointers[resource].inUse = true;	
 				data.inUse = resource;
@@ -56,11 +56,11 @@ namespace Awning::Protocols::WL::Pointer
 		data.pointers[resource].client = wl_client;
 		data.pointers[(wl_resource*)resource].version = version;
 
-		WM::Client::Bind::Pointer(wl_client, resource);
+		Client::Bind::Pointer(wl_client, resource);
 
 		if (!data.window)
 		{
-			data.window = WM::Window::Create(0);
+			data.window = Window::Create(0);
 			data.window->Mapped(true);
 			data.inUse = nullptr;
 		}
@@ -76,7 +76,7 @@ namespace Awning::Protocols::WL::Pointer
 			data.inUse = nullptr;
 		}
 
-		WM::Client::Unbind::Pointer(data.pointers[resource].client, resource);
+		Client::Unbind::Pointer(data.pointers[resource].client, resource);
 		data.pointers.erase(resource);
 	}
 
@@ -84,7 +84,7 @@ namespace Awning::Protocols::WL::Pointer
 	{
 		if (data.window)
 		{
-			WM::Window::Manager::Move(data.window, tx, ty);
+			Window::Manager::Move(data.window, tx, ty);
 		}
 
 		if (!surface)
@@ -93,7 +93,7 @@ namespace Awning::Protocols::WL::Pointer
 		int xPoint = wl_fixed_from_double(x);
 		int yPoint = wl_fixed_from_double(y);
 
-		for (auto resource : WM::Client::Get::All::Pointers(client))
+		for (auto resource : Client::Get::All::Pointers(client))
 			wl_pointer_send_enter((wl_resource*)resource, NextSerialNum(), surface, xPoint, yPoint);
 	}
 
@@ -102,7 +102,7 @@ namespace Awning::Protocols::WL::Pointer
 		if (!surface)
 			return;
 		
-		for (auto resource : WM::Client::Get::All::Pointers(client))
+		for (auto resource : Client::Get::All::Pointers(client))
 			wl_pointer_send_leave((wl_resource*)resource, NextSerialNum(), surface);
 	}
 
@@ -110,14 +110,14 @@ namespace Awning::Protocols::WL::Pointer
 	{
 		if (data.window)
 		{
-			WM::Window::Manager::Move(data.window, tx, ty);
+			Window::Manager::Move(data.window, tx, ty);
 		}
 
 		int xPoint = wl_fixed_from_double(x);
 		int yPoint = wl_fixed_from_double(y);
 		auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
 		
-		for (auto resource : WM::Client::Get::All::Pointers(client))
+		for (auto resource : Client::Get::All::Pointers(client))
 			wl_pointer_send_motion((wl_resource*)resource, time, xPoint, yPoint);
 	}
 
@@ -125,7 +125,7 @@ namespace Awning::Protocols::WL::Pointer
 	{
 		if (data.window)
 		{
-			WM::Window::Manager::Move(data.window, x, y);
+			Window::Manager::Move(data.window, x, y);
 		}
 	}
 
@@ -133,7 +133,7 @@ namespace Awning::Protocols::WL::Pointer
 	{
 		auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
 		
-		for (auto resource : WM::Client::Get::All::Pointers(client))
+		for (auto resource : Client::Get::All::Pointers(client))
 			wl_pointer_send_button((wl_resource*)resource, NextSerialNum(), time, button, pressed);
 	}
 
@@ -142,13 +142,13 @@ namespace Awning::Protocols::WL::Pointer
 		auto time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
 		int step = wl_fixed_from_double(value);
 		
-		for (auto resource : WM::Client::Get::All::Pointers(client))
+		for (auto resource : Client::Get::All::Pointers(client))
 			wl_pointer_send_axis((wl_resource*)resource, time, axis, step);
 	}
 
 	void Frame(wl_client* client)
 	{
-		for (auto resource : WM::Client::Get::All::Pointers(client))
+		for (auto resource : Client::Get::All::Pointers(client))
 		{
 			auto version = data.pointers[(wl_resource*)resource].version;
 			if (version < WL_POINTER_FRAME_SINCE_VERSION)

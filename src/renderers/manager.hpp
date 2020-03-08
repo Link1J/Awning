@@ -16,10 +16,10 @@ namespace Awning::Renderers
 
 	namespace Functions
 	{
-		typedef void (*Draw       )(                                                              );
-		typedef void (*EGLImage   )(wl_resource  * buffer, WM::Texture* texture, WM::Damage damage);
-		typedef void (*SHMBuffer  )(wl_shm_buffer* buffer, WM::Texture* texture, WM::Damage damage);
-		typedef void (*LinuxDMABuf)(wl_resource  * buffer, WM::Texture* texture, WM::Damage damage);
+		typedef void (*Draw       )(                                                                      );
+		typedef void (*EGLImage   )(wl_resource  * buffer, Awning::Texture* texture, Awning::Damage damage);
+		typedef void (*SHMBuffer  )(wl_shm_buffer* buffer, Awning::Texture* texture, Awning::Damage damage);
+		typedef void (*LinuxDMABuf)(wl_resource  * buffer, Awning::Texture* texture, Awning::Damage damage);
 	};
 
 	void Init(API renderer);

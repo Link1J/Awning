@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <algorithm>
 
-namespace Awning::WM::Client
+namespace Awning::Client
 {
 	struct Data
 	{
@@ -20,14 +20,14 @@ namespace Awning::WM::Client
 		void* wm_base;
 	};
 
-	std::unordered_map<void*,Data> clients;
+	std::unordered_map<void*, Data> clients;
 
 	void Create(void* id)
 	{
 		clients[id] = Data();
 	}
 
-	void Bind::Window(void* id, WM::Window* window)
+	void Bind::Window(void* id, Awning::Window* window)
 	{
 		window->client = id;
 		clients[id].windows[window] = Data::Windows();
@@ -43,7 +43,7 @@ namespace Awning::WM::Client
 		clients[id].keyboards.emplace(keyboard);
 	}
 
-	void Unbind::Window(WM::Window* window)
+	void Unbind::Window(Awning::Window* window)
 	{
 		clients[window->client].windows.erase(window);
 	}
@@ -103,14 +103,14 @@ namespace Awning::WM::Client
 		return clients[id].keyboards;
 	}
 
-	std::vector<WM::Window*> Get::All::Windows(void* id)
+	std::vector<Window*> Get::All::Windows(void* id)
 	{
-		std::vector<WM::Window*> keys(clients[id].windows.size());
+		std::vector<Window*> keys(clients[id].windows.size());
 		std::transform(clients[id].windows.begin(), clients[id].windows.end(), keys.begin(), [](auto pair){return pair.first;});
 		return keys;
 	}
 
-	void Bind::Surface(WM::Window* window, void* pointer)
+	void Bind::Surface(Awning::Window* window, void* pointer)
 	{
 		clients[window->client].windows[window].surface = pointer;
 	}

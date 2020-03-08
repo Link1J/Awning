@@ -26,20 +26,18 @@ namespace Awning::Protocols::ZXDG::Output
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
-		WM::Output::ID outputID = WL::Output::data.resource_to_outputId[output];
+		Awning::Output::ID outputID = WL::Output::data.resource_to_outputId[output];
 
-		auto [px, py] = WM::Output::Get::Position(outputID);
-		auto [sx, sy] = WM::Output::Get::Mode::Resolution(outputID, WM::Output::Get::CurrentMode(outputID));
+		auto [px, py] = Awning::Output::Get::Position(outputID);
+		auto [sx, sy] = Awning::Output::Get::Mode::Resolution(outputID, Awning::Output::Get::CurrentMode(outputID));
 
 		if (version >= ZXDG_OUTPUT_V1_NAME_SINCE_VERSION       )
-			zxdg_output_v1_send_name       (resource, WM::Output::Get::Name       (outputID).c_str());
+			zxdg_output_v1_send_name       (resource, Awning::Output::Get::Name       (outputID).c_str());
 		if (version >= ZXDG_OUTPUT_V1_DESCRIPTION_SINCE_VERSION)
-			zxdg_output_v1_send_description(resource, WM::Output::Get::Description(outputID).c_str());
+			zxdg_output_v1_send_description(resource, Awning::Output::Get::Description(outputID).c_str());
 
 		zxdg_output_v1_send_logical_position(resource, px, py);
 		zxdg_output_v1_send_logical_size    (resource, sx, sy);
-
-		zxdg_output_v1_send_done(resource);
 
 		return resource;
 	}

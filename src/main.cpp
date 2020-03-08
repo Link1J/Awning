@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
 
 	wl_display_init_shm(Awning::Server::data.display);
 
-	if (startXWayland) Awning::WM::X::Server::Setup();
+	if (startXWayland) Awning::X::Server::Setup();
 
 	const char* launchArgs1[] = { "falkon", "-platform", "wayland", NULL };
     const char* launchArgs2[] = { "weston-terminal", NULL };
@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
     const char* launchArgs5[] = { "konsole", "-platform", "wayland", NULL };
     const char* launchArgs6[] = { "termite", NULL };
 
-	int display = Awning::WM::X::Server::display;
+	int display = Awning::X::Server::display;
 
 	setenv("DISPLAY", fmt::format(":{}", display).c_str(), 1);
 	setenv("MOZ_ENABLE_WAYLAND", "1", 1);
@@ -187,7 +187,7 @@ int main(int argc, char* argv[])
 		wl_event_loop_dispatch(Awning::Server::data.event_loop, 0);
 		wl_display_flush_clients(Awning::Server::data.display);
 
-		Awning::WM::X::EventLoop();
+		Awning::X::EventLoop();
 
 		Awning::Renderers::Draw();
 
@@ -205,7 +205,7 @@ void on_term_signal(int signal_number)
 
 void client_created(struct wl_listener* listener, void* data)
 {
-	Awning::WM::Client::Create(data);
+	Awning::Client::Create(data);
 }
 
 /*void GetSockAddress()

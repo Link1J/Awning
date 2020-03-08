@@ -18,7 +18,7 @@ namespace Awning::Protocols::WL::Pointer
 		};
 
 		std::unordered_map<wl_resource*,Interface> pointers;
-		WM::Window* window;
+		Window* window;
 		wl_resource* inUse;
 	};
 

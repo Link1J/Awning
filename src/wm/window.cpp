@@ -1,7 +1,7 @@
 #include "window.hpp"
 #include "protocols/wl/keyboard.hpp"
 
-namespace Awning::WM
+namespace Awning
 {
 	std::list<Window*> Window::Manager::windowList                  ;
 	Window*            Window::Manager::hoveredOver                 ;
@@ -166,7 +166,7 @@ namespace Awning::WM
 		window = nullptr;
 	}
 
-	WM::Texture* Window::Texture()
+	Awning::Texture* Window::Texture()
 	{
 		return texture;
 	}
@@ -251,7 +251,7 @@ namespace Awning::WM
 		return offset.y;
 	}
 
-	void Window::Texture(WM::Texture* texture)
+	void Window::Texture(Awning::Texture* texture)
 	{
 		this->texture = texture;
 	}
@@ -276,13 +276,13 @@ namespace Awning::WM
 		}
 	}
 
-	void Window::Parent(WM::Window* parent, bool offsets)
+	void Window::Parent(Window* parent, bool offsets)
 	{
 		this->parent = parent;
 		parentOffsets = offsets;
 	}
 
-	void Window::AddSubwindow(WM::Window* child)
+	void Window::AddSubwindow(Window* child)
 	{
 		child->Parent(this, true);
 		child->drawingManaged = true;

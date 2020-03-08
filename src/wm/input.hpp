@@ -1,5 +1,6 @@
+#pragma once
 
-namespace Awning::WM::Input
+namespace Awning::Input
 {
 	class Keymap
 	{
@@ -19,6 +20,6 @@ namespace Awning::WM::Input
 
 	class Seat
 	{
-
+		
 	};
 }

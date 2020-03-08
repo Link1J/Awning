@@ -15,7 +15,7 @@ namespace Awning::Protocols::XDG::TopLevel
 			wl_resource* parent;
 			std::string title;
 			std::string appid;
-			WM::Window* window;
+			Window* window;
 		};
 
 		std::unordered_map<wl_resource*, Instance> toplevels;
