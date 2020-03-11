@@ -43,6 +43,8 @@ namespace Awning::Protocols::XDG::Popup
 		data.popups[resource].surface = surface;
 		data.popups[resource].window  = Window::Create(wl_client);
 
+		Window::Manager::Manage(data.popups[resource].window);
+
 		WL::Surface::data.surfaces[surface_wl].window = data.popups[resource].window;
 		    Surface::data.surfaces[surface   ].window = data.popups[resource].window;
 

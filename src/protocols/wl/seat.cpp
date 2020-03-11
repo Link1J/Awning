@@ -2,6 +2,7 @@
 #include "pointer.hpp"
 #include "keyboard.hpp"
 #include <spdlog/spdlog.h>
+#include "wm/input.hpp"
 
 namespace Awning::Protocols::WL::Seat
 {
@@ -12,18 +13,18 @@ namespace Awning::Protocols::WL::Seat
 		.release      = Interface::Release,
 	};
 
-	Data data;
+	Global global;
 
 	namespace Interface
 	{
 		void Get_Pointer(struct wl_client* client, struct wl_resource* resource, uint32_t id)
 		{
-			Pointer::Create(client, wl_resource_get_version(resource), id);
+			Pointer::Create(client, wl_resource_get_version(resource), id, global.instances[resource].seat);
 		}
 
 		void Get_Keyboard(struct wl_client* client, struct wl_resource* resource, uint32_t id)
 		{
-			Keyboard::Create(client, wl_resource_get_version(resource), id);
+			Keyboard::Create(client, wl_resource_get_version(resource), id, global.instances[resource].seat);
 		}
 
 		void Get_Touch(struct wl_client* client, struct wl_resource* resource, uint32_t id)
@@ -44,10 +45,19 @@ namespace Awning::Protocols::WL::Seat
 		}
 		wl_resource_set_implementation(resource, &interface, data, nullptr);
 
-		wl_seat_send_capabilities(resource, WL_SEAT_CAPABILITY_POINTER|WL_SEAT_CAPABILITY_KEYBOARD);
+		Input::Seat* seat = (Input::Seat*)data;
+		int capabilities = (int)seat->Capabilities();
+
+		wl_seat_send_capabilities(resource, 
+			(capabilities & (int)Input::Seat::Capability::Mouse    ? WL_SEAT_CAPABILITY_POINTER  : 0) |
+			(capabilities & (int)Input::Seat::Capability::Keyboard ? WL_SEAT_CAPABILITY_KEYBOARD : 0) |
+			(capabilities & (int)Input::Seat::Capability::Touch    ? WL_SEAT_CAPABILITY_TOUCH    : 0)
+		);
 
 		if (version >= WL_SEAT_NAME_SINCE_VERSION)
-			wl_seat_send_name(resource, "Maybe Working Input.");
+			wl_seat_send_name(resource, seat->Name().c_str());
+
+		global.instances[resource].seat = data;
 	}
 
 	wl_global* Add(struct wl_display* display, void* data)

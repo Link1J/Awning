@@ -1,17 +1,22 @@
 #pragma once
 
 #include <wayland-server.h>
-
 #include <unordered_map>
 
 namespace Awning::Protocols::WL::Seat
 {
-	struct Data 
+	struct Global 
 	{
+		struct Instance 
+		{
+			void* seat;
+		};
+
+		std::unordered_map<wl_resource*, Instance> instances;
 	};
 
 	extern const struct wl_seat_interface interface;
-	extern Data data;
+	extern Global global;
 	
 	namespace Interface
 	{

@@ -3,8 +3,9 @@
 
 #include "backends/manager.hpp"
 
-#include "wm/manager.hpp"
+#include "wm/frame.hpp"
 #include "wm/x/wm.hpp"
+#include "wm/input.hpp"
 
 #include "protocols/wl/pointer.hpp"
 #include "protocols/zwp/dmabuf.hpp"
@@ -107,7 +108,7 @@ namespace Awning::Renderers::GLES2
 	int height = 0;
 	int size;
 
-	GLuint frameTexture;
+	GLuint frameTextures[2];
 
 	void RenderWindow(Window* window, int count = 2, int frame = 1, int depth = 0)
 	{
@@ -128,10 +129,10 @@ namespace Awning::Renderers::GLES2
 		int sizeX = winSizeX + winOffX * std::max(count, 0);
 		int sizeY = winSizeY + winOffY * std::max(count, 0);
 
-		int frameSX = Frame::Size::left   * frame;
-		int frameSY = Frame::Size::top    * frame;
-		int frameEX = Frame::Size::right  * frame;
-		int frameEY = Frame::Size::bottom * frame;
+		int frameSX = ::Frame::Size::left   * frame;
+		int frameSY = ::Frame::Size::top    * frame;
+		int frameEX = ::Frame::Size::right  * frame;
+		int frameEY = ::Frame::Size::bottom * frame;
 
 		if (window->Frame())
 		{
@@ -139,7 +140,31 @@ namespace Awning::Renderers::GLES2
 
 			glUseProgram(program2D);
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, frameTexture);
+			glBindTexture(GL_TEXTURE_2D, frameTextures[0]);
+
+			frameSX = ::Frame::Size::left   * frame;
+			frameSY = ::Frame::Size::top    * frame;
+			frameEX = ::Frame::Size::right  * frame;
+			frameEY = ::Frame::Size::bottom * frame;
+
+			glViewport(posX - frameSX, posY - frameSY, sizeX + frameSX + frameEX, frameSY);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			glViewport(posX - frameSX, posY + sizeY, sizeX + frameSX + frameEX, frameEY);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			glViewport(posX - frameSX, posY - frameSY, frameSX, sizeY + frameSY + frameEY);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			glViewport(posX + sizeX, posY - frameSY, frameEX, sizeY + frameSY + frameEY);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			frameSX = ::Frame::Move::left   * frame;
+			frameSY = ::Frame::Move::top    * frame;
+			frameEX = ::Frame::Move::right  * frame;
+			frameEY = ::Frame::Move::bottom * frame;
+
+			glBindTexture(GL_TEXTURE_2D, frameTextures[1]);
 
 			glViewport(posX - frameSX, posY - frameSY, sizeX + frameSX + frameEX, frameSY);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -222,12 +247,16 @@ namespace Awning::Renderers::GLES2
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, FBO_Texture, 0);
 
-		glGenTextures(1, &frameTexture);
-		glBindTexture(GL_TEXTURE_2D, frameTexture);
+		GLubyte resizeColor[] = { 0xFF, 0xFF, 0x00, 0xFF };
+		GLubyte moveColor  [] = { 0x00, 0xFF, 0x00, 0xFF };
 
-		GLubyte frameColor[] = { 0xFF, 0xFF, 0x00, 0xFF };
+		glGenTextures(2, frameTextures);
 
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, frameColor);
+		glBindTexture(GL_TEXTURE_2D, frameTextures[0]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, resizeColor);
+
+		glBindTexture(GL_TEXTURE_2D, frameTextures[1]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, moveColor  );
 
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -284,8 +313,8 @@ namespace Awning::Renderers::GLES2
 			}
 		}
 
-		if (Awning::Protocols::WL::Pointer::data.window)
-			RenderWindow(Awning::Protocols::WL::Pointer::data.window, 0, 0);
+		for (auto window : Input::cursors)
+			RenderWindow(window, 0, 0);
 	
 		for (auto& display : displays)
 		{

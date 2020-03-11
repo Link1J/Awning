@@ -31,7 +31,7 @@
 #include "evdev.hpp"
 #include "manager.hpp"
 
-#include "wm/manager.hpp"
+
 #include "wm/client.hpp"
 
 #define EVENT_SIZE  (sizeof(struct inotify_event))
@@ -166,8 +166,8 @@ void Awning::Backend::EVDEV::Hand()
 				}
 				else
 				{
-					using namespace WM::Manager::Handle::Input;
-					Mouse::Scroll(event.code, event.value);
+					//using namespace WM::Manager::Handle::Input;
+					//Mouse::Scroll(event.code, event.value);
 				}
 			}
 			else if (event.type == EV_KEY)
@@ -179,21 +179,21 @@ void Awning::Backend::EVDEV::Hand()
 
 				if (event.code >= BTN_MISC)
 				{
-					using namespace WM::Manager::Handle::Input;
+					//using namespace WM::Manager::Handle::Input;
 
-					if (event.value == 1)
-						Mouse::Pressed(event.code);
-					else
-						Mouse::Released(event.code);
+					//if (event.value == 1)
+					//	Mouse::Pressed(event.code);
+					//else
+					//	Mouse::Released(event.code);
 				}
 				else
 				{
-					using namespace WM::Manager::Handle::Input;
+					//using namespace WM::Manager::Handle::Input;
 
-					if (event.value == 1)
-						Keyboard::Pressed(event.code);
-					else
-						Keyboard::Released(event.code);
+					//if (event.value == 1)
+					//	Keyboard::Pressed(event.code);
+					//else
+					//	Keyboard::Released(event.code);
 				}
 			}
 
@@ -203,7 +203,7 @@ void Awning::Backend::EVDEV::Hand()
 
 	if (mouseMoved)
 	{
-		WM::Manager::Handle::Input::Mouse::Moved(cursor.x, cursor.y);
+		//WM::Manager::Handle::Input::Mouse::Moved(cursor.x, cursor.y);
 		mouseMoved = false;
 	}
 }

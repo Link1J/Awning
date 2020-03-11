@@ -68,6 +68,7 @@ namespace Awning::Protocols::KDE::Decoration_Manager
 			return;
 		}
 		wl_resource_set_implementation(resource, &interface, data, nullptr);
+		org_kde_kwin_server_decoration_manager_send_default_mode(resource, ORG_KDE_KWIN_SERVER_DECORATION_MANAGER_MODE_SERVER);	
 	}
 
 	wl_global* Add(struct wl_display* display, void* data)

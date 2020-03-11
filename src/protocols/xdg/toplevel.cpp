@@ -4,8 +4,9 @@
 
 #include "protocols/wl/surface.hpp"
 #include "protocols/wl/pointer.hpp"
+#include "protocols/wl/seat.hpp"
 
-#include "wm/manager.hpp"
+#include "wm/input.hpp"
 
 #include <iostream>
 
@@ -57,26 +58,26 @@ namespace Awning::Protocols::XDG::TopLevel
 
 		void Move(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
 		{
-			WM::Manager::Handle::Input::Lock(WM::Manager::Handle::Input::MOVE);
+			//((Input::Seat*)WL::Seat::global.instances[seat].seat)->Lock(Input::Action::Move);
 		}
 
 		void Resize(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, uint32_t edges)
 		{
 
-			WM::Manager::Handle::Input::WindowSide side;
+			Input::WindowSide side;
 			switch (edges)
 			{
-			case XDG_TOPLEVEL_RESIZE_EDGE_TOP         : side = WM::Manager::Handle::Input::TOP         ; break;
-			case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM      : side = WM::Manager::Handle::Input::BOTTOM      ; break;
-			case XDG_TOPLEVEL_RESIZE_EDGE_LEFT        : side = WM::Manager::Handle::Input::LEFT        ; break;
-			case XDG_TOPLEVEL_RESIZE_EDGE_TOP_LEFT    : side = WM::Manager::Handle::Input::TOP_LEFT    ; break;
-			case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_LEFT : side = WM::Manager::Handle::Input::BOTTOM_LEFT ; break;
-			case XDG_TOPLEVEL_RESIZE_EDGE_RIGHT       : side = WM::Manager::Handle::Input::RIGHT       ; break;
-			case XDG_TOPLEVEL_RESIZE_EDGE_TOP_RIGHT   : side = WM::Manager::Handle::Input::TOP_RIGHT   ; break;
-			case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_RIGHT: side = WM::Manager::Handle::Input::BOTTOM_RIGHT; break;
+			case XDG_TOPLEVEL_RESIZE_EDGE_TOP         : side = Input::WindowSide::TOP         ; break;
+			case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM      : side = Input::WindowSide::BOTTOM      ; break;
+			case XDG_TOPLEVEL_RESIZE_EDGE_LEFT        : side = Input::WindowSide::LEFT        ; break;
+			case XDG_TOPLEVEL_RESIZE_EDGE_TOP_LEFT    : side = Input::WindowSide::TOP_LEFT    ; break;
+			case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_LEFT : side = Input::WindowSide::BOTTOM_LEFT ; break;
+			case XDG_TOPLEVEL_RESIZE_EDGE_RIGHT       : side = Input::WindowSide::RIGHT       ; break;
+			case XDG_TOPLEVEL_RESIZE_EDGE_TOP_RIGHT   : side = Input::WindowSide::TOP_RIGHT   ; break;
+			case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_RIGHT: side = Input::WindowSide::BOTTOM_RIGHT; break;
 			}
 
-			WM::Manager::Handle::Input::Lock(WM::Manager::Handle::Input::RESIZE, side);
+			//((Input::Seat*)WL::Seat::global.instances[seat].seat)->Lock(Input::Action::Resize, side);
 		}
 
 		void Set_Max_Size(struct wl_client* client, struct wl_resource* resource, int32_t width, int32_t height)
@@ -135,6 +136,7 @@ namespace Awning::Protocols::XDG::TopLevel
 		data.toplevels[resource].window->Data      (resource);
 		data.toplevels[resource].window->SetRaised (Raised  );
 		data.toplevels[resource].window->SetResized(Resized );
+		data.toplevels[resource].window->SetLowered(Lowered );
 
 		return resource;
 	}
@@ -183,5 +185,18 @@ namespace Awning::Protocols::XDG::TopLevel
 		wl_array_release(states);
 		delete states;
 		xdg_surface_send_configure(TopLevel::data.toplevels[resource].surface, NextSerialNum());
+	}
+
+	void Lowered(void* data)
+	{
+		struct wl_resource* resource = (struct wl_resource*)data;
+		wl_array* states = new wl_array();
+		wl_array_init(states);
+		xdg_toplevel_send_configure(resource, 
+			Awning::Protocols::XDG::TopLevel::data.toplevels[resource].window->XSize(),
+			Awning::Protocols::XDG::TopLevel::data.toplevels[resource].window->YSize(),
+			states);
+		wl_array_release(states);
+		delete states;
 	}
 }

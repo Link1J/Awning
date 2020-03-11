@@ -8,8 +8,10 @@
 #include "protocols/wl/surface.hpp"
 
 #include "renderers/manager.hpp"
-#include "wm/output.hpp"
 #include "backends/manager.hpp"
+
+#include "wm/output.hpp"
+#include "wm/input.hpp"
 
 #include <fmt/format.h>
 
@@ -386,49 +388,49 @@ namespace Awning::X
 					}
 					if (e->type == atoms[_NET_WM_MOVERESIZE])
 					{
-						WM::Manager::Handle::Input::WindowAction action;
-						WM::Manager::Handle::Input::WindowSide   side  ;
+						Input::Action     action;
+						Input::WindowSide side  ;
 
 						switch (e->data.data32[2])
 						{
 						case _NET_WM_MOVERESIZE_SIZE_TOPLEFT    :
-							action = WM::Manager::Handle::Input::RESIZE;
-							side   = WM::Manager::Handle::Input::TOP_LEFT;
+							action = Input::Action::Resize;
+							side   = Input::WindowSide::TOP_LEFT;
 							break;
 						case _NET_WM_MOVERESIZE_SIZE_TOP        :
-							action = WM::Manager::Handle::Input::RESIZE;
-							side   = WM::Manager::Handle::Input::TOP;
+							action = Input::Action::Resize;
+							side   = Input::WindowSide::TOP;
 							break;
 						case _NET_WM_MOVERESIZE_SIZE_TOPRIGHT   :
-							action = WM::Manager::Handle::Input::RESIZE;
-							side   = WM::Manager::Handle::Input::TOP_RIGHT;
+							action = Input::Action::Resize;
+							side   = Input::WindowSide::TOP_RIGHT;
 							break;
 						case _NET_WM_MOVERESIZE_SIZE_RIGHT      :
-							action = WM::Manager::Handle::Input::RESIZE;
-							side   = WM::Manager::Handle::Input::RIGHT;
+							action = Input::Action::Resize;
+							side   = Input::WindowSide::RIGHT;
 							break;
 						case _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT:
-							action = WM::Manager::Handle::Input::RESIZE;
-							side   = WM::Manager::Handle::Input::BOTTOM_RIGHT;
+							action = Input::Action::Resize;
+							side   = Input::WindowSide::BOTTOM_RIGHT;
 							break;
 						case _NET_WM_MOVERESIZE_SIZE_BOTTOM     :
-							action = WM::Manager::Handle::Input::RESIZE;
-							side   = WM::Manager::Handle::Input::BOTTOM;
+							action = Input::Action::Resize;
+							side   = Input::WindowSide::BOTTOM;
 							break;
 						case _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT :
-							action = WM::Manager::Handle::Input::RESIZE;
-							side   = WM::Manager::Handle::Input::BOTTOM_LEFT;
+							action = Input::Action::Resize;
+							side   = Input::WindowSide::BOTTOM_LEFT;
 							break;
 						case _NET_WM_MOVERESIZE_SIZE_LEFT       :
-							action = WM::Manager::Handle::Input::RESIZE;
-							side   = WM::Manager::Handle::Input::LEFT;
+							action = Input::Action::Resize;
+							side   = Input::WindowSide::LEFT;
 							break;
 						case _NET_WM_MOVERESIZE_MOVE            :
-							action = WM::Manager::Handle::Input::MOVE;
-							side   = WM::Manager::Handle::Input::TOP;
+							action = Input::Action::Move;
+							side   = Input::WindowSide::TOP;
 							break;
 						}
-						WM::Manager::Handle::Input::Lock(action, side);
+						//Input::Lock(action, side);
 					}
 					
 				}

@@ -4,7 +4,6 @@
 namespace Awning
 {
 	std::list<Window*> Window::Manager::windowList                  ;
-	Window*            Window::Manager::hoveredOver                 ;
 	std::list<Window*> Window::Manager::layers     [(int)Layer::END];
 
 	void Window::Manager::Manage(Window*& window, Layer layer)
@@ -75,13 +74,6 @@ namespace Awning
 				layers[(int)window->layer].emplace_front(window);
 			}
 		}
-
-		Protocols::WL::Keyboard::ChangeWindow(
-			(wl_client  *)(*star)->Client(), 
-			(wl_resource*)Client::Get::Surface(*star),
-			(wl_client  *)(*curr)->Client(), 
-			(wl_resource*)Client::Get::Surface(*curr)
-		);
 
 		windowList.erase(curr);
 		windowList.emplace_front(window);
@@ -302,5 +294,10 @@ namespace Awning
 	void Window::SetMoved(Functions::Moved moved)
 	{
 		Moved = moved;
+	}
+
+	void Window::SetLowered(Functions::Lowered lowered)
+	{
+		Lowered = lowered;
 	}
 }

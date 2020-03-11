@@ -8,20 +8,23 @@ namespace Awning::Protocols::WL::Keyboard
 {
 	struct Data 
 	{
-		struct Interface 
+		struct Instance 
 		{
-			wl_resource* resource;
+			wl_client* client;
+			int version = 0;
+			void* seat;
 		};
 
-		std::unordered_map<wl_client*,Interface> keyboards;
-		wl_resource* pre_shell;
-		bool moveMode = false;
+		std::unordered_map<wl_resource*, Instance> instances;
 	};
 
 	extern const struct wl_keyboard_interface interface;
 	extern Data data;
 
-	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id);
-	void Button(wl_client* client, uint32_t button, bool pressed);
-	void ChangeWindow(wl_client* client1, wl_resource* surface1, wl_client* client2, wl_resource* surface2);
+	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, void* seat);
+	void Destroy(struct wl_resource* resource);
+
+	void Enter (void* data, void* object, int x, int y );
+	void Leave (void* data, void* object               );
+	void Button(void* data, uint32_t button, bool state);
 }

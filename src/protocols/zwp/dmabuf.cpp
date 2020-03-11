@@ -91,7 +91,7 @@ namespace Awning::Protocols::ZWP::Linux_Buffer_Params
 	void CreateBuffer(struct wl_client* client, struct wl_resource* resource, uint32_t buffer_id, int32_t width, int32_t height, uint32_t format, uint32_t flags);
 
 	static void BufferDestroy(struct wl_client *client, struct wl_resource *resource) {
-		delete resource->data;
+		delete (char*)resource->data;
 		resource->data = nullptr;
 		wl_resource_destroy(resource);
 	}

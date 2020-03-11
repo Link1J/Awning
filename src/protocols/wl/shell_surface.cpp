@@ -1,9 +1,9 @@
 #include "shell_surface.hpp"
 #include "surface.hpp"
 #include "pointer.hpp"
+#include "seat.hpp"
 #include <spdlog/spdlog.h>
-
-#include "wm/x/wm.hpp"
+#include "wm/input.hpp"
 
 namespace Awning::Protocols::WL::Shell_Surface
 {
@@ -30,25 +30,26 @@ namespace Awning::Protocols::WL::Shell_Surface
 
 		void Move(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
 		{
-			WM::Manager::Handle::Input::Lock(WM::Manager::Handle::Input::MOVE);
+			//((Input::Seat*)Seat::global.instances[seat].seat)->Lock(Input::Action::Move);
 		}
 
 		void Resize(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, uint32_t edges)
 		{
-			WM::Manager::Handle::Input::WindowSide side;
+			Input::WindowSide side;
+
 			switch (edges)
 			{
-			case WL_SHELL_SURFACE_RESIZE_TOP         : side = WM::Manager::Handle::Input::TOP         ; break;
-			case WL_SHELL_SURFACE_RESIZE_BOTTOM      : side = WM::Manager::Handle::Input::BOTTOM      ; break;
-			case WL_SHELL_SURFACE_RESIZE_LEFT        : side = WM::Manager::Handle::Input::LEFT        ; break;
-			case WL_SHELL_SURFACE_RESIZE_TOP_LEFT    : side = WM::Manager::Handle::Input::TOP_LEFT    ; break;
-			case WL_SHELL_SURFACE_RESIZE_BOTTOM_LEFT : side = WM::Manager::Handle::Input::BOTTOM_LEFT ; break;
-			case WL_SHELL_SURFACE_RESIZE_RIGHT       : side = WM::Manager::Handle::Input::RIGHT       ; break;
-			case WL_SHELL_SURFACE_RESIZE_TOP_RIGHT   : side = WM::Manager::Handle::Input::TOP_RIGHT   ; break;
-			case WL_SHELL_SURFACE_RESIZE_BOTTOM_RIGHT: side = WM::Manager::Handle::Input::BOTTOM_RIGHT; break;
+			case WL_SHELL_SURFACE_RESIZE_TOP         : side = Input::WindowSide::TOP         ; break;
+			case WL_SHELL_SURFACE_RESIZE_BOTTOM      : side = Input::WindowSide::BOTTOM      ; break;
+			case WL_SHELL_SURFACE_RESIZE_LEFT        : side = Input::WindowSide::LEFT        ; break;
+			case WL_SHELL_SURFACE_RESIZE_TOP_LEFT    : side = Input::WindowSide::TOP_LEFT    ; break;
+			case WL_SHELL_SURFACE_RESIZE_BOTTOM_LEFT : side = Input::WindowSide::BOTTOM_LEFT ; break;
+			case WL_SHELL_SURFACE_RESIZE_RIGHT       : side = Input::WindowSide::RIGHT       ; break;
+			case WL_SHELL_SURFACE_RESIZE_TOP_RIGHT   : side = Input::WindowSide::TOP_RIGHT   ; break;
+			case WL_SHELL_SURFACE_RESIZE_BOTTOM_RIGHT: side = Input::WindowSide::BOTTOM_RIGHT; break;
 			}
 
-			WM::Manager::Handle::Input::Lock(WM::Manager::Handle::Input::RESIZE, side);
+			//((Input::Seat*)Seat::global.instances[seat].seat)->Lock(Input::Action::Resize, side);
 		}
 
 		void Set_Toplevel(struct wl_client* client, struct wl_resource* resource)
@@ -97,9 +98,6 @@ namespace Awning::Protocols::WL::Shell_Surface
 
 		Window::Manager::Manage(data.shells[resource].window);
 		Window::Manager::Raise(data.shells[resource].window);
-
-		if (X::surface == nullptr)
-			X::surface = surface;
 
 		return resource;
 	}

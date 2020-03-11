@@ -4,7 +4,7 @@
 #include <spdlog/spdlog.h>
 
 #include "protocols/wl/surface.hpp"
-#include "wm/manager.hpp"
+
 
 #include "backends/manager.hpp"
 

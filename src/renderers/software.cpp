@@ -3,7 +3,8 @@
 
 #include "backends/manager.hpp"
 
-#include "wm/manager.hpp"
+#include "wm/frame.hpp"
+#include "wm/input.hpp"
 
 #include "protocols/wl/pointer.hpp"
 
@@ -105,10 +106,10 @@ namespace Awning::Renderers::Software
 		int offX    = winOffX ;
 		int offY    = winOffY ;
 
-		int frameSX = Frame::Size::left   * frame;
-		int frameSY = Frame::Size::top    * frame;
-		int frameEX = Frame::Size::right  * frame;
-		int frameEY = Frame::Size::bottom * frame;
+		int frameSX = ::Frame::Size::left   * frame;
+		int frameSY = ::Frame::Size::top    * frame;
+		int frameEX = ::Frame::Size::right  * frame;
+		int frameEY = ::Frame::Size::bottom * frame;
 
 		for (int x = -frameSX; x < sizeX + frameEX; x++)
 			for (int y = -frameSY; y < sizeY + frameEY; y++)
@@ -235,19 +236,19 @@ namespace Awning::Renderers::Software
 				RenderWindow(window);
 			}
 		}
-
-		if (Awning::Protocols::WL::Pointer::data.window)
+		
+		for (auto window : Input::cursors)
 		{
-			auto texture = Awning::Protocols::WL::Pointer::data.window->Texture();
+			auto texture = window->Texture();
 
 			if (texture)
 			{
-				RenderWindow(Awning::Protocols::WL::Pointer::data.window, 0, 0);
+				RenderWindow(window, 0, 0);
 			}
 			else
 			{
-				auto winPosX  = Awning::Protocols::WL::Pointer::data.window->XPos();
-				auto winPosY  = Awning::Protocols::WL::Pointer::data.window->YPos();
+				auto winPosX  = window->XPos();
+				auto winPosY  = window->YPos();
 
 				for (int x = 0; x < 5; x++)
 					for (int y = 0; y < 5; y++)

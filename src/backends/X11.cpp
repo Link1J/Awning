@@ -10,8 +10,9 @@
 #include "protocols/wl/pointer.hpp"
 #include "protocols/wl/keyboard.hpp"
 
-#include "wm/manager.hpp"
+
 #include "wm/output.hpp"
+#include "wm/input.hpp"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,6 +46,10 @@ static Display*		                            display    ;
 static EGLDisplay                               egl_display;
 static EGLContext                               egl_context;
 static std::unordered_map<::Window, WindowData> windows    ;
+
+static Awning::Input::Seat seat;
+static Awning::Input::Device mouse;
+static Awning::Input::Device keyboard;
 
 static Atom WM_DELETE_WINDOW;
 
@@ -259,6 +264,14 @@ void Awning::Backend::X11::Start()
 
 		xOffset += data.framebuffer.width;
 	}
+	
+    seat = Awning::Input::Seat("seat0");
+
+	mouse    = Awning::Input::Device(Awning::Input::Device::Type::Mouse   , "X11 Mouse"   );
+	keyboard = Awning::Input::Device(Awning::Input::Device::Type::Keyboard, "X11 Keyboard");
+
+	seat.AddDevice(mouse   );
+	seat.AddDevice(keyboard);
 }
 
 uint32_t XorgMouseToLinuxInputMouse(uint32_t button)
@@ -268,6 +281,8 @@ uint32_t XorgMouseToLinuxInputMouse(uint32_t button)
 	if (button == Button3) return BTN_RIGHT;
 	return BTN_EXTRA;
 }
+
+int preMouseX = 0, preMouseY = 0; 
 
 void Awning::Backend::X11::Hand()
 {
@@ -305,40 +320,40 @@ void Awning::Backend::X11::Hand()
 		else if (event.type == MotionNotify)
 		{
 			auto [px, py] = Output::Get::Position(windows[event.xmotion.window].id);
-			Awning::WM::Manager::Handle::Input::Mouse::Moved(px + event.xmotion.x, py + event.xmotion.y);			
+			
+			seat.Moved(mouse, event.xmotion.x - preMouseX, event.xmotion.y - preMouseY);
+			
+			preMouseX = event.xmotion.x; 
+			preMouseY = event.xmotion.y; 
 		}
-		else if (event.type == ButtonPress)
+		else if (event.type == ButtonPress || event.type == ButtonRelease)
 		{
 			if (event.xbutton.button > Button3)
 			{
-				if (event.xbutton.button == Button4)
+				if (event.type == ButtonPress)
 				{
-					Awning::WM::Manager::Handle::Input::Mouse::Scroll(0, -15);
-				}
-				if (event.xbutton.button == Button5)
-				{
-					Awning::WM::Manager::Handle::Input::Mouse::Scroll(0, 15);
+					if (event.xbutton.button == Button4)
+					{
+						seat.Axis(mouse, 0, -5);
+					}
+					if (event.xbutton.button == Button5)
+					{
+						seat.Axis(mouse, 0, 5);
+					}
 				}
 			}
 			else
 			{
 				uint32_t button = XorgMouseToLinuxInputMouse(event.xbutton.button);
-				Awning::WM::Manager::Handle::Input::Mouse::Pressed(button);
+				seat.Button(mouse, button, event.type == ButtonPress);
 			}
 		}
-		else if (event.type == ButtonRelease)
+		else if (event.type == KeyPress || event.type == KeyRelease)
 		{
-			uint32_t button = XorgMouseToLinuxInputMouse(event.xbutton.button);
-			Awning::WM::Manager::Handle::Input::Mouse::Released(button);
+			seat.Button(keyboard, event.xkey.keycode - 8, event.type == KeyPress);
 		}
-		else if (event.type == KeyPress)
-		{
-			Awning::WM::Manager::Handle::Input::Keyboard::Pressed(event.xkey.keycode - 8);
-		}
-		else if (event.type == KeyRelease)
-		{
-			Awning::WM::Manager::Handle::Input::Keyboard::Released(event.xkey.keycode - 8);
-		}
+
+		seat.End();
 	}
 }
 

@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <algorithm>
 
+#include <spdlog/spdlog.h>
+
 namespace Awning::Client
 {
 	struct Data

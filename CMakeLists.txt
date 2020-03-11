@@ -36,10 +36,10 @@ set(SOURCES
     src/protocols/zxdg/decoration.cpp
     src/protocols/zxdg/output.cpp
 
-    src/wm/manager.cpp
     src/wm/window.cpp
     src/wm/client.cpp
     src/wm/output.cpp
+    src/wm/input.cpp
 
     src/wm/x/wm.cpp
     src/wm/x/server.cpp
@@ -106,6 +106,10 @@ find_program(PKG_CONFIG pkg-config)
 
 #------------------------------------------------------------------------------
 
+pkg_check_modules(DBUS dbus-1)
+
+#------------------------------------------------------------------------------
+
 function(wayland_protocol_create file_name file_to_use)
 	#message(${file_name})
 	#message(${file_to_use})
@@ -165,6 +169,11 @@ set_target_properties(Awning PROPERTIES
 #------------------------------------------------------------------------------
 
 target_include_directories(Awning PRIVATE "src")
+target_include_directories(Awning PRIVATE ${DBUS_INCLUDE_DIRS})
+
+#------------------------------------------------------------------------------
+
+target_link_directories(Awning PRIVATE ${DBUS_LIBRARY_DIRS})
 
 #------------------------------------------------------------------------------
 
@@ -198,4 +207,6 @@ target_link_libraries(Awning PRIVATE
     GLESv2
     xkbcommon
     rt
+
+    ${DBUS_LIBRARIES}
 )

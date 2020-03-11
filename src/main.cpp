@@ -44,7 +44,7 @@
 #include "wm/x/wm.hpp"
 #include "wm/window.hpp"
 #include "wm/client.hpp"
-#include "wm/manager.hpp"
+
 #include "wm/x/server.hpp"
 
 #include <spdlog/spdlog.h>
@@ -146,7 +146,6 @@ int main(int argc, char* argv[])
 	Awning::Renderers::Init(api_drawing);
 
 	Awning::Protocols::WL  ::Compositor         ::Add(Awning::Server::data.display);
-	Awning::Protocols::WL  ::Seat               ::Add(Awning::Server::data.display);
 	//Awning::Protocols::WL  ::Shell              ::Add(Awning::Server::data.display);
 	Awning::Protocols::XDG ::WM_Base            ::Add(Awning::Server::data.display);
 	Awning::Protocols::ZXDG::Decoration_Manager ::Add(Awning::Server::data.display);
@@ -172,6 +171,7 @@ int main(int argc, char* argv[])
 	int display = Awning::X::Server::display;
 
 	setenv("DISPLAY", fmt::format(":{}", display).c_str(), 1);
+	setenv("WAYLAND_DISPLAY", socket, 1);
 	setenv("MOZ_ENABLE_WAYLAND", "1", 1);
 
 	//signal(SIGINT, on_term_signal);
@@ -181,7 +181,7 @@ int main(int argc, char* argv[])
 	//launchApp(launchArgs3);
 	//launchApp(launchArgs4);
 	//launchApp(launchArgs5);
-	//launchApp(launchArgs6);
+	launchApp(launchArgs6);
 	
 	while(1)
 	{

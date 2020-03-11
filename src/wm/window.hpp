@@ -1,5 +1,5 @@
 #pragma once
-#include "manager.hpp"
+#include "texture.hpp"
 #include "client.hpp"
 #include "functions.hpp"
 
@@ -24,16 +24,16 @@ namespace Awning
 			};
 
 			static std::list<Window*> windowList                  ;
-			static Window*            hoveredOver                 ;
 			static std::list<Window*> layers     [(int)Layer::END];
 
 			static void Manage  (Window*& window, Layer layer = Layer::Application);
 			static void Unmanage(Window*& window                                  );
 
-			static void Raise (Window*& window                      );
-			static void Move  (Window*& window, int xPos , int yPos );
-			static void Resize(Window*& window, int xSize, int ySize);
-			static void Offset(Window*& window, int xOff , int yOff );
+			static void Raise  (Window*& window                      );
+			static void Move   (Window*& window, int xPos , int yPos );
+			static void Resize (Window*& window, int xSize, int ySize);
+			static void Offset (Window*& window, int xOff , int yOff );
+			static void Lowered(Window*& window                      );
 		};
 	
 	private:
@@ -47,6 +47,7 @@ namespace Awning
 		Functions::Resized Resized;
 		Functions::Raised  Raised ;
 		Functions::Moved   Moved  ;
+		Functions::Lowered Lowered;
 
 		Awning::Texture* texture;
 		Window* parent;
@@ -92,5 +93,6 @@ namespace Awning
 		void SetRaised (Functions::Raised  raised );
 		void SetResized(Functions::Resized resized);
 		void SetMoved  (Functions::Moved   moved  );
+		void SetLowered(Functions::Lowered lowered);
 	};
 }

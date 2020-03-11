@@ -47,4 +47,5 @@ namespace Awning::Protocols::XDG::TopLevel
 
 	void Raised (void* data);
 	void Resized(void* data, int width, int height);
+	void Lowered(void* data);
 }
