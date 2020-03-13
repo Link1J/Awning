@@ -113,6 +113,7 @@ namespace Awning::Input
 
 	class Seat
 	{
+		friend Window;
 	public:
 		enum class Capability { None = 0, Keyboard = 1, Mouse = 2, Touch = 4 };
 

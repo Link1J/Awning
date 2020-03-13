@@ -1,4 +1,5 @@
 #include "window.hpp"
+#include "input.hpp"
 #include "protocols/wl/keyboard.hpp"
 
 namespace Awning

@@ -2,7 +2,6 @@
 #include "texture.hpp"
 #include "client.hpp"
 #include "functions.hpp"
-
 #include <vector>
 #include <list>
 
