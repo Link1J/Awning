@@ -58,11 +58,11 @@ namespace Awning::Utils::Sockets
 		}
 		if (bind(fd, (struct sockaddr*)addr, size) < 0) {
 			rc = errno;
-			spdlog::error(
-				"Failed to bind socket {}{}",
-				addr->sun_path[0] ? addr->sun_path[0] : '@',
-				addr->sun_path + 1
-			);
+			//spdlog::error(
+			//	"Failed to bind socket {}{}",
+			//	addr->sun_path[0] ? addr->sun_path[0] : '@',
+			//	addr->sun_path + 1
+			//);
 			goto cleanup;
 		}
 		if (listen(fd, 1) < 0) {

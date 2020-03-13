@@ -174,6 +174,9 @@ namespace Awning::Protocols::WL::Surface
 
 				surface.window->Mapped(true);
 			}
+
+			wl_buffer_send_release(surface.buffer);
+			surface.buffer = nullptr;
 		}
 
 		void Set_Buffer_Transform(struct wl_client* client, struct wl_resource* resource, int32_t transform)

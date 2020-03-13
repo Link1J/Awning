@@ -275,25 +275,25 @@ namespace Awning::Renderers::GLES2
 		glClearColor(238 / 255., 238 / 255., 238 / 255., 1);
 		glClear(GL_COLOR_BUFFER_BIT);
 		
-		int layerOrder[] = {
-				(int)Window::Manager::Layer::Background,
-				(int)Window::Manager::Layer::Bottom,
-				(int)Window::Manager::Layer::Application,
-				(int)Window::Manager::Layer::Top,
-				(int)Window::Manager::Layer::Overlay,
+		Window::Manager::Layer layerOrder[] = {
+			Window::Manager::Layer::Background,
+			Window::Manager::Layer::Bottom,
+			Window::Manager::Layer::Application,
+			Window::Manager::Layer::Top,
+			Window::Manager::Layer::Overlay,
 		};
 
 		for (int a = 0; a < sizeof(layerOrder) / sizeof(*layerOrder); a++)
 		{
-			auto list = Window::Manager::layers[layerOrder[a]];
+			auto list = Window::Manager::layers[(int)layerOrder[a]];
 			for (auto& window : reverse(list))
 			{
 				RenderWindow(window);
 			}
 		}
 
-		//for (auto window : Input::cursors)
-		//	RenderWindow(window, 0, 0);
+		for (auto window : Input::cursors)
+			RenderWindow(window, 0, 0);
 	
 		for (auto& display : displays)
 		{

@@ -229,7 +229,6 @@ namespace Awning::X
 		xcb_change_property(xcb_conn, XCB_PROP_MODE_REPLACE, window, atoms[_NET_SUPPORTING_WM_CHECK], XCB_ATOM_WINDOW, 32, 1, &window);
 		xcb_set_selection_owner(xcb_conn, window, atoms[WM_S0], XCB_CURRENT_TIME);
 		xcb_set_selection_owner(xcb_conn, window, atoms[NET_WM_CM_S0], XCB_CURRENT_TIME);
-		xcb_unmap_window_checked(xcb_conn, window);
 		
 		xcb_flush(xcb_conn);
 	}
@@ -240,9 +239,7 @@ namespace Awning::X
 		if (!windows.contains(w))
 			return;
 
-		uint32_t mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
-						XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
-						XCB_CONFIG_WINDOW_BORDER_WIDTH;
+		uint32_t mask = XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
 
 		uint32_t XPos  = windows[w]->XPos ();
 		uint32_t YPos  = windows[w]->YPos ();
@@ -260,9 +257,7 @@ namespace Awning::X
 		if (!windows.contains(w))
 			return;
 
-		uint32_t mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
-						XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
-						XCB_CONFIG_WINDOW_BORDER_WIDTH;
+		uint32_t mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y;
 
 		uint32_t XPos  = x                  ;
 		uint32_t YPos  = y                  ;
@@ -281,6 +276,8 @@ namespace Awning::X
 			return;
 		if (windows[w]->XSize() == 0 || windows[w]->YSize() == 0)
 			return;
+
+		xcb_change_property(xcb_conn, XCB_PROP_MODE_REPLACE, screen->root, atoms[_NET_ACTIVE_WINDOW], atoms[WINDOW], 32, 1, &w);
 	}
 
 #define XCB_EVENT_RESPONSE_TYPE_MASK (0x7f)
@@ -320,17 +317,32 @@ namespace Awning::X
 				{
 					auto e = (xcb_configure_request_event_t*)event;
 
+					spdlog::debug("X Window {} has been configured", e->window);
+					
 					uint32_t mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y |
 						XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
 						XCB_CONFIG_WINDOW_BORDER_WIDTH;
 
 					uint32_t values[] = {e->x, e->y, e->width, e->height, 0};
+					xcb_configure_window(xcb_conn, e->window, mask, values);
 					
 					Window::Manager::Move  (windows[e->window], e->x    , e->y     );
 					Window::Manager::Resize(windows[e->window], e->width, e->height);
 
-					xcb_configure_window(xcb_conn, e->window, mask, values);
-					xcb_flush(xcb_conn);
+				}
+				break;
+			case XCB_CONFIGURE_NOTIFY:
+				{
+					auto e = (xcb_configure_notify_event_t*)event;
+
+					spdlog::debug("X Window {} has been configured notify", e->window);
+
+					windows[e->window]->SetResized(nullptr);
+					windows[e->window]->SetRaised (nullptr);
+					windows[e->window]->SetMoved  (nullptr);
+
+					Window::Manager::Move  (windows[e->window], e->x    , e->y     );
+					Window::Manager::Resize(windows[e->window], e->width, e->height);
 
 					windows[e->window]->SetResized(Resized);
 					windows[e->window]->SetRaised (Raised );
@@ -350,35 +362,8 @@ namespace Awning::X
 					xcb_map_window_checked              (xcb_conn, e->window);
 					xcb_flush                           (xcb_conn);
 
-					auto displays = Backend::GetDisplays();
-
-					if (displays.size() > 0 && windows[e->window]->XSize() > 0 && windows[e->window]->YSize() > 0)
-					{
-						auto display = displays[0];
-						auto [sx, sy] = Output::Get::Mode::Resolution(display.output, display.mode);
-					
-						if (windows[e->window]->XPos() == INT32_MIN) Window::Manager::Move(windows[e->window], sx/2. - windows[e->window]->XSize()/2., windows[e->window]->YPos());
-						if (windows[e->window]->YPos() == INT32_MIN) Window::Manager::Move(windows[e->window], windows[e->window]->XPos(), sy/2. - windows[e->window]->YSize()/2.);
-					}
-
 					windows[e->window]->Frame (true);
         			windows[e->window]->Mapped(true);
-
-					//xcb_generic_error_t* error;
-
-					//auto property_c = xcb_get_property      (xcb_conn, 0, e->window, atoms[_MOTIF_WM_HINTS], atoms[_MOTIF_WM_HINTS], 0, 4);
-					//auto property_r = xcb_get_property_reply(xcb_conn, property_c, &error);
-
-					//if (property_r && !error) 
-					//{
-					//	windows[e->window]->Frame(true);
-					//}
-					//free(property_r);
-					//if (error)
-					//{
-					//	spdlog::warn("x11 error code {}", error->error_code);
-					//	free(error);
-					//}
 					
 					Window::Manager::Raise(windows[e->window]);
 				}
@@ -421,18 +406,11 @@ namespace Awning::X
 						struct wl_resource* resource = wl_client_get_object(xWaylandClient, id);
 						Awning::Protocols::WL::Surface::data.surfaces[resource].window = windows[e->window];
 						windows[e->window]->Texture(Awning::Protocols::WL::Surface::data.surfaces[resource].texture);
+						Client::Bind::Surface(windows[e->window], resource);
+        				windows[e->window]->Mapped(true);
 
 						auto displays = Backend::GetDisplays();
 						auto texture = Awning::Protocols::WL::Surface::data.surfaces[resource].texture;
-
-						if (displays.size() > 0 && texture->width > 0 && texture->height > 0)
-						{
-							auto display = displays[0];
-							auto [sx,sy] = Output::Get::Mode::Resolution(display.output, display.mode);
-
-							if (windows[e->window]->XPos() == INT32_MIN) Window::Manager::Move(windows[e->window], sx/2. - texture->width/2. , windows[e->window]->YPos());
-							if (windows[e->window]->YPos() == INT32_MIN) Window::Manager::Move(windows[e->window], windows[e->window]->XPos(), sy/2. - texture->height/2.);
-						}
 					}
 					if (e->type == atoms[_NET_WM_MOVERESIZE])
 					{
