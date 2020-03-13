@@ -1,7 +1,13 @@
 #include "surface.hpp"
+
 #include <spdlog/spdlog.h>
+
 #include "protocols/handler/xdg-shell.h"
+
+#include "wm/server.hpp"
+
 #include "renderers/manager.hpp"
+#include "renderers/egl.hpp"
 
 #include "protocols/zwp/dmabuf.hpp"
 
@@ -77,7 +83,14 @@ namespace Awning::Protocols::WL::Surface
 
 		void Attach(struct wl_client* client, struct wl_resource* resource, struct wl_resource* buffer, int32_t x, int32_t y)
 		{
-			data.surfaces[resource].buffer = buffer;
+			auto& surface = data.surfaces[resource];
+
+			if (surface.buffer != nullptr)
+			{
+				wl_buffer_send_release(surface.buffer);
+				surface.buffer = nullptr;
+			}
+			surface.buffer = buffer;
 		}
 
 		void Damage(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
@@ -141,7 +154,6 @@ namespace Awning::Protocols::WL::Surface
 				if (!surface.window->Texture())
 				{
 					surface.window->Texture(surface.texture);
-					Window::Manager::Raise(surface.window);
 				}
 			}
 
@@ -152,7 +164,7 @@ namespace Awning::Protocols::WL::Surface
 				Renderers::FillTextureFrom::LinuxDMABuf(surface.buffer, surface.texture, surface.damage);
 			else if (shm_buffer)
 				Renderers::FillTextureFrom::SHMBuffer(shm_buffer, surface.texture, surface.damage);
-			else if (eglQueryWaylandBufferWL(Server::data.egl.display, surface.buffer, EGL_TEXTURE_FORMAT, &texture_format))
+			else if (eglQueryWaylandBufferWL(Renderers::EGL::display, surface.buffer, EGL_TEXTURE_FORMAT, &texture_format))
 				Renderers::FillTextureFrom::EGLImage(surface.buffer, surface.texture, surface.damage);
 
 			if (surface.window)
@@ -162,9 +174,6 @@ namespace Awning::Protocols::WL::Surface
 
 				surface.window->Mapped(true);
 			}
-
-			wl_buffer_send_release(surface.buffer);
-			surface.buffer = nullptr;
 		}
 
 		void Set_Buffer_Transform(struct wl_client* client, struct wl_resource* resource, int32_t transform)

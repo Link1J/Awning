@@ -54,13 +54,18 @@ namespace Awning::Protocols::XDG::Surface
 			if (window->XSize() == 0 || window->YSize() == 0)
 				Window::Manager::Resize(window, width, height);
 
-			auto display = Backend::GetDisplays()[0];
-			auto [sx, sy] = Output::Get::Mode::Resolution(display.output, display.mode);
+			auto displays = Backend::GetDisplays();
 
-			if (window->XPos() == INT32_MIN)
-				Window::Manager::Move(window, sx/2. - window->XSize()/2., window->YPos());
-			if (window->YPos() == INT32_MIN)
-				Window::Manager::Move(window, window->XPos(), sy/2. - window->YSize()/2.);
+			if (displays.size() > 0)
+			{
+				auto display = displays[0];
+				auto [sx, sy] = Output::Get::Mode::Resolution(display.output, display.mode);
+	
+				if (window->XPos() == INT32_MIN)
+					Window::Manager::Move(window, sx/2. - window->XSize()/2., window->YPos());
+				if (window->YPos() == INT32_MIN)
+					Window::Manager::Move(window, window->XPos(), sy/2. - window->YSize()/2.);
+			}
 		}
 
 		void Ack_Configure(struct wl_client* client, struct wl_resource* resource, uint32_t serial)

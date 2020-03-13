@@ -6,6 +6,7 @@
 #include "wm/frame.hpp"
 #include "wm/x/wm.hpp"
 #include "wm/input.hpp"
+#include "wm/server.hpp"
 
 #include "protocols/wl/pointer.hpp"
 #include "protocols/zwp/dmabuf.hpp"
@@ -19,30 +20,7 @@
 #include <sstream>
 #include <algorithm>
 
-template <typename T>
-struct reversion_wrapper { T& iterable; };
-template <typename T>
-auto begin (reversion_wrapper<T> w) { return std::rbegin(w.iterable); }
-template <typename T>
-auto end (reversion_wrapper<T> w) { return std::rend(w.iterable); }
-template <typename T>
-reversion_wrapper<T> reverse (T&& iterable) { return { iterable }; }
-
-namespace Awning
-{
-	namespace Server
-	{
-		struct Data
-		{
-			wl_display* display;
-			wl_event_loop* event_loop;
-			wl_protocol_logger* logger; 
-			wl_listener client_listener;
-		};
-		extern Data data;
-	}
-};
-
+#include "utils/reverse.hpp"
 
 int LoadOpenGLES2();
 
@@ -115,6 +93,9 @@ namespace Awning::Renderers::GLES2
 		if (window->DrawingManaged() && depth == 0)
 			return;
 
+		if (!window->Mapped())
+			return;
+
 		auto texture = window->Texture();
 
 		auto winPosX  = window->XPos   ();
@@ -180,8 +161,6 @@ namespace Awning::Renderers::GLES2
 
 		}
 
-		if (!window->Mapped())
-			return;
 		if (!texture)
 			return;
 
@@ -210,7 +189,7 @@ namespace Awning::Renderers::GLES2
 	void Init()
 	{
 		EGL::Init();
-		eglBindWaylandDisplayWL(EGL::display, Awning::Server::data.display);
+		eglBindWaylandDisplayWL(EGL::display, Awning::Server::global.display);
 
 		GLuint vertexShader, pixelShaderOES, pixelShader2D;
 
@@ -313,8 +292,8 @@ namespace Awning::Renderers::GLES2
 			}
 		}
 
-		for (auto window : Input::cursors)
-			RenderWindow(window, 0, 0);
+		//for (auto window : Input::cursors)
+		//	RenderWindow(window, 0, 0);
 	
 		for (auto& display : displays)
 		{

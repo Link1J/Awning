@@ -40,6 +40,7 @@ set(SOURCES
     src/wm/client.cpp
     src/wm/output.cpp
     src/wm/input.cpp
+    src/wm/server.cpp
 
     src/wm/x/wm.cpp
     src/wm/x/server.cpp

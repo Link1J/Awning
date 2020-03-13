@@ -11,21 +11,7 @@
 #include "protocols/wl/pointer.hpp"
 
 #include "frame.hpp"
-
-namespace Awning
-{
-	namespace Server
-	{
-		struct Data
-		{
-			wl_display* display;
-			wl_event_loop* event_loop;
-			wl_protocol_logger* logger; 
-			wl_listener client_listener;
-		};
-		extern Data data;
-	}
-};
+#include "server.hpp"
 
 void xcbLog(xkb_context* context, xkb_log_level level, const char* format, va_list args)
 {
@@ -73,7 +59,7 @@ namespace Awning::Input
 		}
 
 		this->name = name;
-		global = Awning::Protocols::WL::Seat::Add(Awning::Server::data.display, this);
+		global = Awning::Protocols::WL::Seat::Add(Awning::Server::global.display, this);
 
 		pointer.window = Window::Create(0);
 		pointer.window->Mapped(true);

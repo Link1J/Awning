@@ -1,5 +1,8 @@
 #include "server.hpp"
 #include "wm.hpp"
+
+#include "wm/server.hpp"
+
 #include <spdlog/spdlog.h>
 
 #include "utils/sockets.hpp"
@@ -9,21 +12,6 @@
 static const char* lock_fmt = "/tmp/.X%d-lock";
 static const char* socket_dir = "/tmp/.X11-unix";
 static const char* socket_fmt = "/tmp/.X11-unix/X%d";
-
-namespace Awning
-{
-	namespace Server
-	{
-		struct Data
-		{
-			wl_display* display;
-			wl_event_loop* event_loop;
-			wl_protocol_logger* logger; 
-			wl_listener client_listener;
-		};
-		extern Data data;
-	}
-};
 
 namespace Awning::X::Server
 {
@@ -154,9 +142,9 @@ namespace Awning::X::Server
 		Utils::Sockets::SetCloexec(wm_fd[0], true);
 		Utils::Sockets::SetCloexec(wm_fd[1], true);
 
-		xWaylandClient = wl_client_create(Awning::Server::data.display, wl_fd[0]);
+		xWaylandClient = wl_client_create(Awning::Server::global.display, wl_fd[0]);
 		
-		sigusr1 = wl_event_loop_add_signal(Awning::Server::data.event_loop, SIGUSR1, XWM_Start, nullptr);
+		sigusr1 = wl_event_loop_add_signal(Awning::Server::global.event_loop, SIGUSR1, XWM_Start, nullptr);
 
 		int pidT = fork();
 		if (pidT == 0) 

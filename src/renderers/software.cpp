@@ -5,6 +5,7 @@
 
 #include "wm/frame.hpp"
 #include "wm/input.hpp"
+#include "wm/server.hpp"
 
 #include "protocols/wl/pointer.hpp"
 
@@ -17,14 +18,7 @@
 
 #include <iostream>
 
-template <typename T>
-struct reversion_wrapper { T& iterable; };
-template <typename T>
-auto begin (reversion_wrapper<T> w) { return std::rbegin(w.iterable); }
-template <typename T>
-auto end (reversion_wrapper<T> w) { return std::rend(w.iterable); }
-template <typename T>
-reversion_wrapper<T> reverse (T&& iterable) { return { iterable }; }
+#include "utils/reverse.hpp"
 
 namespace Awning
 {
@@ -190,7 +184,7 @@ namespace Awning::Renderers::Software
 		if (EGL::Init() != 0)
 			return;
 		
-		eglBindWaylandDisplayWL(EGL::display, Awning::Server::data.display);
+		eglBindWaylandDisplayWL(EGL::display, Awning::Server::global.display);
 
 		EGL::CreateShader(vertexShader, GL_VERTEX_SHADER, vertexShaderCode);
 		EGL::CreateShader(pixelShader, GL_FRAGMENT_SHADER, pixelShaderCode);

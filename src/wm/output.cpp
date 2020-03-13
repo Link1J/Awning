@@ -1,4 +1,5 @@
 #include "output.hpp"
+#include "server.hpp"
 #include <unordered_map>
 #include <vector>
 
@@ -44,21 +45,6 @@ struct Output
 	std::vector<Resizes> resizes     ;
 };
 
-namespace Awning
-{
-	namespace Server
-	{
-		struct Data
-		{
-			wl_display* display;
-			wl_event_loop* event_loop;
-			wl_protocol_logger* logger; 
-			wl_listener client_listener;
-		};
-		extern Data data;
-	}
-};
-
 namespace Awning::Output
 {
 	std::unordered_map<::Output*, wl_global*> globals;
@@ -66,7 +52,7 @@ namespace Awning::Output
 	ID Create()
 	{
 		::Output* output = new ::Output();
-		globals[output] = Protocols::WL::Output::Add(Server::data.display, output);
+		globals[output] = Protocols::WL::Output::Add(Server::global.display, output);
 		return (ID)output;
 	}
 

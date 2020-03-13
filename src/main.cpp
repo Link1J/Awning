@@ -44,8 +44,8 @@
 #include "wm/x/wm.hpp"
 #include "wm/window.hpp"
 #include "wm/client.hpp"
-
 #include "wm/x/server.hpp"
+#include "wm/server.hpp"
 
 #include <spdlog/spdlog.h>
 
@@ -58,27 +58,8 @@
 #include <iostream>
 #include <unordered_map>
 
-void ProtocolLogger(void* user_data, wl_protocol_logger_type direction, const wl_protocol_logger_message* message);
 void on_term_signal(int signal_number);
-void client_created(struct wl_listener *listener, void *data);
 void launchApp(const char** argv);
-
-namespace Awning
-{
-	namespace Server
-	{
-		struct Data
-		{
-			wl_display* display;
-			wl_event_loop* event_loop;
-			wl_protocol_logger* logger; 
-			wl_listener client_listener;
-		};
-		Data data;
-	}
-};
-
-extern int tty_fd;
 
 uint32_t lastSerialNum = 1;
 
@@ -131,33 +112,24 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	Awning::Server::data.display = wl_display_create(); 
-	const char* socket = wl_display_add_socket_auto(Awning::Server::data.display);
-	spdlog::info("Wayland Socket: {}", socket);
-
-	Awning::Server::data.client_listener.notify = client_created;
-
-	Awning::Server::data.event_loop = wl_display_get_event_loop(Awning::Server::data.display);
-	wl_display_add_client_created_listener(Awning::Server::data.display, &Awning::Server::data.client_listener);
-
-	wl_display_add_protocol_logger(Awning::Server::data.display, ProtocolLogger, nullptr);
+	Awning::Server::Init();
 
 	Awning::Backend::Init(api_output, api_input);
 	Awning::Renderers::Init(api_drawing);
 
-	Awning::Protocols::WL  ::Compositor         ::Add(Awning::Server::data.display);
-	//Awning::Protocols::WL  ::Shell              ::Add(Awning::Server::data.display);
-	Awning::Protocols::XDG ::WM_Base            ::Add(Awning::Server::data.display);
-	Awning::Protocols::ZXDG::Decoration_Manager ::Add(Awning::Server::data.display);
-	Awning::Protocols::WL  ::Data_Device_Manager::Add(Awning::Server::data.display);
-	Awning::Protocols::WLR ::Output_Manager     ::Add(Awning::Server::data.display);
-	Awning::Protocols::ZXDG::Output_Manager     ::Add(Awning::Server::data.display);
-	Awning::Protocols::ZWP ::Linux_Dmabuf       ::Add(Awning::Server::data.display);
-	Awning::Protocols::WL  ::Subcompositor      ::Add(Awning::Server::data.display);
-	Awning::Protocols::KDE ::Decoration_Manager ::Add(Awning::Server::data.display);
-	Awning::Protocols::WLR ::Layer_Shell        ::Add(Awning::Server::data.display);
+	Awning::Protocols::WL  ::Compositor         ::Add(Awning::Server::global.display);
+	//Awning::Protocols::WL  ::Shell              ::Add(Awning::Server::global.display);
+	Awning::Protocols::XDG ::WM_Base            ::Add(Awning::Server::global.display);
+	Awning::Protocols::ZXDG::Decoration_Manager ::Add(Awning::Server::global.display);
+	Awning::Protocols::WL  ::Data_Device_Manager::Add(Awning::Server::global.display);
+	Awning::Protocols::WLR ::Output_Manager     ::Add(Awning::Server::global.display);
+	Awning::Protocols::ZXDG::Output_Manager     ::Add(Awning::Server::global.display);
+	Awning::Protocols::ZWP ::Linux_Dmabuf       ::Add(Awning::Server::global.display);
+	Awning::Protocols::WL  ::Subcompositor      ::Add(Awning::Server::global.display);
+	Awning::Protocols::KDE ::Decoration_Manager ::Add(Awning::Server::global.display);
+	Awning::Protocols::WLR ::Layer_Shell        ::Add(Awning::Server::global.display);
 
-	wl_display_init_shm(Awning::Server::data.display);
+	wl_display_init_shm(Awning::Server::global.display);
 
 	if (startXWayland) Awning::X::Server::Setup();
 
@@ -167,11 +139,13 @@ int main(int argc, char* argv[])
     const char* launchArgs4[] = { "ksysguard", "-platform", "wayland", NULL };
     const char* launchArgs5[] = { "konsole", "-platform", "wayland", NULL };
     const char* launchArgs6[] = { "termite", NULL };
+    const char* launchArgs7[] = { "waybar", NULL };
+    const char* launchArgs8[] = { "swaybg", "-i", "/home/link1j/Desktop/Next/contents/images/1366x768.jpg", "-m", "fill", NULL };
 
 	int display = Awning::X::Server::display;
 
 	setenv("DISPLAY", fmt::format(":{}", display).c_str(), 1);
-	setenv("WAYLAND_DISPLAY", socket, 1);
+	setenv("WAYLAND_DISPLAY", Awning::Server::global.socketname.c_str(), 1);
 	setenv("MOZ_ENABLE_WAYLAND", "1", 1);
 
 	//signal(SIGINT, on_term_signal);
@@ -181,15 +155,17 @@ int main(int argc, char* argv[])
 	//launchApp(launchArgs3);
 	//launchApp(launchArgs4);
 	//launchApp(launchArgs5);
-	launchApp(launchArgs6);
+	//launchApp(launchArgs6);
+	launchApp(launchArgs7);
+	launchApp(launchArgs8);
 	
 	while(1)
 	{
 		Awning::Backend::Poll();
 		Awning::Backend::Hand();
 
-		wl_event_loop_dispatch(Awning::Server::data.event_loop, 0);
-		wl_display_flush_clients(Awning::Server::data.display);
+		wl_event_loop_dispatch(Awning::Server::global.event_loop, 0);
+		wl_display_flush_clients(Awning::Server::global.display);
 
 		Awning::X::EventLoop();
 
@@ -200,26 +176,11 @@ int main(int argc, char* argv[])
 		Awning::Protocols::WL::Surface::HandleFrameCallbacks();
 	}
 
-	wl_display_destroy(Awning::Server::data.display);
-}
-
-void ProtocolLogger(void* user_data, wl_protocol_logger_type direction, const wl_protocol_logger_message* message)
-{
-	const char* direction_strings[] = { 
-		"REQUEST", 
-		"EVENT  "
-	};
-
-	//spdlog::debug("[{}] {}: {}", direction_strings[direction], message->resource->object.interface->name, message->message->name);
+	wl_display_destroy(Awning::Server::global.display);
 }
 
 void on_term_signal(int signal_number)
 {
-}
-
-void client_created(struct wl_listener* listener, void* data)
-{
-	Awning::Client::Create(data);
 }
 
 /*void GetSockAddress()
