@@ -122,8 +122,10 @@ namespace Awning::Backend::X11
 	}
 }
 
-static void eglLog(EGLenum error, const char *command, EGLint msg_type, EGLLabelKHR thread, EGLLabelKHR obj, const char *msg) {
-	spdlog::error("[X EGL] command: {}, error: 0x{:X}, message: \"{}\"\n", command, error, msg);
+static void eglLog(EGLenum error, const char *command, EGLint msg_type, EGLLabelKHR thread, EGLLabelKHR obj, const char *msg) 
+{
+	((char*)msg)[strlen(msg)-1] = '\0';
+	spdlog::error("[X EGL] command: {}, error: 0x{:X}, message: \"{}\"", command, error, msg);
 }
 
 static GLuint vertexShader, pixelShader, program;
@@ -158,7 +160,9 @@ void Awning::Backend::X11::Start()
 	EGLConfig  ecfg;
 	EGLint     num_config;
 
-	egl_display = eglGetDisplay((EGLNativeDisplayType)display);
+	Awning::Renderers::EGL::loadEGLProc(&eglGetPlatformDisplayEXT, "eglGetPlatformDisplayEXT");
+
+	egl_display = eglGetPlatformDisplayEXT(EGL_PLATFORM_X11_KHR, display, NULL);
 	eglInitialize(egl_display, NULL, NULL);
 	eglChooseConfig(egl_display, attr, &ecfg, 1, &num_config);
 	egl_context = eglCreateContext(egl_display, ecfg, EGL_NO_CONTEXT, ctxattr);
@@ -179,13 +183,12 @@ void Awning::Backend::X11::Start()
 
 	auto extensions = std::string(eglQueryString(egl_display, EGL_EXTENSIONS));
 
-	//std::cout << "X EGL Vendor  : " << eglQueryString(egl_display, EGL_VENDOR ) << "\n";
-	//std::cout << "X EGL Version : " << eglQueryString(egl_display, EGL_VERSION) << "\n";
-	//std::cout << "EGL Extensions: " << extensions                               << "\n";
-	//std::cout << "X GL Vendor   : " << glGetString(GL_VENDOR                  ) << "\n";
-	//std::cout << "X GL Renderer : " << glGetString(GL_RENDERER                ) << "\n";
-	//std::cout << "X GL Version  : " << glGetString(GL_VERSION                 ) << "\n";
-	//std::cout << "X GLSL Version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "\n";
+	spdlog::info("X EGL Vendor  : {}", eglQueryString(egl_display, EGL_VENDOR ));
+	spdlog::info("X EGL Version : {}", eglQueryString(egl_display, EGL_VERSION));
+	spdlog::info("X GL Vendor   : {}", glGetString(GL_VENDOR                  ));
+	spdlog::info("X GL Renderer : {}", glGetString(GL_RENDERER                ));
+	spdlog::info("X GL Version  : {}", glGetString(GL_VERSION                 ));
+	spdlog::info("X GLSL Version: {}", glGetString(GL_SHADING_LANGUAGE_VERSION));
 	
 	attribs.event_mask = StructureNotifyMask|ButtonPressMask|KeyPressMask|PointerMotionMask|ButtonReleaseMask|KeyReleaseMask;
 	

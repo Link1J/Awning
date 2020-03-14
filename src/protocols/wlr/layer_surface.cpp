@@ -30,21 +30,21 @@ namespace Awning::Protocols::WLR::Layer_Surface
 		.set_layer                  = Interface::Set_Layer                 ,
 	};
 
-	Data data;
+	std::unordered_map<wl_resource*, Instance> instances;
 	
 	namespace Interface
 	{
 		void Set_Size(struct wl_client* client, struct wl_resource* resource, uint32_t width, uint32_t height)
 		{
-			data.instances[resource].baseX = width ;
-			data.instances[resource].baseY = height;
+			instances[resource].baseX = width ;
+			instances[resource].baseY = height;
 
 			ReconfigureWindow(resource);
 		}
 
 		void Set_Anchor(struct wl_client* client, struct wl_resource* resource, uint32_t anchor)
 		{
-			data.instances[resource].anchor = anchor;
+			instances[resource].anchor = anchor;
 
 			ReconfigureWindow(resource);
 		}
@@ -55,10 +55,10 @@ namespace Awning::Protocols::WLR::Layer_Surface
 
 		void Set_Margin(struct wl_client* client, struct wl_resource* resource, int32_t top, int32_t right, int32_t bottom, int32_t left)
 		{
-			data.instances[resource].marginsTop    = top   ;
-			data.instances[resource].marginsLeft   = left  ;
-			data.instances[resource].marginsBottom = bottom;
-			data.instances[resource].marginsRight  = right ;
+			instances[resource].marginsTop    = top   ;
+			instances[resource].marginsLeft   = left  ;
+			instances[resource].marginsBottom = bottom;
+			instances[resource].marginsRight  = right ;
 
 			ReconfigureWindow(resource);
 		}
@@ -82,8 +82,8 @@ namespace Awning::Protocols::WLR::Layer_Surface
 
 		void Set_Layer(struct wl_client* client, struct wl_resource* resource, uint32_t layer)
 		{
-			//Window::Manager::Unmanage(data.instances[resource].window);
-			//Window::Manager::Manage(data.instances[resource].window, (Window::Manager::Layer)layer);
+			//Window::Manager::Unmanage(instances[resource].window);
+			//Window::Manager::Manage(instances[resource].window, (Window::Manager::Layer)layer);
 		}
 	}
 
@@ -96,26 +96,26 @@ namespace Awning::Protocols::WLR::Layer_Surface
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
-		data.instances[resource] = Data::Instance();
-		data.instances[resource].surface       = surface;
-		data.instances[resource].output        = output ;
-		data.instances[resource].marginsTop    = 0;
-		data.instances[resource].marginsLeft   = 0;
-		data.instances[resource].marginsBottom = 0;
-		data.instances[resource].marginsRight  = 0;
-		data.instances[resource].window        = Window::Create(wl_client);
+		instances[resource] = Instance();
+		instances[resource].surface       = surface;
+		instances[resource].output        = output ;
+		instances[resource].marginsTop    = 0;
+		instances[resource].marginsLeft   = 0;
+		instances[resource].marginsBottom = 0;
+		instances[resource].marginsRight  = 0;
+		instances[resource].window        = Window::Create(wl_client);
 
-		Window::Manager::Manage(data.instances[resource].window, (Window::Manager::Layer)layer);
-		Window::Manager::Move  (data.instances[resource].window, 0, 0                         );
+		Window::Manager::Manage(instances[resource].window, (Window::Manager::Layer)layer);
+		Window::Manager::Move  (instances[resource].window, 0, 0                         );
 
-		WL::Surface::data.surfaces[surface].window = data.instances[resource].window;
-		WL::Surface::data.surfaces[surface].type   = 0;
+		WL::Surface::instances[surface].window = instances[resource].window;
+		WL::Surface::instances[surface].type   = 0;
 
-		data.instances[resource].window->Data         (resource);
-		data.instances[resource].window->SetResized   (Resized );
-		data.instances[resource].window->ConfigMinSize(0, 0    );
+		instances[resource].window->Data         (resource);
+		instances[resource].window->SetResized   (Resized );
+		instances[resource].window->ConfigMinSize(0, 0    );
 
-		auto outputid = WL::Output::data.resource_to_outputId[output];
+		auto outputid = WL::Output::resource_to_outputId[output];
 
 		Output::AddResize(outputid, ResizedOutput, resource);
 
@@ -124,20 +124,20 @@ namespace Awning::Protocols::WLR::Layer_Surface
 
 	void Destroy(struct wl_resource* resource)
 	{
-		if (!data.instances.contains(resource))
+		if (!instances.contains(resource))
 			return;
 
-		auto surface = data.instances[resource].surface; 
+		auto surface = instances[resource].surface; 
 
-		WL::Surface::data.surfaces[surface].window = nullptr;
+		WL::Surface::instances[surface].window = nullptr;
 
-		auto outputid = WL::Output::data.resource_to_outputId[data.instances[resource].output];
+		auto outputid = WL::Output::resource_to_outputId[instances[resource].output];
 		Output::RemoveResize(outputid, ResizedOutput, resource);
 
-		data.instances[resource].window->Mapped(false);
-		data.instances[resource].window->Texture(nullptr);
-		Window::Destory(data.instances[resource].window);
-		data.instances.erase(resource);
+		instances[resource].window->Mapped(false);
+		instances[resource].window->Texture(nullptr);
+		Window::Destory(instances[resource].window);
+		instances.erase(resource);
 	}
 
 	void Resized(void* data, int width, int height)
@@ -153,11 +153,14 @@ namespace Awning::Protocols::WLR::Layer_Surface
 
 	void ReconfigureWindow(struct wl_resource* resource)
 	{
+		if (!instances.contains(resource))
+			return;
+
 		int check = 0;
 
-		auto output = WL::Output::data.resource_to_outputId[data.instances[resource].output];
-		auto anchor = data.instances[resource].anchor;
-		auto window = data.instances[resource].window;
+		auto output = WL::Output::resource_to_outputId[instances[resource].output];
+		auto anchor = instances[resource].anchor;
+		auto window = instances[resource].window;
 
 		auto mode = Output::Get::CurrentMode(output);
 		
@@ -166,37 +169,37 @@ namespace Awning::Protocols::WLR::Layer_Surface
 		auto [rx, ry] = Output::Get::Mode::Resolution(output, mode);
 
 		check = Anchor::Left | Anchor::Right;
-		if ((anchor & check) != check) sx = data.instances[resource].baseX;
+		if ((anchor & check) != check) sx = instances[resource].baseX;
 
 		check = Anchor::Top | Anchor::Bottom;
-		if ((anchor & check) != check) sy = data.instances[resource].baseY;
+		if ((anchor & check) != check) sy = instances[resource].baseY;
 
 		if ((anchor & Anchor::Left) != 0 && (anchor & Anchor::Right) == 0)
 		{
-			px += data.instances[resource].marginsLeft;
+			px += instances[resource].marginsLeft;
 		}
 		else if ((anchor & Anchor::Left) == 0 && (anchor & Anchor::Right) != 0)
 		{
-			px += (rx - (sx + data.instances[resource].marginsRight));
+			px += (rx - (sx + instances[resource].marginsRight));
 		}
 		else if ((anchor & Anchor::Left) != 0 && (anchor & Anchor::Right) != 0)
 		{
-			px += data.instances[resource].marginsLeft;
-			sx -= (data.instances[resource].marginsLeft + data.instances[resource].marginsRight);
+			px += instances[resource].marginsLeft;
+			sx -= (instances[resource].marginsLeft + instances[resource].marginsRight);
 		}
 
 		if ((anchor & Anchor::Top) != 0 && (anchor & Anchor::Bottom) == 0)
 		{
-			py += data.instances[resource].marginsTop;
+			py += instances[resource].marginsTop;
 		}
 		else if ((anchor & Anchor::Top) == 0 && (anchor & Anchor::Bottom) != 0)
 		{
-			py += (ry - (sy + data.instances[resource].marginsBottom));
+			py += (ry - (sy + instances[resource].marginsBottom));
 		}
 		else if ((anchor & Anchor::Top) != 0 && (anchor & Anchor::Bottom) != 0)
 		{
-			py += data.instances[resource].marginsTop;
-			sy -= (data.instances[resource].marginsLeft + data.instances[resource].marginsBottom);
+			py += instances[resource].marginsTop;
+			sy -= (instances[resource].marginsLeft + instances[resource].marginsBottom);
 		}
 
 		if (px != window->XPos() || py != window->YPos() || sx != window->XSize() || sy != window->YSize())

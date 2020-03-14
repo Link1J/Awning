@@ -57,7 +57,7 @@ static const char* pixelShaderCode = R"(
 
 precision mediump float;
 
-uniform samplerExternalOES texture0;
+uniform samplerExternalOES texture0;global
 
 in vec4 color;
 out vec4 FragColor;
@@ -184,7 +184,7 @@ namespace Awning::Renderers::Software
 		if (EGL::Init() != 0)
 			return;
 		
-		eglBindWaylandDisplayWL(EGL::display, Awning::Server::global.display);
+		eglBindWaylandDisplayWL(EGL::display, Awning::Server::display);
 
 		EGL::CreateShader(vertexShader, GL_VERTEX_SHADER, vertexShaderCode);
 		EGL::CreateShader(pixelShader, GL_FRAGMENT_SHADER, pixelShaderCode);

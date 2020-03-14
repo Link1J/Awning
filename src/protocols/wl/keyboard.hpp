@@ -6,20 +6,15 @@
 
 namespace Awning::Protocols::WL::Keyboard
 {
-	struct Data 
+	struct Instance 
 	{
-		struct Instance 
-		{
-			wl_client* client;
-			int version = 0;
-			void* seat;
-		};
-
-		std::unordered_map<wl_resource*, Instance> instances;
+		wl_client* client;
+		int version = 0;
+		void* seat;
 	};
 
 	extern const struct wl_keyboard_interface interface;
-	extern Data data;
+	extern std::unordered_map<wl_resource*, Instance> instances;
 
 	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, void* seat);
 	void Destroy(struct wl_resource* resource);

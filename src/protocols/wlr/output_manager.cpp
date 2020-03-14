@@ -11,7 +11,7 @@ namespace Awning::Protocols::WLR::Output_Manager
 		.create_configuration = Interface::Create_Configuration,
 		.stop                 = Interface::Stop                ,
 	};
-	Data data;
+	std::unordered_map<wl_resource*, bool> sendDisplays;
 
 	namespace Interface
 	{
@@ -22,7 +22,7 @@ namespace Awning::Protocols::WLR::Output_Manager
 
 		void Stop(struct wl_client* client, struct wl_resource* resource)
 		{
-			Output_Manager::data.sendDisplays[resource] = false;
+			Output_Manager::sendDisplays[resource] = false;
 		}
 	}
 	
@@ -40,7 +40,7 @@ namespace Awning::Protocols::WLR::Output_Manager
 		}
 		wl_resource_set_implementation(resource, &interface, data, nullptr);
 
-		Output_Manager::data.sendDisplays[resource] = true;
+		Output_Manager::sendDisplays[resource] = true;
 
 		auto displays = Backend::GetDisplays();
 		for (auto display : displays)
@@ -55,7 +55,8 @@ namespace Awning::Protocols::WLR::Output_Manager
 
 namespace Awning::Protocols::WLR::Head
 {
-	Data data;
+	std::unordered_map<Output::ID, std::unordered_set<wl_resource*>> outputId_to_resource;
+	std::unordered_map<wl_resource*, Output::ID> resource_to_outputId;
 
 	namespace Interface
 	{
@@ -66,7 +67,7 @@ namespace Awning::Protocols::WLR::Head
 
 	void SendData(wl_resource* resource)
 	{
-		auto outputId = data.resource_to_outputId[resource];
+		auto outputId = resource_to_outputId[resource];
 
 		auto [mX, mY] = Awning::Output::Get::Size        (outputId);
 		auto [pX, pY] = Awning::Output::Get::Position    (outputId);
@@ -101,26 +102,28 @@ namespace Awning::Protocols::WLR::Head
 		wl_resource_set_implementation(resource, nullptr, nullptr, Destroy);
 		zwlr_output_manager_v1_send_head(manager, resource);
 
-		Head::data.resource_to_outputId[resource] = outputId;
-		Head::data.outputId_to_resource[outputId].emplace(resource);
+		Head::resource_to_outputId[resource] = outputId;
+		Head::outputId_to_resource[outputId].emplace(resource);
 
 		return resource;
 	}
 
 	void Destroy(struct wl_resource* resource)
 	{
-		if (!data.resource_to_outputId.contains(resource))
+		if (!resource_to_outputId.contains(resource))
 			return;
 
-		auto id = data.resource_to_outputId[resource];
-		data.outputId_to_resource[id].erase(resource);
-		data.resource_to_outputId    .erase(resource);
+		auto id = resource_to_outputId[resource];
+		outputId_to_resource[id].erase(resource);
+		resource_to_outputId    .erase(resource);
 	}
 }
 
 namespace Awning::Protocols::WLR::Mode
 {
-	Data data;
+	std::unordered_map<Output::ID, std::unordered_set<wl_resource*>> outputId_to_resource;
+	std::unordered_map<wl_resource*, Output::ID> resource_to_outputId;
+	std::unordered_map<wl_resource*, int> resource_to_mode;
 
 	namespace Interface
 	{
@@ -131,8 +134,8 @@ namespace Awning::Protocols::WLR::Mode
 
 	void SendData(wl_resource* resource)
 	{
-		auto outputId = data.resource_to_outputId[resource];
-		auto mode     = data.resource_to_mode    [resource];
+		auto outputId = resource_to_outputId[resource];
+		auto mode     = resource_to_mode    [resource];
 
 		auto [mX, mY] = Awning::Output::Get::Mode::Resolution (outputId, mode);
 		auto refresh  = Awning::Output::Get::Mode::RefreshRate(outputId, mode);
@@ -154,22 +157,22 @@ namespace Awning::Protocols::WLR::Mode
 		wl_resource_set_implementation(resource, nullptr, nullptr, Destroy);
 		zwlr_output_head_v1_send_mode(head, resource);
 
-		Mode::data.resource_to_outputId[resource] = outputId;
-		Mode::data.outputId_to_resource[outputId].emplace(resource);
-		Mode::data.resource_to_mode    [resource] = mode;
+		Mode::resource_to_outputId[resource] = outputId;
+		Mode::outputId_to_resource[outputId].emplace(resource);
+		Mode::resource_to_mode    [resource] = mode;
 
 		return resource;
 	}
 
 	void Destroy(struct wl_resource* resource)
 	{
-		if (!data.resource_to_outputId.contains(resource))
+		if (!resource_to_outputId.contains(resource))
 			return;
 
-		auto id = data.resource_to_outputId[resource];
-		data.outputId_to_resource[id].erase(resource);
-		data.resource_to_outputId    .erase(resource);
-		data.resource_to_mode        .erase(resource);
+		auto id = resource_to_outputId[resource];
+		outputId_to_resource[id].erase(resource);
+		resource_to_outputId    .erase(resource);
+		resource_to_mode        .erase(resource);
 	}
 }
 
@@ -182,8 +185,6 @@ namespace Awning::Protocols::WLR::Output_Configuration
 		.test         = Interface::Test        ,
 		.destroy      = Interface::Destroy     ,
 	};
-
-	Data data;
 
 	namespace Interface
 	{

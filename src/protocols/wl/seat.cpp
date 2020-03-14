@@ -12,19 +12,18 @@ namespace Awning::Protocols::WL::Seat
 		.get_touch    = Interface::Get_Touch,
 		.release      = Interface::Release,
 	};
-
-	Global global;
+	std::unordered_map<wl_resource*, Instance> instances;
 
 	namespace Interface
 	{
 		void Get_Pointer(struct wl_client* client, struct wl_resource* resource, uint32_t id)
 		{
-			Pointer::Create(client, wl_resource_get_version(resource), id, global.instances[resource].seat);
+			Pointer::Create(client, wl_resource_get_version(resource), id, instances[resource].seat);
 		}
 
 		void Get_Keyboard(struct wl_client* client, struct wl_resource* resource, uint32_t id)
 		{
-			Keyboard::Create(client, wl_resource_get_version(resource), id, global.instances[resource].seat);
+			Keyboard::Create(client, wl_resource_get_version(resource), id, instances[resource].seat);
 		}
 
 		void Get_Touch(struct wl_client* client, struct wl_resource* resource, uint32_t id)
@@ -57,7 +56,7 @@ namespace Awning::Protocols::WL::Seat
 		if (version >= WL_SEAT_NAME_SINCE_VERSION)
 			wl_seat_send_name(resource, seat->Name().c_str());
 
-		global.instances[resource].seat = data;
+		instances[resource].seat = data;
 	}
 
 	wl_global* Add(struct wl_display* display, void* data)

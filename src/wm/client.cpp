@@ -70,7 +70,7 @@ namespace Awning::Client
 		void* surface = clients[window->client].windows[window].surface;
 		if (!surface)
 		{
-			for (auto& [resource, data] : Protocols::WL::Surface::data.surfaces)
+			for (auto& [resource, data] : Protocols::WL::Surface::instances)
 			{
 				if (data.window == window)
 				{

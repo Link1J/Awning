@@ -65,8 +65,9 @@ namespace Awning
 		Manager::Layer layer;
 
 	public:		
-		static Window* Create        (void* client   );
-		static void    Destory       (Window*& window);
+		static Window* Create (void* client   );
+		static void    Destory(Window*& window);
+		static bool    Valid  (Window*& window);
 
 		Awning::Texture*     Texture       (                            );
 		void                 Mapped        (bool map                    );

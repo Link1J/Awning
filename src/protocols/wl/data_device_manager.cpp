@@ -13,8 +13,6 @@ namespace Awning::Protocols::WL::Data_Device_Manager
         .get_data_device    = Interface::Get_Data_Device,
 	};
 
-	Data data;
-
 	namespace Interface
 	{
 		void Create_Data_Source(struct wl_client* client, struct wl_resource* resource, uint32_t id)

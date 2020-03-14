@@ -6,18 +6,13 @@
 
 namespace Awning::Protocols::KDE::Decoration
 {
-	struct Data 
+	struct Instance 
 	{
-		struct Instance 
-		{
-			wl_resource* surface;
-		};
-
-		std::unordered_map<wl_resource*,Instance> instances;
+		wl_resource* surface;
 	};
 
 	extern const struct org_kde_kwin_server_decoration_interface interface;
-	extern Data data;
+	extern std::unordered_map<wl_resource*,Instance> instances;
 
 	namespace Interface
 	{
@@ -31,12 +26,7 @@ namespace Awning::Protocols::KDE::Decoration
 
 namespace Awning::Protocols::KDE::Decoration_Manager
 {
-	struct Data 
-	{
-	};
-
 	extern const struct org_kde_kwin_server_decoration_manager_interface interface;
-	extern Data data;
 	
 	namespace Interface
 	{

@@ -8,8 +8,7 @@ namespace Awning::Protocols::ZXDG::Output
 	const struct zxdg_output_v1_interface interface = {
 		.destroy    = Interface::Destroy,
 	};
-
-	Data data;
+	std::unordered_map<wl_resource*, Instance> instances;
 
 	namespace Interface
 	{
@@ -34,7 +33,7 @@ namespace Awning::Protocols::ZXDG::Output
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
-		Awning::Output::ID outputID = WL::Output::data.resource_to_outputId[output];
+		Awning::Output::ID outputID = WL::Output::resource_to_outputId[output];
 
 		auto [px, py] = Awning::Output::Get::Position(outputID);
 		auto [sx, sy] = Awning::Output::Get::Mode::Resolution(outputID, Awning::Output::Get::CurrentMode(outputID));
@@ -51,20 +50,20 @@ namespace Awning::Protocols::ZXDG::Output
 
 		Awning::Output::AddResize(outputID, Resize, resource);
 
-		data.instances[resource].output = output;
-		data.instances[resource].id = outputID;
+		instances[resource].output = output;
+		instances[resource].id = outputID;
 
 		return resource;
 	}
 
 	void Destroy(struct wl_resource* resource)
 	{
-		if (!data.instances.contains(resource))
+		if (!instances.contains(resource))
 			return;
 
-		Awning::Output::ID outputID = data.instances[resource].id;
+		Awning::Output::ID outputID = instances[resource].id;
 		Awning::Output::RemoveResize(outputID, Resize, resource);
-		data.instances.erase(resource);
+		instances.erase(resource);
 	}
 }
 
@@ -74,8 +73,6 @@ namespace Awning::Protocols::ZXDG::Output_Manager
 		.destroy        = Interface::Destroy       ,
 		.get_xdg_output = Interface::Get_Xdg_Output,
 	};
-
-	Data data;
 
 	namespace Interface
 	{

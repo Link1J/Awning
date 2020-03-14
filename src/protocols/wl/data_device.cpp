@@ -9,8 +9,6 @@ namespace Awning::Protocols::WL::Data_Device
 		.release       = Interface::Release      ,
 	};
 
-	Data data;
-
 	namespace Interface
 	{
 		void Start_Drag(struct wl_client* client, struct wl_resource* resource, struct wl_resource* source, struct wl_resource* origin, struct wl_resource* icon, uint32_t serial)
@@ -40,7 +38,5 @@ namespace Awning::Protocols::WL::Data_Device
 
 	void Destroy(struct wl_resource* resource)
 	{
-		//if (!data.info.contains(resource))
-		//	return;
 	}
 }

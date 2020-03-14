@@ -10,8 +10,6 @@ namespace Awning::Protocols::WL::Compositor
 		.create_region = Interface::Create_Region
 	};
 
-	Data data;
-
 	namespace Interface
 	{
 		void Create_Region(struct wl_client* client, struct wl_resource* resource, uint32_t id) 

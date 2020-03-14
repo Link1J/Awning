@@ -81,7 +81,7 @@ namespace Awning::Renderers::EGL
 		}
 		*/
 
-		int32_t fd = open("/dev/dri/renderD128", O_RDWR);
+		int32_t fd = open("/dev/dri/renderD129", O_RDWR);
 		struct gbm_device* gbm = gbm_create_device(fd);
 
 		display = eglGetPlatformDisplayEXT(EGL_PLATFORM_GBM_MESA, gbm, NULL);

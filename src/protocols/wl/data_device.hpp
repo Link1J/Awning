@@ -7,12 +7,7 @@
 
 namespace Awning::Protocols::WL::Data_Device
 {
-	struct Data 
-	{
-	};
-
 	extern const struct wl_data_device_interface interface;
-	extern Data data;
 
 	namespace Interface
 	{

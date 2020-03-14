@@ -4,12 +4,7 @@
 
 namespace Awning::Protocols::WL::Compositor
 {
-	struct Data 
-	{
-	};
-
 	extern const struct wl_compositor_interface interface;
-	extern Data data;
 
 	namespace Interface
 	{

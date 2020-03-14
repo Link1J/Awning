@@ -25,28 +25,6 @@
 
 uint32_t NextSerialNum();
 
-namespace Awning
-{
-	namespace Server
-	{
-		struct Data
-		{
-			wl_display* display;
-			wl_event_loop* event_loop;
-			wl_protocol_logger* logger; 
-			wl_listener client_listener;
-
-			struct {
-				EGLDisplay display;
-				EGLint major, minor;
-				EGLContext context;
-				EGLSurface surface;
-			} egl;
-		};
-		extern Data data;
-	}
-};
-
 extern PFNEGLQUERYWAYLANDBUFFERWL eglQueryWaylandBufferWL;
 
 namespace Awning::Protocols::WL::Surface
@@ -64,7 +42,7 @@ namespace Awning::Protocols::WL::Surface
 		.damage_buffer = Interface::Damage_Buffer,
 	};
 
-	Data data;
+	std::unordered_map<wl_resource*, Instance> instances;
 
 	struct FrameCallback
 	{
@@ -83,7 +61,7 @@ namespace Awning::Protocols::WL::Surface
 
 		void Attach(struct wl_client* client, struct wl_resource* resource, struct wl_resource* buffer, int32_t x, int32_t y)
 		{
-			auto& surface = data.surfaces[resource];
+			auto& surface = instances[resource];
 
 			if (surface.buffer != nullptr)
 			{
@@ -95,7 +73,7 @@ namespace Awning::Protocols::WL::Surface
 
 		void Damage(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
 		{
-			auto& surface = data.surfaces[resource];
+			auto& surface = instances[resource];
 			surface.damage.xp = x;
 			surface.damage.yp = y;
 			surface.damage.xs = width;
@@ -129,7 +107,7 @@ namespace Awning::Protocols::WL::Surface
 
 		void Commit(struct wl_client* client, struct wl_resource* resource)
 		{
-			auto& surface = data.surfaces[resource];
+			auto& surface = instances[resource];
 
 			if (surface.buffer == nullptr)
 			{
@@ -169,7 +147,7 @@ namespace Awning::Protocols::WL::Surface
 
 			if (surface.window)
 			{
-				if ((surface.window->XSize() == 0 && surface.window->YSize() == 0) || surface.type == 2 || surface.type == 3)
+				if ((surface.window->XSize() <= 0 && surface.window->YSize() <= 0) || surface.type == 2 || surface.type == 3)
 					Window::Manager::Resize(surface.window, surface.texture->width, surface.texture->height);
 
 				surface.window->Mapped(true);
@@ -189,7 +167,7 @@ namespace Awning::Protocols::WL::Surface
 
 		void Damage_Buffer(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
 		{
-			auto& surface = data.surfaces[resource];
+			auto& surface = instances[resource];
 			surface.damage.xp = x;
 			surface.damage.yp = y;
 			surface.damage.xs = width;
@@ -206,20 +184,20 @@ namespace Awning::Protocols::WL::Surface
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 		
-		data.surfaces[resource].client = wl_client;
-		data.surfaces[resource].texture = new Texture();
-		memset(data.surfaces[resource].texture, 0, sizeof(Texture));
+		instances[resource].client = wl_client;
+		instances[resource].texture = new Texture();
+		memset(instances[resource].texture, 0, sizeof(Texture));
 
 		return resource;
 	}
 
 	void Destroy(struct wl_resource* resource)
 	{
-		if (!data.surfaces.contains(resource))
+		if (!instances.contains(resource))
 			return;
 
-		delete data.surfaces[resource].texture;
-		data.surfaces.erase(resource);
+		delete instances[resource].texture;
+		instances.erase(resource);
 	}
 
 	void HandleFrameCallbacks()

@@ -5,18 +5,13 @@
 
 namespace Awning::Protocols::WL::Seat
 {
-	struct Global 
+	struct Instance 
 	{
-		struct Instance 
-		{
-			void* seat;
-		};
-
-		std::unordered_map<wl_resource*, Instance> instances;
+		void* seat;
 	};
 
 	extern const struct wl_seat_interface interface;
-	extern Global global;
+	extern std::unordered_map<wl_resource*, Instance> instances;
 	
 	namespace Interface
 	{

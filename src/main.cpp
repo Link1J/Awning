@@ -117,19 +117,18 @@ int main(int argc, char* argv[])
 	Awning::Backend::Init(api_output, api_input);
 	Awning::Renderers::Init(api_drawing);
 
-	Awning::Protocols::WL  ::Compositor         ::Add(Awning::Server::global.display);
-	//Awning::Protocols::WL  ::Shell              ::Add(Awning::Server::global.display);
-	Awning::Protocols::XDG ::WM_Base            ::Add(Awning::Server::global.display);
-	Awning::Protocols::ZXDG::Decoration_Manager ::Add(Awning::Server::global.display);
-	Awning::Protocols::WL  ::Data_Device_Manager::Add(Awning::Server::global.display);
-	Awning::Protocols::WLR ::Output_Manager     ::Add(Awning::Server::global.display);
-	Awning::Protocols::ZXDG::Output_Manager     ::Add(Awning::Server::global.display);
-	Awning::Protocols::ZWP ::Linux_Dmabuf       ::Add(Awning::Server::global.display);
-	Awning::Protocols::WL  ::Subcompositor      ::Add(Awning::Server::global.display);
-	Awning::Protocols::KDE ::Decoration_Manager ::Add(Awning::Server::global.display);
-	Awning::Protocols::WLR ::Layer_Shell        ::Add(Awning::Server::global.display);
+	Awning::Protocols::WL  ::Compositor         ::Add(Awning::Server::display);
+	Awning::Protocols::XDG ::WM_Base            ::Add(Awning::Server::display);
+	Awning::Protocols::ZXDG::Decoration_Manager ::Add(Awning::Server::display);
+	Awning::Protocols::WL  ::Data_Device_Manager::Add(Awning::Server::display);
+	Awning::Protocols::WLR ::Output_Manager     ::Add(Awning::Server::display);
+	Awning::Protocols::ZXDG::Output_Manager     ::Add(Awning::Server::display);
+	Awning::Protocols::ZWP ::Linux_Dmabuf       ::Add(Awning::Server::display);
+	Awning::Protocols::WL  ::Subcompositor      ::Add(Awning::Server::display);
+	Awning::Protocols::KDE ::Decoration_Manager ::Add(Awning::Server::display);
+	Awning::Protocols::WLR ::Layer_Shell        ::Add(Awning::Server::display);
 
-	wl_display_init_shm(Awning::Server::global.display);
+	wl_display_init_shm(Awning::Server::display);
 
 	if (startXWayland) Awning::X::Server::Setup();
 
@@ -145,7 +144,7 @@ int main(int argc, char* argv[])
 	int display = Awning::X::Server::display;
 
 	setenv("DISPLAY", fmt::format(":{}", display).c_str(), 1);
-	setenv("WAYLAND_DISPLAY", Awning::Server::global.socketname.c_str(), 1);
+	setenv("WAYLAND_DISPLAY", Awning::Server::socketname.c_str(), 1);
 	setenv("MOZ_ENABLE_WAYLAND", "1", 1);
 
 	//signal(SIGINT, on_term_signal);
@@ -164,8 +163,8 @@ int main(int argc, char* argv[])
 		Awning::Backend::Poll();
 		Awning::Backend::Hand();
 
-		wl_event_loop_dispatch(Awning::Server::global.event_loop, 0);
-		wl_display_flush_clients(Awning::Server::global.display);
+		wl_event_loop_dispatch(Awning::Server::event_loop, 0);
+		wl_display_flush_clients(Awning::Server::display);
 
 		Awning::X::EventLoop();
 
@@ -176,7 +175,7 @@ int main(int argc, char* argv[])
 		Awning::Protocols::WL::Surface::HandleFrameCallbacks();
 	}
 
-	wl_display_destroy(Awning::Server::global.display);
+	wl_display_destroy(Awning::Server::display);
 }
 
 void on_term_signal(int signal_number)

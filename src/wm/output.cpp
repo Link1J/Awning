@@ -52,7 +52,7 @@ namespace Awning::Output
 	ID Create()
 	{
 		::Output* output = new ::Output();
-		globals[output] = Protocols::WL::Output::Add(Server::global.display, output);
+		globals[output] = Protocols::WL::Output::Add(Server::display, output);
 		return (ID)output;
 	}
 
@@ -72,6 +72,8 @@ namespace Awning::Output
 
 	void RemoveResize(ID id, Functions::Resized resized, void* data)
 	{
+		if (!id) return;
+
 		::Output* output = (::Output*)id;
 
 		auto curr = output->resizes.begin();

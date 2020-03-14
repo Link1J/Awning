@@ -7,18 +7,13 @@
 
 namespace Awning::Protocols::ZXDG::Toplevel_Decoration
 {
-	struct Data 
+	struct Instance 
 	{
-		struct Instance 
-		{
-			wl_resource* toplevel;
-		};
-
-		std::unordered_map<wl_resource*,Instance> decorations;
+		wl_resource* toplevel;
 	};
 
 	extern const struct zxdg_toplevel_decoration_v1_interface interface;
-	extern Data data;
+	extern std::unordered_map<wl_resource*,Instance> instances;
 
 	namespace Interface
 	{

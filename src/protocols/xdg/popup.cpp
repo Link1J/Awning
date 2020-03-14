@@ -13,8 +13,7 @@ namespace Awning::Protocols::XDG::Popup
 		.destroy = Interface::Destroy,
 		.grab    = Interface::Grab,
 	};
-
-	Data data;
+	std::unordered_map<wl_resource*, Instance> instances;
 
 	namespace Interface
 	{
@@ -37,27 +36,27 @@ namespace Awning::Protocols::XDG::Popup
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
-		auto surface_wl = Surface::data.surfaces[surface].surface_wl;
+		auto surface_wl = Surface::instances[surface].surface_wl;
 
-		data.popups[resource].parent  = parent;
-		data.popups[resource].surface = surface;
-		data.popups[resource].window  = Window::Create(wl_client);
+		instances[resource].parent  = parent;
+		instances[resource].surface = surface;
+		instances[resource].window  = Window::Create(wl_client);
 
-		Window::Manager::Manage(data.popups[resource].window);
+		Window::Manager::Manage(instances[resource].window);
 
-		WL::Surface::data.surfaces[surface_wl].window = data.popups[resource].window;
-		    Surface::data.surfaces[surface   ].window = data.popups[resource].window;
+		WL::Surface::instances[surface_wl].window = instances[resource].window;
+		    Surface::instances[surface   ].window = instances[resource].window;
 
 		auto pointer = Positioner::data.instances[point];
 
-		WL::Surface::data.surfaces[surface_wl].type = 2;
+		WL::Surface::instances[surface_wl].type = 2;
 
-		Window::Manager::Move  (data.popups[resource].window, pointer.x, pointer.y);
-		Window::Manager::Resize(data.popups[resource].window, pointer.width, pointer.height);
+		Window::Manager::Move  (instances[resource].window, pointer.x, pointer.y);
+		Window::Manager::Resize(instances[resource].window, pointer.width, pointer.height);
 
-		data.popups[resource].window->Data(resource);
-		data.popups[resource].window->Parent(Surface::data.surfaces[parent].window, true);
-		Surface::data.surfaces[resource].configured = true;
+		instances[resource].window->Data(resource);
+		instances[resource].window->Parent(Surface::instances[parent].window, true);
+		Surface::instances[resource].configured = true;
 
 		xdg_popup_send_configure(resource, pointer.x, pointer.y, pointer.width, pointer.height);
 
@@ -66,18 +65,18 @@ namespace Awning::Protocols::XDG::Popup
 
 	void Destroy(struct wl_resource* resource)
 	{
-		if (!data.popups.contains(resource))
+		if (!instances.contains(resource))
 			return;
 
-		auto surface    =          data.popups[resource  ].surface   ; 
-		auto surface_wl = Surface::data.surfaces[surface ].surface_wl;
+		auto surface    =          instances[resource  ].surface   ; 
+		auto surface_wl = Surface::instances[surface ].surface_wl;
 
-			Surface::data.surfaces[surface   ].window = nullptr;
-		WL::Surface::data.surfaces[surface_wl].window = nullptr;
+			Surface::instances[surface   ].window = nullptr;
+		WL::Surface::instances[surface_wl].window = nullptr;
 
-		data.popups[resource].window->Mapped (false  );
-		data.popups[resource].window->Texture(nullptr);
-		Window::Destory(data.popups[resource].window);
-		data.popups.erase(resource);
+		instances[resource].window->Mapped (false  );
+		instances[resource].window->Texture(nullptr);
+		Window::Destory(instances[resource].window);
+		instances.erase(resource);
 	}
 }

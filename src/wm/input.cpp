@@ -59,7 +59,7 @@ namespace Awning::Input
 		}
 
 		this->name = name;
-		global = Awning::Protocols::WL::Seat::Add(Awning::Server::global.display, this);
+		global = Awning::Protocols::WL::Seat::Add(Awning::Server::display, this);
 
 		pointer.window = Window::Create(0);
 		pointer.window->Mapped(true);

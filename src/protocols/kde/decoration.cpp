@@ -9,7 +9,7 @@ namespace Awning::Protocols::KDE::Decoration
 		.release      = Interface::Release,
 		.request_mode = Interface::Request_Mode,
 	};
-	Data data;
+	std::unordered_map<wl_resource*,Instance> instances;
 
 	namespace Interface
 	{
@@ -19,8 +19,8 @@ namespace Awning::Protocols::KDE::Decoration
 
 		void Request_Mode(struct wl_client *client, struct wl_resource *resource, uint32_t mode)
 		{
-			auto surface = data.instances[resource].surface;
-			WL::Surface::data.surfaces[surface].window->Frame(mode == ORG_KDE_KWIN_SERVER_DECORATION_MANAGER_MODE_SERVER);
+			auto surface = instances[resource].surface;
+			WL::Surface::instances[surface].window->Frame(mode == ORG_KDE_KWIN_SERVER_DECORATION_MANAGER_MODE_SERVER);
 			org_kde_kwin_server_decoration_send_mode(resource, mode);
 		}
 	}
@@ -34,7 +34,7 @@ namespace Awning::Protocols::KDE::Decoration
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
-		data.instances[resource].surface = surface;
+		instances[resource].surface = surface;
 
 		return resource;
 	}
@@ -49,8 +49,6 @@ namespace Awning::Protocols::KDE::Decoration_Manager
 	const struct org_kde_kwin_server_decoration_manager_interface interface = {
 		.create = Interface::Create,
 	};
-
-	Data data;
 
 	namespace Interface
 	{

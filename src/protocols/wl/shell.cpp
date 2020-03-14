@@ -8,8 +8,6 @@ namespace Awning::Protocols::WL::Shell
 		.get_shell_surface = Interface::Get_Shell_Surface
 	};
 
-	Data data;
-
 	namespace Interface
 	{
 		void Get_Shell_Surface(struct wl_client *client, struct wl_resource *resource, uint32_t id, struct wl_resource *surface)

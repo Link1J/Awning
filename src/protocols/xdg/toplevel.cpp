@@ -30,8 +30,7 @@ namespace Awning::Protocols::XDG::TopLevel
 		.unset_fullscreen = Interface::Unset_Fullscreen,
 		.set_minimized    = Interface::Set_Minimized,
 	};
-
-	Data data;
+	std::unordered_map<wl_resource*, Instance> instances;
 
 	namespace Interface
 	{
@@ -58,7 +57,7 @@ namespace Awning::Protocols::XDG::TopLevel
 
 		void Move(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
 		{
-			//((Input::Seat*)WL::Seat::global.instances[seat].seat)->Lock(Input::Action::Move);
+			//((Input::Seat*)WL::Seat::instances[seat].seat)->Lock(Input::Action::Move);
 		}
 
 		void Resize(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, uint32_t edges)
@@ -77,17 +76,17 @@ namespace Awning::Protocols::XDG::TopLevel
 			case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_RIGHT: side = Input::WindowSide::BOTTOM_RIGHT; break;
 			}
 
-			//((Input::Seat*)WL::Seat::global.instances[seat].seat)->Lock(Input::Action::Resize, side);
+			//((Input::Seat*)WL::Seat::instances[seat].seat)->Lock(Input::Action::Resize, side);
 		}
 
 		void Set_Max_Size(struct wl_client* client, struct wl_resource* resource, int32_t width, int32_t height)
 		{
-			data.toplevels[resource].window->ConfigMaxSize(width, height);
+			instances[resource].window->ConfigMaxSize(width, height);
 		}
 
 		void Set_Min_Size(struct wl_client* client, struct wl_resource* resource, int32_t width, int32_t height)
 		{
-			data.toplevels[resource].window->ConfigMinSize(width, height);
+			instances[resource].window->ConfigMinSize(width, height);
 		}
 
 		void Set_Maximized(struct wl_client* client, struct wl_resource* resource)
@@ -120,42 +119,42 @@ namespace Awning::Protocols::XDG::TopLevel
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
-		auto surface_wl = Surface::data.surfaces[surface].surface_wl;
+		auto surface_wl = Surface::instances[surface].surface_wl;
 
-		data.toplevels[resource] = Data::Instance();
-		data.toplevels[resource].surface = surface;
-		data.toplevels[resource].window = Window::Create(wl_client);
+		instances[resource] = Instance();
+		instances[resource].surface = surface;
+		instances[resource].window  = Window::Create(wl_client);
 
-		Window::Manager::Manage(data.toplevels[resource].window);
+		Window::Manager::Manage(instances[resource].window);
 
-		WL::Surface::data.surfaces[surface_wl].window = data.toplevels[resource].window;
-		    Surface::data.surfaces[surface   ].window = data.toplevels[resource].window;
+		WL::Surface::instances[surface_wl].window = instances[resource].window;
+		    Surface::instances[surface   ].window = instances[resource].window;
 
-		WL::Surface::data.surfaces[surface_wl].type = 1;
+		WL::Surface::instances[surface_wl].type = 1;
 
-		data.toplevels[resource].window->Data      (resource);
-		data.toplevels[resource].window->SetRaised (Raised  );
-		data.toplevels[resource].window->SetResized(Resized );
-		data.toplevels[resource].window->SetLowered(Lowered );
+		instances[resource].window->Data      (resource);
+		instances[resource].window->SetRaised (Raised  );
+		instances[resource].window->SetResized(Resized );
+		instances[resource].window->SetLowered(Lowered );
 
 		return resource;
 	}
 
 	void Destroy(struct wl_resource* resource)
 	{
-		if (!data.toplevels.contains(resource))
+		if (!instances.contains(resource))
 			return;
 
-		auto surface    =         data.toplevels[resource].surface   ; 
-		auto surface_wl = Surface::data.surfaces[surface ].surface_wl;
+		auto surface    =         instances[resource].surface   ; 
+		auto surface_wl = Surface::instances[surface ].surface_wl;
 
-			Surface::data.surfaces[surface   ].window = nullptr;
-		WL::Surface::data.surfaces[surface_wl].window = nullptr;
+			Surface::instances[surface   ].window = nullptr;
+		WL::Surface::instances[surface_wl].window = nullptr;
 
-		data.toplevels[resource].window->Mapped(false);
-		data.toplevels[resource].window->Texture(nullptr);
-		Window::Destory(data.toplevels[resource].window);
-		data.toplevels.erase(resource);
+		instances[resource].window->Mapped(false);
+		instances[resource].window->Texture(nullptr);
+		Window::Destory(instances[resource].window);
+		instances.erase(resource);
 	}
 
 	void Raised(void* data)
@@ -166,8 +165,8 @@ namespace Awning::Protocols::XDG::TopLevel
 		wl_array_add(states, sizeof(xdg_toplevel_state));
 		((xdg_toplevel_state*)states->data)[0] = XDG_TOPLEVEL_STATE_ACTIVATED;
 		xdg_toplevel_send_configure(resource, 
-			Awning::Protocols::XDG::TopLevel::data.toplevels[resource].window->XSize(),
-			Awning::Protocols::XDG::TopLevel::data.toplevels[resource].window->YSize(),
+			Awning::Protocols::XDG::TopLevel::instances[resource].window->XSize(),
+			Awning::Protocols::XDG::TopLevel::instances[resource].window->YSize(),
 			states);
 		wl_array_release(states);
 		delete states;
@@ -184,7 +183,7 @@ namespace Awning::Protocols::XDG::TopLevel
 		xdg_toplevel_send_configure(resource, width, height, states);
 		wl_array_release(states);
 		delete states;
-		xdg_surface_send_configure(TopLevel::data.toplevels[resource].surface, NextSerialNum());
+		xdg_surface_send_configure(TopLevel::instances[resource].surface, NextSerialNum());
 	}
 
 	void Lowered(void* data)
@@ -193,8 +192,8 @@ namespace Awning::Protocols::XDG::TopLevel
 		wl_array* states = new wl_array();
 		wl_array_init(states);
 		xdg_toplevel_send_configure(resource, 
-			Awning::Protocols::XDG::TopLevel::data.toplevels[resource].window->XSize(),
-			Awning::Protocols::XDG::TopLevel::data.toplevels[resource].window->YSize(),
+			Awning::Protocols::XDG::TopLevel::instances[resource].window->XSize(),
+			Awning::Protocols::XDG::TopLevel::instances[resource].window->YSize(),
 			states);
 		wl_array_release(states);
 		delete states;

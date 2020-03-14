@@ -13,8 +13,6 @@ namespace Awning::Protocols::XDG::WM_Base
 		.pong              = Interface::Pong,
 	};
 
-	Data data;
-
 	namespace Interface
 	{
 		void Destroy(struct wl_client* client, struct wl_resource* resource)

@@ -9,13 +9,13 @@ namespace Awning::Protocols::WL::Data_Source
 		.set_actions = Interface::Set_Actions,
 	};
 
-	Data data;
+	std::unordered_map<wl_resource*, Instance> instances;
 
 	namespace Interface
 	{
 		void Offer(struct wl_client* client, struct wl_resource* resource, const char* mime_type)
 		{
-			auto& info = data.info[resource];
+			auto& info = instances[resource];
 
 			for (auto mime : info.mime_types)
 				if (mime == mime_type)
@@ -31,7 +31,7 @@ namespace Awning::Protocols::WL::Data_Source
 
 		void Set_Actions(struct wl_client* client, struct wl_resource* resource, uint32_t dnd_actions)
 		{
-			auto& info = data.info[resource];
+			auto& info = instances[resource];
 			info.dnd_actions = dnd_actions;
 		}
 	}
@@ -50,9 +50,9 @@ namespace Awning::Protocols::WL::Data_Source
 
 	void Destroy(struct wl_resource* resource)
 	{
-		if (!data.info.contains(resource))
+		if (!instances.contains(resource))
 			return;
 
-		data.info.erase(resource);
+		instances.erase(resource);
 	}
 }

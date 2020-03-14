@@ -7,19 +7,14 @@
 
 namespace Awning::Protocols::WL::Data_Source
 {
-	struct Data 
+	struct Instance 
 	{
-		struct Info 
-		{
-			std::vector<std::string> mime_types;
-			uint32_t dnd_actions;
-		};
-
-		std::unordered_map<wl_resource*, Info> info;
+		std::vector<std::string> mime_types;
+		uint32_t dnd_actions;
 	};
 
 	extern const struct wl_data_source_interface interface;
-	extern Data data;
+	extern std::unordered_map<wl_resource*, Instance> instances;
 
 	namespace Interface
 	{

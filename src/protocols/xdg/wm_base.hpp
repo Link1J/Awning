@@ -4,12 +4,7 @@
 
 namespace Awning::Protocols::XDG::WM_Base
 {
-	struct Data 
-	{
-	};
-
 	extern const struct xdg_wm_base_interface interface;
-	extern Data data;
 	
 	namespace Interface
 	{

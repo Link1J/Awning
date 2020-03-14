@@ -21,8 +21,7 @@ namespace Awning::Protocols::XDG::Surface
 		.set_window_geometry = Interface::Set_Window_Geometry,
 		.ack_configure       = Interface::Ack_Configure,
 	};
-
-	Data data;
+	std::unordered_map<wl_resource*, Instance> instances;
 
 	namespace Interface
 	{
@@ -43,10 +42,10 @@ namespace Awning::Protocols::XDG::Surface
 
 		void Set_Window_Geometry(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
 		{
-			if (!data.surfaces[resource].window)
+			if (!instances[resource].window)
 				return;
 
-			auto window = data.surfaces[resource].window;
+			auto window = instances[resource].window;
 			
 			if (x != 0 || y != 0)
 				Window::Manager::Offset(window, x, y);
@@ -82,16 +81,16 @@ namespace Awning::Protocols::XDG::Surface
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
-		data.surfaces[resource].surface_wl = surface;
+		instances[resource].surface_wl = surface;
 		
-		WL::Surface::data.surfaces[surface].type = 1;
-		WL::Surface::data.surfaces[surface].shell = resource;
+		WL::Surface::instances[surface].type = 1;
+		WL::Surface::instances[surface].shell = resource;
 
 		return resource;
 	}
 
 	void Destroy(struct wl_resource* resource)
 	{
-		data.surfaces.erase(resource);
+		instances.erase(resource);
 	}
 }

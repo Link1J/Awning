@@ -18,26 +18,26 @@ namespace Awning::Protocols::WL::Pointer
 		.set_cursor = Interface::Set_Cursor,
 		.release    = Interface::Release   ,
 	};
-
-	Data data;
+	std::unordered_map<wl_resource*,Instance> instances;
+	wl_resource* inUse;
 
 	namespace Interface
 	{
 		void Set_Cursor(struct wl_client* client, struct wl_resource* resource, uint32_t serial, struct wl_resource* surface, int32_t hotspot_x, int32_t hotspot_y)
 		{
-			if (data.inUse)
+			if (inUse)
 			{
-				data.instances[data.inUse].inUse = false;	
+				instances[inUse].inUse = false;	
 			}
 
-			if (data.instances[resource].seat)
+			if (instances[resource].seat)
 			{
-				Input::Seat* seat = (Input::Seat*)data.instances[resource].seat;
+				Input::Seat* seat = (Input::Seat*)instances[resource].seat;
 
 				Window::Manager::Offset(seat->pointer.window, hotspot_x, hotspot_y);
 				Window::Manager::Resize(seat->pointer.window, 0, 0);
 
-				auto texture = Awning::Protocols::WL::Surface::data.surfaces[surface].texture;
+				auto texture = Surface::instances[surface].texture;
 
 				if (!texture)
 					return;
@@ -45,8 +45,8 @@ namespace Awning::Protocols::WL::Pointer
 				seat->pointer.window->Texture(texture);
 				Window::Manager::Resize(seat->pointer.window, texture->width, texture->height);
 
-				data.instances[resource].inUse = true;
-				data.inUse = resource;
+				instances[resource].inUse = true;
+				inUse = resource;
 			}
 		}
 
@@ -65,9 +65,9 @@ namespace Awning::Protocols::WL::Pointer
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
-		data.instances[resource].client  = wl_client;
-		data.instances[resource].version = version  ;
-		data.instances[resource].seat    = seat     ;
+		instances[resource].client  = wl_client;
+		instances[resource].version = version  ;
+		instances[resource].seat    = seat     ;
 
 		Client::Bind::Pointer(wl_client, resource);
 
@@ -88,18 +88,18 @@ namespace Awning::Protocols::WL::Pointer
 
 	void Destroy(struct wl_resource* resource)
 	{
-		if (!data.instances.contains(resource))
+		if (!instances.contains(resource))
 			return;
 
-		if (resource == data.inUse)
+		if (resource == inUse)
 		{
-			((Input::Seat*)data.instances[resource].seat)->pointer.window->Texture(nullptr);
-			data.inUse = nullptr;
+			((Input::Seat*)instances[resource].seat)->pointer.window->Texture(nullptr);
+			inUse = nullptr;
 		}
 
-		((Input::Seat*)data.instances[resource].seat)->RemoveFunctions(1, data.instances[resource].client, resource);
-		Client::Unbind::Pointer(data.instances[resource].client, resource);
-		data.instances.erase(resource);
+		((Input::Seat*)instances[resource].seat)->RemoveFunctions(1, instances[resource].client, resource);
+		Client::Unbind::Pointer(instances[resource].client, resource);
+		instances.erase(resource);
 	}
 	
 	void Enter(void* data, void* object, int x, int y)
@@ -107,7 +107,7 @@ namespace Awning::Protocols::WL::Pointer
 		if (!data  ) return;
 		if (!object) return;
 
-		auto version = Pointer::data.instances[(wl_resource*)data].version;
+		auto version = Pointer::instances[(wl_resource*)data].version;
 		if (version < WL_POINTER_ENTER_SINCE_VERSION) return;
 			
 		int xPoint = wl_fixed_from_int(x);
@@ -121,7 +121,7 @@ namespace Awning::Protocols::WL::Pointer
 		if (!data  ) return;
 		if (!object) return;
 
-		auto version = Pointer::data.instances[(wl_resource*)data].version;
+		auto version = Pointer::instances[(wl_resource*)data].version;
 		if (version < WL_POINTER_LEAVE_SINCE_VERSION) return;
 
 		wl_pointer_send_leave((wl_resource*)data, NextSerialNum(), (wl_resource*)object);
@@ -131,7 +131,7 @@ namespace Awning::Protocols::WL::Pointer
 	{
 		if (!data) return;
 
-		auto version = Pointer::data.instances[(wl_resource*)data].version;
+		auto version = Pointer::instances[(wl_resource*)data].version;
 		if (version < WL_POINTER_MOTION_SINCE_VERSION) return;
 
 		uint32_t time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
@@ -146,7 +146,7 @@ namespace Awning::Protocols::WL::Pointer
 	{
 		if (!data) return;
 
-		auto version = Pointer::data.instances[(wl_resource*)data].version;
+		auto version = Pointer::instances[(wl_resource*)data].version;
 		if (version < WL_POINTER_BUTTON_SINCE_VERSION) return;
 
 		uint32_t time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
@@ -158,7 +158,7 @@ namespace Awning::Protocols::WL::Pointer
 	{
 		if (!data) return;
 
-		auto version = Pointer::data.instances[(wl_resource*)data].version;
+		auto version = Pointer::instances[(wl_resource*)data].version;
 		if (version < WL_POINTER_AXIS_SINCE_VERSION) return;
 
 		uint32_t time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
@@ -170,7 +170,7 @@ namespace Awning::Protocols::WL::Pointer
 
 	void Frame(void* data)
 	{
-		auto version = Pointer::data.instances[(wl_resource*)data].version;
+		auto version = Pointer::instances[(wl_resource*)data].version;
 		if (version < WL_POINTER_FRAME_SINCE_VERSION) return;
 
 		wl_pointer_send_frame((wl_resource*)data);

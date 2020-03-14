@@ -3,12 +3,7 @@
 
 namespace Awning::Protocols::WLR::Layer_Shell
 {
-	struct Data 
-	{
-	};
-
 	extern const struct zwlr_layer_shell_v1_interface interface;
-	extern Data data;
 
 	namespace Interface
 	{

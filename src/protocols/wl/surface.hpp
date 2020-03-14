@@ -7,26 +7,21 @@
 
 namespace Awning::Protocols::WL::Surface
 {
-	struct Data 
+	struct Instance 
 	{
-		struct Instance 
-		{
-			Damage damage;
-			char type = -1;
-			wl_resource* buffer;
-			wl_shm_buffer* shm_buffer;
-			wl_resource* shell;
-			wl_resource* toplevel;
-			wl_client* client;
-			Texture* texture;
-			Window* window;
-		};
-
-		std::unordered_map<wl_resource*, Instance> surfaces;
-	};
+		Damage damage;
+		char type = -1;
+		wl_resource* buffer;
+		wl_shm_buffer* shm_buffer;
+		wl_resource* shell;
+		wl_resource* toplevel;
+		wl_client* client;
+		Texture* texture;
+		Window* window;
+	};	
 
 	extern const struct wl_surface_interface interface;
-	extern Data data;
+	extern std::unordered_map<wl_resource*, Instance> instances;
 	
 	namespace Interface
 	{

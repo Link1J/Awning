@@ -225,7 +225,7 @@ namespace Awning::X
 		window = xcb_generate_id(xcb_conn);
 
 		xcb_create_window(xcb_conn, XCB_COPY_FROM_PARENT, window, screen->root, 0, 0, 10, 10, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT, screen->root_visual, 0, NULL);
-		xcb_change_property(xcb_conn, XCB_PROP_MODE_REPLACE, window, atoms[_NET_WM_NAME], atoms[UTF8_STRING], 8, strlen("Awning XWM"), "Awning XWM");
+		xcb_change_property(xcb_conn, XCB_PROP_MODE_REPLACE, window, atoms[_NET_WM_NAME], atoms[UTF8_STRING], 8, strlen("Awning"), "Awning");
 		xcb_change_property(xcb_conn, XCB_PROP_MODE_REPLACE, screen->root, atoms[_NET_SUPPORTING_WM_CHECK], XCB_ATOM_WINDOW, 32, 1, &window);
 		xcb_change_property(xcb_conn, XCB_PROP_MODE_REPLACE, window, atoms[_NET_SUPPORTING_WM_CHECK], XCB_ATOM_WINDOW, 32, 1, &window);
 		xcb_set_selection_owner(xcb_conn, window, atoms[WM_S0], XCB_CURRENT_TIME);
@@ -309,9 +309,8 @@ namespace Awning::X
 
 		xcb_change_property(xcb_conn, XCB_PROP_MODE_REPLACE, screen->root, atoms[_NET_ACTIVE_WINDOW], atoms[WINDOW], 32, 1, &w);
 		Focus(w);
-		xcb_flush(xcb_conn);
-
 		activeWindow = w;
+		xcb_flush(xcb_conn);
 	}
 
 #define XCB_EVENT_RESPONSE_TYPE_MASK (0x7f)
@@ -356,9 +355,16 @@ namespace Awning::X
 					uint32_t values[] = {e->x, e->y, e->width, e->height, 0};
 					xcb_configure_window(xcb_conn, e->window, mask, values);
 					
+					windows[e->window]->SetResized(nullptr);
+					windows[e->window]->SetRaised (nullptr);
+					windows[e->window]->SetMoved  (nullptr);
+
 					Window::Manager::Move  (windows[e->window], e->x    , e->y     );
 					Window::Manager::Resize(windows[e->window], e->width, e->height);
 
+					windows[e->window]->SetResized(Resized);
+					windows[e->window]->SetRaised (Raised );
+					windows[e->window]->SetMoved  (Moved  );
 				}
 				break;
 			case XCB_CONFIGURE_NOTIFY:
@@ -433,11 +439,11 @@ namespace Awning::X
 					{
 						uint32_t id = e->data.data32[0];
 						struct wl_resource* resource = wl_client_get_object(xWaylandClient, id);
-						Awning::Protocols::WL::Surface::data.surfaces[resource].window = windows[e->window];
-						windows[e->window]->Texture(Awning::Protocols::WL::Surface::data.surfaces[resource].texture);
+						Awning::Protocols::WL::Surface::instances[resource].window = windows[e->window];
+						windows[e->window]->Texture(Awning::Protocols::WL::Surface::instances[resource].texture);
 
 						auto displays = Backend::GetDisplays();
-						auto texture = Awning::Protocols::WL::Surface::data.surfaces[resource].texture;
+						auto texture = Awning::Protocols::WL::Surface::instances[resource].texture;
 					}
 					if (e->type == atoms[_NET_WM_MOVERESIZE])
 					{

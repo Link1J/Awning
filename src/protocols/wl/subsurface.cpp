@@ -23,9 +23,7 @@ namespace Awning::Protocols::WL::Subsurface
 		.set_sync     = Interface::Set_Sync,
 		.set_desync   = Interface::Set_Desync,
 	};
-
-	Data data;
-
+	std::unordered_map<wl_resource*, Instance> instances;
 	std::vector<wl_resource*> list;
 
 	namespace Interface
@@ -37,7 +35,7 @@ namespace Awning::Protocols::WL::Subsurface
 
 		void Set_Position(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y)
 		{
-			Window::Manager::Move(data.instances[resource].window, x, y);
+			Window::Manager::Move(instances[resource].window, x, y);
 		}
 
 		void Place_Above(struct wl_client* client, struct wl_resource* resource, struct wl_resource* sibling)
@@ -66,25 +64,25 @@ namespace Awning::Protocols::WL::Subsurface
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
-		data.instances[resource].window = Window::Create(wl_client);
-		data.instances[resource].surface = surface;
+		instances[resource].window = Window::Create(wl_client);
+		instances[resource].surface = surface;
 
-		Surface::data.surfaces[surface].window = data.instances[resource].window;
-		Surface::data.surfaces[surface].type = 3;
+		Surface::instances[surface].window = instances[resource].window;
+		Surface::instances[surface].type = 3;
 
-		Surface::data.surfaces[parent].window->AddSubwindow(data.instances[resource].window);
+		Surface::instances[parent].window->AddSubwindow(instances[resource].window);
 		
 		return resource;
 	}
 
 	void Destroy(struct wl_resource* resource)
 	{
-		if (!data.instances.contains(resource))
+		if (!instances.contains(resource))
 			return;
 
-		Surface::data.surfaces[data.instances[resource].surface].window = nullptr;
-		Window::Destory(data.instances[resource].window);
+		Surface::instances[instances[resource].surface].window = nullptr;
+		Window::Destory(instances[resource].window);
 
-		data.instances.erase(resource);
+		instances.erase(resource);
 	}
 }

@@ -10,7 +10,7 @@ namespace Awning::Protocols::ZXDG::Toplevel_Decoration
 		.set_mode   = Interface::Set_Mode,
 		.unset_mode = Interface::Unset_Mode,
 	};
-	Data data;
+	std::unordered_map<wl_resource*,Instance> instances;
 
 	namespace Interface
 	{
@@ -20,14 +20,14 @@ namespace Awning::Protocols::ZXDG::Toplevel_Decoration
 
 		void Set_Mode(struct wl_client* client, struct wl_resource* resource, uint32_t mode)
 		{
-			auto toplevel = data.decorations[resource].toplevel;
-			XDG::TopLevel::data.toplevels[toplevel].window->Frame(mode != ZXDG_TOPLEVEL_DECORATION_V1_MODE_CLIENT_SIDE);
+			auto toplevel = instances[resource].toplevel;
+			XDG::TopLevel::instances[toplevel].window->Frame(mode != ZXDG_TOPLEVEL_DECORATION_V1_MODE_CLIENT_SIDE);
 		}
 
 		void Unset_Mode(struct wl_client* client, struct wl_resource *resource)
 		{
-			auto toplevel = data.decorations[resource].toplevel;
-			XDG::TopLevel::data.toplevels[toplevel].window->Frame(true);
+			auto toplevel = instances[resource].toplevel;
+			XDG::TopLevel::instances[toplevel].window->Frame(true);
 		}
 	}
 
@@ -40,7 +40,7 @@ namespace Awning::Protocols::ZXDG::Toplevel_Decoration
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
-		data.decorations[resource].toplevel = toplevel;
+		instances[resource].toplevel = toplevel;
 
 		return resource;
 	}

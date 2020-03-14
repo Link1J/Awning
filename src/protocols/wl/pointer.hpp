@@ -8,22 +8,17 @@
 
 namespace Awning::Protocols::WL::Pointer
 {
-	struct Data 
+	struct Instance 
 	{
-		struct Instance 
-		{
-			wl_client* client;
-			bool inUse = false;
-			int version = 0;
-			void* seat;
-		};
-
-		std::unordered_map<wl_resource*,Instance> instances;
-		wl_resource* inUse;
+		wl_client* client;
+		bool inUse = false;
+		int version = 0;
+		void* seat;
 	};
 
 	extern const struct wl_pointer_interface interface;
-	extern Data data;
+	extern std::unordered_map<wl_resource*,Instance> instances;
+	extern wl_resource* inUse;
 
 	namespace Interface
 	{

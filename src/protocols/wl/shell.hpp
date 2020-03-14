@@ -4,12 +4,7 @@
 
 namespace Awning::Protocols::WL::Shell
 {
-	struct Data 
-	{
-	};
-
 	extern const struct wl_shell_interface interface;
-	extern Data data;
 
 	namespace Interface
 	{

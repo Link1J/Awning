@@ -19,8 +19,7 @@ namespace Awning::Protocols::WL::Shell_Surface
 		.set_title      = Interface::Set_Title,
 		.set_class      = Interface::Set_Class
 	};
-
-	Data data;
+	std::unordered_map<wl_resource*, Instance> instances;
 
 	namespace Interface
 	{
@@ -90,29 +89,29 @@ namespace Awning::Protocols::WL::Shell_Surface
 		}
 		wl_resource_set_implementation(resource, &interface, nullptr, Destroy);
 
-		data.shells[resource] = Data::Instance();
+		instances[resource] = Instance();
 
-		data.shells[resource].surface = surface;
-		data.shells[resource].window = Window::Create(wl_client);
-		Surface::data.surfaces[surface].window = data.shells[resource].window;
+		instances[resource].surface = surface;
+		instances[resource].window = Window::Create(wl_client);
+		Surface::instances[surface].window = instances[resource].window;
 
-		Window::Manager::Manage(data.shells[resource].window);
-		Window::Manager::Raise(data.shells[resource].window);
+		Window::Manager::Manage(instances[resource].window);
+		Window::Manager::Raise(instances[resource].window);
 
 		return resource;
 	}
 
 	void Destroy(struct wl_resource* resource)
 	{
-		if (!data.shells.contains(resource))
+		if (!instances.contains(resource))
 			return;
 
-		auto surface = data.shells[resource].surface; 
-		Surface::data.surfaces[surface].window = nullptr;
+		auto surface = instances[resource].surface; 
+		Surface::instances[surface].window = nullptr;
 		
-		data.shells[resource].window->Mapped(false);
-		data.shells[resource].window->Texture(nullptr);
-		Window::Destory(data.shells[resource].window);
-		data.shells.erase(resource);
+		instances[resource].window->Mapped(false);
+		instances[resource].window->Texture(nullptr);
+		Window::Destory(instances[resource].window);
+		instances.erase(resource);
 	}
 }

@@ -7,19 +7,14 @@
 
 namespace Awning::Protocols::WL::Subsurface
 {
-	struct Data 
+	struct Instance 
 	{
-		struct Instance 
-		{
-			Window* window;
-			wl_resource* surface;
-		};
-
-		std::unordered_map<wl_resource*, Instance> instances;
+		Window* window;
+		wl_resource* surface;
 	};
 
 	extern const struct wl_subsurface_interface interface;
-	extern Data data;
+	extern std::unordered_map<wl_resource*, Instance> instances;
 	
 	namespace Interface
 	{

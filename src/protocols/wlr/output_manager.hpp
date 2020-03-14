@@ -5,13 +5,8 @@
 
 namespace Awning::Protocols::WLR::Output_Manager
 {
-	struct Data 
-	{
-		std::unordered_map<wl_resource*, bool> sendDisplays;
-	};
-
 	extern const struct zwlr_output_manager_v1_interface interface;
-	extern Data data;
+	extern std::unordered_map<wl_resource*, bool> sendDisplays;
 
 	namespace Interface
 	{
@@ -25,13 +20,8 @@ namespace Awning::Protocols::WLR::Output_Manager
 
 namespace Awning::Protocols::WLR::Head
 {
-	struct Data 
-	{
-		std::unordered_map<Output::ID, std::unordered_set<wl_resource*>> outputId_to_resource;
-		std::unordered_map<wl_resource*, Output::ID> resource_to_outputId;
-	};
-
-	extern Data data;
+	extern std::unordered_map<Output::ID, std::unordered_set<wl_resource*>> outputId_to_resource;
+	extern std::unordered_map<wl_resource*, Output::ID> resource_to_outputId;
 
 	namespace Interface
 	{
@@ -45,14 +35,9 @@ namespace Awning::Protocols::WLR::Head
 
 namespace Awning::Protocols::WLR::Mode
 {
-	struct Data 
-	{
-		std::unordered_map<Output::ID, std::unordered_set<wl_resource*>> outputId_to_resource;
-		std::unordered_map<wl_resource*, Output::ID> resource_to_outputId;
-		std::unordered_map<wl_resource*, int> resource_to_mode;
-	};
-
-	extern Data data;
+	extern std::unordered_map<Output::ID, std::unordered_set<wl_resource*>> outputId_to_resource;
+	extern std::unordered_map<wl_resource*, Output::ID> resource_to_outputId;
+	extern std::unordered_map<wl_resource*, int> resource_to_mode;
 
 	namespace Interface
 	{
@@ -65,13 +50,8 @@ namespace Awning::Protocols::WLR::Mode
 }
 
 namespace Awning::Protocols::WLR::Output_Configuration
-{
-	struct Data 
-	{
-	};
-	
+{	
 	extern const struct zwlr_output_configuration_v1_interface interface;
-	extern Data data;
 
 	namespace Interface
 	{

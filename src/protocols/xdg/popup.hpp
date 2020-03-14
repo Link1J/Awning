@@ -7,20 +7,15 @@
 
 namespace Awning::Protocols::XDG::Popup
 {
-	struct Data 
+	struct Instance 
 	{
-		struct Instance 
-		{
-			wl_resource* surface;
-			wl_resource* parent;
-			Window* window;
-		};
-
-		std::unordered_map<wl_resource*, Instance> popups;
+		wl_resource* surface;
+		wl_resource* parent;
+		Window* window;
 	};
 
 	extern const struct xdg_popup_interface interface;
-	extern Data data;
+	extern std::unordered_map<wl_resource*, Instance> instances;
 	
 	namespace Interface
 	{

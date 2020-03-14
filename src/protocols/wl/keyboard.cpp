@@ -23,8 +23,7 @@ namespace Awning::Protocols::WL::Keyboard
 			Destroy(resource);
 		},
 	};
-
-	Data data;
+	std::unordered_map<wl_resource*, Instance> instances;
 
 	wl_resource* Create(struct wl_client* wl_client, uint32_t version, uint32_t id, void* seat)
 	{
@@ -51,9 +50,9 @@ namespace Awning::Protocols::WL::Keyboard
 		if (version >= WL_KEYBOARD_REPEAT_INFO_SINCE_VERSION)
 			wl_keyboard_send_repeat_info(resource, 25, 1000);
 
-		data.instances[resource].client  = wl_client;
-		data.instances[resource].version = version  ;
-		data.instances[resource].seat    = seat     ;
+		instances[resource].client  = wl_client;
+		instances[resource].version = version  ;
+		instances[resource].seat    = seat     ;
 
 		Client::Bind::Pointer(wl_client, resource);
 
@@ -73,12 +72,12 @@ namespace Awning::Protocols::WL::Keyboard
 
 	void Destroy(struct wl_resource* resource)
 	{
-		if (!data.instances.contains(resource))
+		if (!instances.contains(resource))
 			return;
 			
-		((Input::Seat*)data.instances[resource].seat)->RemoveFunctions(0, data.instances[resource].client, resource);
-		Client::Unbind::Keyboard(data.instances[resource].client, resource);
-		data.instances.erase(resource);
+		((Input::Seat*)instances[resource].seat)->RemoveFunctions(0, instances[resource].client, resource);
+		Client::Unbind::Keyboard(instances[resource].client, resource);
+		instances.erase(resource);
 	}
 
 	void Enter(void* data, void* object, int x, int y)
@@ -86,7 +85,7 @@ namespace Awning::Protocols::WL::Keyboard
 		if (!data  ) return;
 		if (!object) return;
 
-		auto version = Keyboard::data.instances[(wl_resource*)data].version;
+		auto version = Keyboard::instances[(wl_resource*)data].version;
 		if (version < WL_KEYBOARD_ENTER_SINCE_VERSION) return;
 
 		wl_array* states = new wl_array();
@@ -102,7 +101,7 @@ namespace Awning::Protocols::WL::Keyboard
 		if (!data  ) return;
 		if (!object) return;
 
-		auto version = Keyboard::data.instances[(wl_resource*)data].version;
+		auto version = Keyboard::instances[(wl_resource*)data].version;
 		if (version < WL_KEYBOARD_LEAVE_SINCE_VERSION) return;
 
 		wl_keyboard_send_leave((wl_resource*)data, NextSerialNum(), (wl_resource*)object);
@@ -112,12 +111,12 @@ namespace Awning::Protocols::WL::Keyboard
 	{
 		if (!data) return;
 
-		auto version = Keyboard::data.instances[(wl_resource*)data].version;
+		auto version = Keyboard::instances[(wl_resource*)data].version;
 		if (version < WL_KEYBOARD_KEY_SINCE_VERSION) return;
 
 		uint32_t time = std::chrono::high_resolution_clock::now().time_since_epoch().count() / 1000000;
 
-		Input::Seat* seat = (Input::Seat*)Keyboard::data.instances[(wl_resource*)data].seat;
+		Input::Seat* seat = (Input::Seat*)Keyboard::instances[(wl_resource*)data].seat;
 
 		xkb_mod_mask_t depressed = xkb_state_serialize_mods  (seat->keyboard.state, XKB_STATE_MODS_DEPRESSED  );
 		xkb_mod_mask_t latched   = xkb_state_serialize_mods  (seat->keyboard.state, XKB_STATE_MODS_LATCHED    );

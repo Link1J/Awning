@@ -4,15 +4,11 @@
 
 namespace Awning::Server
 {
-	struct Global
-	{
-		wl_display        * display;
-		wl_event_loop     * event_loop;
-		wl_protocol_logger* logger; 
-		wl_listener         client_listener;
-		std::string         socketname;
-	};
-	extern Global global;
+	extern wl_display        * display;
+	extern wl_event_loop     * event_loop;
+	extern wl_protocol_logger* logger; 
+	extern wl_listener         client_listener;
+	extern std::string         socketname;
 
 	void Init();
 };

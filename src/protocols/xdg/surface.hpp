@@ -7,22 +7,17 @@
 
 namespace Awning::Protocols::XDG::Surface
 {
-	struct Data 
+	struct Instance 
 	{
-		struct Instance 
-		{
-			wl_resource* surface_wl;
-			wl_resource* toplevel;
-			wl_resource* popup;
-			Window* window;
-			bool configured = false;
-		};
-
-		std::unordered_map<wl_resource*, Instance> surfaces;
+		wl_resource* surface_wl;
+		wl_resource* toplevel;
+		wl_resource* popup;
+		Window* window;
+		bool configured = false;
 	};
 
 	extern const struct xdg_surface_interface interface;
-	extern Data data;
+	extern std::unordered_map<wl_resource*, Instance> instances;
 	
 	namespace Interface
 	{

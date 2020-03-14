@@ -9,19 +9,14 @@
 
 namespace Awning::Protocols::ZXDG::Output
 {
-	struct Data 
+	struct Instance 
 	{
-		struct Instance 
-		{
-			wl_resource* output;
-			Awning::Output::ID id;
-		};
-
-		std::unordered_map<wl_resource*, Instance> instances;
+		wl_resource* output;
+		Awning::Output::ID id;
 	};
-
+	
 	extern const struct zxdg_output_v1_interface interface;
-	extern Data data;
+	extern std::unordered_map<wl_resource*, Instance> instances;
 
 	namespace Interface
 	{
@@ -34,12 +29,7 @@ namespace Awning::Protocols::ZXDG::Output
 
 namespace Awning::Protocols::ZXDG::Output_Manager
 {
-	struct Data 
-	{
-	};
-
 	extern const struct zxdg_output_manager_v1_interface interface;
-	extern Data data;
 	
 	namespace Interface
 	{

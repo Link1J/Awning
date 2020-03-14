@@ -189,7 +189,7 @@ namespace Awning::Renderers::GLES2
 	void Init()
 	{
 		EGL::Init();
-		eglBindWaylandDisplayWL(EGL::display, Awning::Server::global.display);
+		eglBindWaylandDisplayWL(EGL::display, Awning::Server::display);
 
 		GLuint vertexShader, pixelShaderOES, pixelShader2D;
 

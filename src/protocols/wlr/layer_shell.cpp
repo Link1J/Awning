@@ -7,7 +7,6 @@ namespace Awning::Protocols::WLR::Layer_Shell
 	const struct zwlr_layer_shell_v1_interface interface = {
 		.get_layer_surface = Interface::Get_Layer_Surface
 	};
-	Data data;
 
 	namespace Interface
 	{

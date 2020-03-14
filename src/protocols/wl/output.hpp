@@ -8,15 +8,10 @@
 
 namespace Awning::Protocols::WL::Output
 {
-	struct Data 
-	{
-		std::unordered_map<Awning::Output::ID, std::unordered_set<wl_resource*>> outputId_to_resource;
-		std::unordered_map<wl_resource*, Awning::Output::ID> resource_to_outputId;
-	};
-
 	extern const struct wl_output_interface interface;
-	extern Data data;
-
+	extern std::unordered_map<Awning::Output::ID, std::unordered_set<wl_resource*>> outputId_to_resource;
+	extern std::unordered_map<wl_resource*, Awning::Output::ID> resource_to_outputId;
+	
 	namespace Interface
 	{
 		void Release(struct wl_client *client, struct wl_resource* resource);

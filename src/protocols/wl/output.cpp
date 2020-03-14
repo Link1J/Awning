@@ -8,8 +8,8 @@ namespace Awning::Protocols::WL::Output
 	const struct wl_output_interface interface = {
 		.release = Interface::Release,
 	};
-
-	Data data;
+	std::unordered_map<Awning::Output::ID, std::unordered_set<wl_resource*>> outputId_to_resource;
+	std::unordered_map<wl_resource*, Awning::Output::ID> resource_to_outputId;
 
 	namespace Interface
 	{
@@ -21,7 +21,7 @@ namespace Awning::Protocols::WL::Output
 
 	void Resize(void* data, int width, int height)
 	{
-		auto id = Output::data.resource_to_outputId[(wl_resource*)data];
+		auto id = resource_to_outputId[(wl_resource*)data];
 
 		auto [sX, sY] = Awning::Output::Get::Mode::Resolution (id, Awning::Output::Get::CurrentMode(id));
 		auto refresh  = Awning::Output::Get::Mode::RefreshRate(id, Awning::Output::Get::CurrentMode(id));
@@ -79,8 +79,8 @@ namespace Awning::Protocols::WL::Output
 
 		wl_output_send_done(resource);
 
-		Output::data.resource_to_outputId[resource] = outputId;
-		Output::data.outputId_to_resource[outputId].emplace(resource);
+		resource_to_outputId[resource] = outputId;
+		outputId_to_resource[outputId].emplace(resource);
 
 		Awning::Output::AddResize(outputId, Resize, resource);
 	}
@@ -92,14 +92,14 @@ namespace Awning::Protocols::WL::Output
 
 	void Destroy(struct wl_resource* resource)
 	{
-		if (!data.resource_to_outputId.contains(resource))
+		if (!resource_to_outputId.contains(resource))
 			return;
 
-		auto id = data.resource_to_outputId[resource];
+		auto id = resource_to_outputId[resource];
 
 		Awning::Output::RemoveResize(id, Resize, resource);
 
-		data.outputId_to_resource[id].erase(resource);
-		data.resource_to_outputId    .erase(resource);
+		outputId_to_resource[id].erase(resource);
+		resource_to_outputId    .erase(resource);
 	}
 }

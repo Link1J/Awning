@@ -7,30 +7,25 @@
 
 namespace Awning::Protocols::WLR::Layer_Surface
 {
-	struct Data 
+	struct Instance 
 	{
-		struct Instance 
-		{
-			wl_resource* surface;
-			wl_resource* parent;
-			wl_resource* output;
-			std::string title;
-			std::string appid;
-			std::string name_space;
-			Window* window;
+		wl_resource* surface;
+		wl_resource* parent;
+		wl_resource* output;
+		std::string title;
+		std::string appid;
+		std::string name_space;
+		Window* window;
 
-			uint32_t anchor;
-			bool configuring = false;
-			int baseX, baseY;
+		uint32_t anchor;
+		bool configuring = false;
+		int baseX, baseY;
 
-			int marginsTop, marginsLeft, marginsBottom, marginsRight;
-		};
-
-		std::unordered_map<wl_resource*, Instance> instances;
+		int marginsTop, marginsLeft, marginsBottom, marginsRight;
 	};
 
 	extern const struct zwlr_layer_surface_v1_interface interface;
-	extern Data data;
+	extern std::unordered_map<wl_resource*, Instance> instances;
 	
 	namespace Interface
 	{

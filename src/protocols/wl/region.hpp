@@ -4,15 +4,7 @@
 
 namespace Awning::Protocols::WL::Region
 {
-	struct Data 
-	{
-		struct Instance 
-		{
-		};
-	};
-
 	extern const struct wl_region_interface interface;
-	extern Data data;
 	
 	namespace Interface
 	{

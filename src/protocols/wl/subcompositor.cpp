@@ -9,8 +9,6 @@ namespace Awning::Protocols::WL::Subcompositor
 		.get_subsurface = Interface::Get_Subsurface
 	};
 
-	Data data;
-
 	namespace Interface
 	{
 		void Get_Subsurface(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface, struct wl_resource* parent)

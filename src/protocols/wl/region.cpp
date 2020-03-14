@@ -9,8 +9,6 @@ namespace Awning::Protocols::WL::Region
 		.subtract = Interface::Subtract
 	};
 
-	Data data;
-
 	namespace Interface
 	{
 		void Destroy(struct wl_client* client, struct wl_resource* resource)
