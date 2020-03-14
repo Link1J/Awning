@@ -41,6 +41,11 @@ namespace Awning::Input
 
 	std::unordered_set<Window*> cursors;
 	xkb_context* Seat::ctx;
+	std::unordered_map<int, Seat*> Seat::seats;
+
+	Seat::Seat()
+	{
+	}
 
 	Seat::Seat(std::string name)
 	{
@@ -68,6 +73,9 @@ namespace Awning::Input
 		keyboard.state = xkb_state_new(keyboard.keymap);
 
 		cursors.emplace(pointer.window);
+
+		number = seats.size();
+		seats[seats.size()] = this;
 	}
 
 	Seat::Seat(const Seat& other)
@@ -81,6 +89,9 @@ namespace Awning::Input
 
 		this->keyboard.keymap = other.keyboard.keymap;
 		this->keyboard.state  = other.keyboard.state ;
+
+		number = seats.size();
+		seats[seats.size()] = this;
 	}
 
 	Seat& Seat::operator=(const Seat& other)
@@ -94,6 +105,9 @@ namespace Awning::Input
 
 		this->keyboard.keymap = other.keyboard.keymap;
 		this->keyboard.state  = other.keyboard.state ;
+
+		number = seats.size();
+		seats[seats.size()] = this;
 
 		return *this;
 	}
@@ -110,9 +124,18 @@ namespace Awning::Input
 		this->keyboard.keymap = other.keyboard.keymap;
 		this->keyboard.state  = other.keyboard.state ;
 
+		this->number = other.number;
+
 		wl_global_set_user_data((wl_global*)global, this);
+		seats[number] = this;
+
+		other.number = -1;
 
 		return *this;
+	}
+
+	Seat::~Seat()
+	{
 	}
 
 	void Seat::AddDevice(Device& device)
@@ -194,70 +217,82 @@ namespace Awning::Input
 			if (pointer.yPos > height)
 				pointer.yPos = height;
 
-			Window::Manager::Move(pointer.window, pointer.xPos, pointer.yPos);
-
 			if (state == State::Normal)
 			{
-				auto curr = Window::Manager::windowList.begin();
+				auto curr = Window::Manager::layers[0].begin();
 				bool found = false;
 
-				while (curr != Window::Manager::windowList.end() && !found)
+				Window::Manager::Layer layerOrder[] = {
+					Window::Manager::Layer::Overlay,
+					Window::Manager::Layer::Top,
+					Window::Manager::Layer::Application,
+					Window::Manager::Layer::Bottom,
+					Window::Manager::Layer::Background,
+				};
+
+				for (int a = 0; a < sizeof(layerOrder) / sizeof(*layerOrder) && !found; a++)
 				{
-					int windowLeft   = (*curr)->XPos() - (*curr)->XOffset()                   ;
-					int windowTop    = (*curr)->YPos() - (*curr)->YOffset()                   ;
-					int windowRight  = (*curr)->XPos() + (*curr)->XOffset() + (*curr)->XSize();
-					int windowButtom = (*curr)->YPos() + (*curr)->YOffset() + (*curr)->YSize();
+					auto list = Window::Manager::layers[(int)layerOrder[a]];
+					curr = list.begin();
 
-					if (pointer.xPos >= windowLeft  
-					&&  pointer.yPos >= windowTop   
-					&&  pointer.xPos <  windowRight 
-					&&  pointer.yPos <  windowButtom
-					)
+					while (curr != list.end() && !found)
 					{
-						action = Action::Application;
-						found = true;
-					}
+						int windowLeft   = (*curr)->XPos() - (*curr)->XOffset()                   ;
+						int windowTop    = (*curr)->YPos() - (*curr)->YOffset()                   ;
+						int windowRight  = (*curr)->XPos() + (*curr)->XOffset() + (*curr)->XSize();
+						int windowButtom = (*curr)->YPos() + (*curr)->YOffset() + (*curr)->YSize();
 
-					if ((*curr)->Frame() && !found)
-					{
-						if (pointer.xPos >= windowLeft   - ::Frame::Move::left  
-						&&  pointer.yPos >= windowTop    - ::Frame::Move::top   
-						&&  pointer.xPos <  windowRight  + ::Frame::Move::right 
-						&&  pointer.yPos <  windowButtom + ::Frame::Move::bottom
-						&& !found)
+						if (pointer.xPos >= windowLeft  
+						&&  pointer.yPos >= windowTop   
+						&&  pointer.xPos <  windowRight 
+						&&  pointer.yPos <  windowButtom
+						)
 						{
-							action = Action::Move;
+							action = Action::Application;
 							found = true;
 						}
 
-						if (pointer.xPos >= windowLeft   - ::Frame::Size::left  
-						&&  pointer.yPos >= windowTop    - ::Frame::Size::top   
-						&&  pointer.xPos <  windowRight  + ::Frame::Size::right 
-						&&  pointer.yPos <  windowButtom + ::Frame::Size::bottom
-						&& !found)
+						if ((*curr)->Frame() && !found)
 						{
-							action = Action::Resize;
-							found = true;
+							if (pointer.xPos >= windowLeft   - ::Frame::Move::left  
+							&&  pointer.yPos >= windowTop    - ::Frame::Move::top   
+							&&  pointer.xPos <  windowRight  + ::Frame::Move::right 
+							&&  pointer.yPos <  windowButtom + ::Frame::Move::bottom
+							&& !found)
+							{
+								action = Action::Move;
+								found = true;
+							}
+
+							if (pointer.xPos >= windowLeft   - ::Frame::Size::left  
+							&&  pointer.yPos >= windowTop    - ::Frame::Size::top   
+							&&  pointer.xPos <  windowRight  + ::Frame::Size::right 
+							&&  pointer.yPos <  windowButtom + ::Frame::Size::bottom
+							&& !found)
+							{
+								action = Action::Resize;
+								found = true;
+							}
+
+							side = WindowSide::NONE;
+
+							if (action == Action::Resize && found)
+							{
+								if (pointer.xPos <  windowLeft  ) side = (WindowSide)((int)side | (int)WindowSide::LEFT  );
+								if (pointer.yPos <  windowTop   ) side = (WindowSide)((int)side | (int)WindowSide::TOP   );
+								if (pointer.xPos >= windowRight ) side = (WindowSide)((int)side | (int)WindowSide::RIGHT );
+								if (pointer.yPos >= windowButtom) side = (WindowSide)((int)side | (int)WindowSide::BOTTOM);
+							}
 						}
 
-						side = WindowSide::NONE;
-
-						if (action == Action::Resize && found)
-						{
-							if (pointer.xPos <  windowLeft  ) side = (WindowSide)((int)side | (int)WindowSide::LEFT  );
-							if (pointer.yPos <  windowTop   ) side = (WindowSide)((int)side | (int)WindowSide::TOP   );
-							if (pointer.xPos >= windowRight ) side = (WindowSide)((int)side | (int)WindowSide::RIGHT );
-							if (pointer.yPos >= windowButtom) side = (WindowSide)((int)side | (int)WindowSide::BOTTOM);
-						}
+						if (!found)
+							curr++;
 					}
-
-					if (!found)
-						curr++;
 				}
 				
 				if (action == Action::Application || hovered != *curr)
 				{
-					if (hovered != *curr && curr != Window::Manager::windowList.end())
+					if (hovered != *curr && curr != Window::Manager::layers[(int)Window::Manager::Layer::Background].end())
 					{
 						int localX = pointer.xPos - (*curr)->XPos() + (*curr)->XOffset();
 						int localY = pointer.yPos - (*curr)->YPos() + (*curr)->YOffset();
@@ -335,13 +370,31 @@ namespace Awning::Input
 					Window::Manager::Resize(active, XSize, YSize);
 
 					if (preX == active->XSize())
+					{
 						XPos =  active->XPos ();
+
+						if ((((int)side & (int)WindowSide::RIGHT ) != 0)
+						||  (((int)side & (int)WindowSide::LEFT  ) != 0))
+						{
+							pointer.xPos -= x;
+						}
+					}
 					if (preY == active->YSize())
+					{
 						YPos =  active->YPos ();
+
+						if ((((int)side & (int)WindowSide::TOP   ) != 0)
+						||  (((int)side & (int)WindowSide::BOTTOM) != 0))
+						{
+							pointer.yPos -= y;
+						}
+					}
 
 					Window::Manager::Move(hovered, XPos, YPos);
 				}
 			}
+
+			Window::Manager::Move(pointer.window, pointer.xPos, pointer.yPos);
 		}
 	}
 
@@ -394,6 +447,7 @@ namespace Awning::Input
 				for (auto& functionSet : functions[1][active->Client()])
 					functionSet.button(functionSet.data, button, pressed);
 				changed.emplace(std::tuple<void*,int>{active->Client(),1});
+				pointer.lockButton = button;
 			}
 			else if ((action == Action::Move || action == Action::Resize) && active)
 			{
@@ -410,7 +464,6 @@ namespace Awning::Input
 				}
 				else if (button == pointer.lockButton)
 				{
-					hovered = active = nullptr;
 					state = State::Normal;
 					action = Action::Application;
 				}
@@ -437,7 +490,7 @@ namespace Awning::Input
 		if (!HasDevice(device))
 			return;
 
-		if (device.GetType() == Device::Type::Mouse)
+		if (device.GetType() == Device::Type::Mouse && hovered)
 		{
 			for (auto& functionSet : functions[1][hovered->Client()])
 				functionSet.scroll(functionSet.data, axis, step);
@@ -476,5 +529,12 @@ namespace Awning::Input
 		{
 			functions[type][client].erase(curr);
 		}
+	}
+
+	void Seat::Lock(Action action, WindowSide side)
+	{
+		this->action = action             ;
+		this->side   = side               ;
+		state        = State::WindowManger;
 	}
 }

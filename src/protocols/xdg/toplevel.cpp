@@ -57,7 +57,7 @@ namespace Awning::Protocols::XDG::TopLevel
 
 		void Move(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
 		{
-			//((Input::Seat*)WL::Seat::instances[seat].seat)->Lock(Input::Action::Move);
+			((Input::Seat*)WL::Seat::instances[seat].seat)->Lock(Input::Action::Move, Input::WindowSide::TOP);
 		}
 
 		void Resize(struct wl_client* client, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, uint32_t edges)
@@ -76,7 +76,7 @@ namespace Awning::Protocols::XDG::TopLevel
 			case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_RIGHT: side = Input::WindowSide::BOTTOM_RIGHT; break;
 			}
 
-			//((Input::Seat*)WL::Seat::instances[seat].seat)->Lock(Input::Action::Resize, side);
+			((Input::Seat*)WL::Seat::instances[seat].seat)->Lock(Input::Action::Resize, side);
 		}
 
 		void Set_Max_Size(struct wl_client* client, struct wl_resource* resource, int32_t width, int32_t height)

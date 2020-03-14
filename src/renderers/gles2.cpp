@@ -204,7 +204,6 @@ namespace Awning::Renderers::GLES2
 		glDeleteShader(pixelShaderOES);
 		glDeleteShader(pixelShader2D );
 
-		auto list     = Window::Manager::windowList;
 		auto displays = Backend::GetDisplays();
 		auto [nW, nH] = Backend::Size(displays);
 

@@ -444,6 +444,13 @@ namespace Awning::X
 
 						auto displays = Backend::GetDisplays();
 						auto texture = Awning::Protocols::WL::Surface::instances[resource].texture;
+
+						windows[e->window]->Frame (true);
+        				windows[e->window]->Mapped(true);
+
+						windows[e->window]->SetResized(Resized);
+						windows[e->window]->SetRaised (Raised );
+						windows[e->window]->SetMoved  (Moved  );
 					}
 					if (e->type == atoms[_NET_WM_MOVERESIZE])
 					{
@@ -489,9 +496,8 @@ namespace Awning::X
 							side   = Input::WindowSide::TOP;
 							break;
 						}
-						//Input::Lock(action, side);
-					}
-					
+						(Input::Seat::seats[0])->Lock(action, side);
+					}		
 				}
 				break;
 			case XCB_FOCUS_IN:

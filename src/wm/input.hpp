@@ -140,8 +140,10 @@ namespace Awning::Input
 			Functions::Frame  frame ;
 			void*             data  ;
 		};
-	private:
 
+		static std::unordered_map<int, Seat*> seats;
+
+	private:
 		static xkb_context* ctx;
 
 		std::string name;
@@ -156,14 +158,17 @@ namespace Awning::Input
 		Window* hovered        ;
 		Window* active         ;
 		bool    entered = false;
+		int     number  = -1   ;
 
 		std::unordered_map<void*, std::vector<FunctionSet>> functions[3];
 		std::unordered_set<std::tuple<void*,int>>           changed     ;
 
 	public:
-		Seat(                 ) = default;
-		Seat(std::string name )          ;
-		Seat(const Seat& other)          ;
+		Seat(                 );
+		Seat(std::string name );
+		Seat(const Seat& other);
+
+		~Seat();
 
 		Seat& operator=(const Seat&  other);
 		Seat& operator=(      Seat&& other);
@@ -180,7 +185,9 @@ namespace Awning::Input
 		void Axis  (Device& device, int    axis  , double step   );
 		void End   (                                             );
 
-		void AddFunctions(int type, void* client, FunctionSet function);
-		void RemoveFunctions(int type, void* client, void* data);
+		void AddFunctions   (int type, void* client, FunctionSet function);
+		void RemoveFunctions(int type, void* client, void*       data    );
+
+		void Lock(Action action, WindowSide side);
 	};
 }

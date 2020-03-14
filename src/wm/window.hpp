@@ -22,7 +22,6 @@ namespace Awning
 				END,
 			};
 
-			static std::list<Window*> windowList                  ;
 			static std::list<Window*> layers     [(int)Layer::END];
 
 			static void Manage  (Window*& window, Layer layer = Layer::Application);

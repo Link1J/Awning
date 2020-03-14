@@ -4,83 +4,58 @@
 
 namespace Awning
 {
-	std::list<Window*> Window::Manager::windowList                  ;
 	std::list<Window*> Window::Manager::layers     [(int)Layer::END];
 
 	void Window::Manager::Manage(Window*& window, Layer layer)
 	{
 		window->layer = layer;
 		layers[(int)layer].emplace_back(window);
-		windowList.emplace_back(window);
 	}
 
 	void Window::Manager::Unmanage(Window*& window)
 	{
-		auto curr = windowList.begin();
-		while (curr != windowList.end())
+		if (window->layer >= Layer::END)
+			return;
+			
+		auto curr = layers[(int)window->layer].begin();
+		while (curr != layers[(int)window->layer].end())
 		{
 			if (*curr == window)
 				break;
 			curr++;
 		}
 
-		if (curr == windowList.end())
+		if (curr == layers[(int)window->layer].end())
 			return;
-
-		if (window->layer < Layer::END)
-		{
-			auto curr = layers[(int)window->layer].begin();
-			while (curr != layers[(int)window->layer].end())
-			{
-				if (*curr == window)
-					break;
-				curr++;
-			}
-
-			if (curr != layers[(int)window->layer].end())
-				layers[(int)window->layer].erase(curr);
-		}
-
-		windowList.erase(curr);
-		Raise(*windowList.begin());
+		
+		layers[(int)window->layer].erase(curr);
+		Raise(*layers[(int)window->layer].begin());
 	}
 
 	void Window::Manager::Raise(Window*& window)
 	{
-		auto star = windowList.begin();
-		auto curr = windowList.begin();
-		while (curr != windowList.end())
+		if (window->layer >= Layer::END)
+			return;
+			
+		auto curr = layers[(int)window->layer].begin();
+		while (curr != layers[(int)window->layer].end())
 		{
 			if (*curr == window)
 				break;
 			curr++;
 		}
 
-		if (curr == windowList.end())
+		if (curr == layers[(int)window->layer].end())
 			return;
 
-		if (window->layer < Layer::END)
-		{
-			auto curr = layers[(int)window->layer].begin();
-			while (curr != layers[(int)window->layer].end())
-			{
-				if (*curr == window)
-					break;
-				curr++;
-			}
-
-			if (curr != layers[(int)window->layer].end())
-			{
-				layers[(int)window->layer].erase(curr);
-				layers[(int)window->layer].emplace_front(window);
-			}
-		}
-
-		windowList.erase(curr);
-		windowList.emplace_front(window);
+		layers[(int)window->layer].erase(curr);
+		layers[(int)window->layer].emplace_front(window);
 
 		if (window->Raised)
 			window->Raised(window->data);
+
+		auto seat = Input::Seat::seats[0];
+		seat->active = window;
 	}
 
 	void Window::Manager::Resize(Window*& window, int xSize, int ySize)
@@ -155,6 +130,27 @@ namespace Awning
 		}
 		Manager::Unmanage(window);
 		Client::Unbind::Window(window);
+
+		window->data      = nullptr;
+		window->texture   = nullptr;
+		window->parent    = nullptr;
+		window->mapped    = false;
+		window->pos.x     = INT32_MIN;
+		window->pos.y     = INT32_MIN;
+		window->minSize.x = 1;
+		window->minSize.y = 1;
+		window->maxSize.x = INT32_MAX;
+		window->maxSize.y = INT32_MAX;
+		window->layer     = Manager::Layer::END;
+
+		for (auto [id, seat] : Input::Seat::seats)
+		{
+			if (seat->active  == window)
+				seat->active  = nullptr;
+			if (seat->hovered == window)
+				seat->hovered = nullptr;
+		}
+
 		delete window;
 		window = nullptr;
 	}
