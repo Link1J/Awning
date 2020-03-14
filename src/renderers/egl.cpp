@@ -31,8 +31,17 @@ namespace Awning::Renderers::EGL
 	EGLContext context;
 	EGLSurface surface;
 
-	static void eglLog(EGLenum error, const char *command, EGLint msg_type, EGLLabelKHR thread, EGLLabelKHR obj, const char *msg) {
-		spdlog::error("[EGL] command: {}, error: 0x{:X}, message: \"{}\"\n", command, error, msg);
+	static void eglLog(EGLenum error, const char *command, EGLint msg_type, EGLLabelKHR thread, EGLLabelKHR obj, const char *msg) 
+	{
+		((char*)msg)[strlen(msg)-1] = '\0';
+
+		switch (msg_type)
+		{
+		case EGL_DEBUG_MSG_CRITICAL_KHR: spdlog::critical("[EGL] command: {}, error: 0x{:X}, message: \"{}\"", command, error, msg); break;
+		case EGL_DEBUG_MSG_ERROR_KHR   : spdlog::error   ("[EGL] command: {}, error: 0x{:X}, message: \"{}\"", command, error, msg); break;
+		case EGL_DEBUG_MSG_WARN_KHR    : spdlog::warn    ("[EGL] command: {}, error: 0x{:X}, message: \"{}\"", command, error, msg); break;
+		case EGL_DEBUG_MSG_INFO_KHR    : spdlog::info    ("[EGL] command: {}, error: 0x{:X}, message: \"{}\"", command, error, msg); break;
+		}
 	}
 
 	void loadEGLProc(void* proc_ptr, const char* name)
@@ -47,7 +56,18 @@ namespace Awning::Renderers::EGL
 
 	int Init()
 	{
-		loadEGLProc(&eglGetPlatformDisplayEXT, "eglGetPlatformDisplayEXT");
+		loadEGLProc(&eglGetPlatformDisplayEXT     , "eglGetPlatformDisplayEXT"     );
+		loadEGLProc(&eglBindWaylandDisplayWL      , "eglBindWaylandDisplayWL"      );
+		loadEGLProc(&eglUnbindWaylandDisplayWL    , "eglUnbindWaylandDisplayWL"    );
+		loadEGLProc(&eglQueryWaylandBufferWL      , "eglQueryWaylandBufferWL"      );
+		loadEGLProc(&eglCreateImageKHR            , "eglCreateImageKHR"            );
+		loadEGLProc(&eglDestroyImageKHR           , "eglDestroyImageKHR"           );
+		loadEGLProc(&glEGLImageTargetTexture2DOES , "glEGLImageTargetTexture2DOES" );
+		loadEGLProc(&eglDebugMessageControlKHR    , "eglDebugMessageControlKHR"    );
+		loadEGLProc(&eglQueryDmaBufFormatsEXT     , "eglQueryDmaBufFormatsEXT"     );
+		loadEGLProc(&eglQueryDmaBufModifiersEXT   , "eglQueryDmaBufModifiersEXT"   );
+		loadEGLProc(&eglExportDMABUFImageQueryMESA, "eglExportDMABUFImageQueryMESA");
+		loadEGLProc(&eglExportDMABUFImageMESA     , "eglExportDMABUFImageMESA"     );
 
 		/*
 		for(auto& di : std::filesystem::directory_iterator("/dev/dri"))
@@ -81,25 +101,6 @@ namespace Awning::Renderers::EGL
 		}
 		*/
 
-		int32_t fd = open("/dev/dri/renderD129", O_RDWR);
-		struct gbm_device* gbm = gbm_create_device(fd);
-
-		display = eglGetPlatformDisplayEXT(EGL_PLATFORM_GBM_MESA, gbm, NULL);
-
-		eglInitialize(display, &major, &minor);
-
-		loadEGLProc(&eglBindWaylandDisplayWL      , "eglBindWaylandDisplayWL"      );
-		loadEGLProc(&eglUnbindWaylandDisplayWL    , "eglUnbindWaylandDisplayWL"    );
-		loadEGLProc(&eglQueryWaylandBufferWL      , "eglQueryWaylandBufferWL"      );
-		loadEGLProc(&eglCreateImageKHR            , "eglCreateImageKHR"            );
-		loadEGLProc(&eglDestroyImageKHR           , "eglDestroyImageKHR"           );
-		loadEGLProc(&glEGLImageTargetTexture2DOES , "glEGLImageTargetTexture2DOES" );
-		loadEGLProc(&eglDebugMessageControlKHR    , "eglDebugMessageControlKHR"    );
-		loadEGLProc(&eglQueryDmaBufFormatsEXT     , "eglQueryDmaBufFormatsEXT"     );
-		loadEGLProc(&eglQueryDmaBufModifiersEXT   , "eglQueryDmaBufModifiersEXT"   );
-		loadEGLProc(&eglExportDMABUFImageQueryMESA, "eglExportDMABUFImageQueryMESA");
-		loadEGLProc(&eglExportDMABUFImageMESA     , "eglExportDMABUFImageMESA"     );
-
 		static const EGLAttrib debug_attribs[] = {
 			EGL_DEBUG_MSG_CRITICAL_KHR, EGL_TRUE,
 			EGL_DEBUG_MSG_ERROR_KHR   , EGL_TRUE,
@@ -109,6 +110,13 @@ namespace Awning::Renderers::EGL
 		};
 
 		eglDebugMessageControlKHR(eglLog, debug_attribs);
+
+		int32_t fd = open("/dev/dri/renderD128", O_RDWR);
+		struct gbm_device* gbm = gbm_create_device(fd);
+
+		display = eglGetPlatformDisplayEXT(EGL_PLATFORM_GBM_MESA, gbm, NULL);
+
+		eglInitialize(display, &major, &minor);
 
 		EGLint attribs[] = { 
 			EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,

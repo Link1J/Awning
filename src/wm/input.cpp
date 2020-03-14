@@ -259,8 +259,8 @@ namespace Awning::Input
 				{
 					if (hovered != *curr && curr != Window::Manager::windowList.end())
 					{
-						int localX = pointer.xPos - (*curr)->XPos() - (*curr)->XOffset();
-						int localY = pointer.yPos - (*curr)->YPos() - (*curr)->YOffset();
+						int localX = pointer.xPos - (*curr)->XPos() + (*curr)->XOffset();
+						int localY = pointer.yPos - (*curr)->YPos() + (*curr)->YOffset();
 
 						void* surface = Client::Get::Surface(*curr);
 
@@ -273,8 +273,8 @@ namespace Awning::Input
 					}
 					else if (hovered && entered)
 					{		
-						int localX = pointer.xPos - hovered->XPos() - hovered->XOffset();
-						int localY = pointer.yPos - hovered->YPos() - hovered->YOffset();
+						int localX = pointer.xPos - hovered->XPos() + hovered->XOffset();
+						int localY = pointer.yPos - hovered->YPos() + hovered->YOffset();
 
 						for (auto& functionSet : functions[1][hovered->Client()])
 							functionSet.moved(functionSet.data, localX, localY);

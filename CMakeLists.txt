@@ -211,3 +211,18 @@ target_link_libraries(Awning PRIVATE
 
     ${DBUS_LIBRARIES}
 )
+
+#------------------------------------------------------------------------------
+
+install(
+	TARGETS Awning
+	RUNTIME
+	DESTINATION bin
+	COMPONENT runtime
+)
+
+install(
+    FILES ${CMAKE_CURRENT_SOURCE_DIR}/awning.desktop
+    DESTINATION share/wayland-sessions
+	COMPONENT data
+)

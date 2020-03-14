@@ -57,7 +57,7 @@ static const char* pixelShaderCode = R"(
 
 precision mediump float;
 
-uniform samplerExternalOES texture0;global
+uniform samplerExternalOES texture0;
 
 in vec4 color;
 out vec4 FragColor;
@@ -166,9 +166,9 @@ namespace Awning::Renderers::Software
 					uint8_t& buffer_green = buffer[framebOffset + 1];
 					uint8_t& buffer_blue  = buffer[framebOffset + 0];
 
-					buffer_red   = red  ; // * (alpha / 256.) + buffer_red   * (1 - alpha / 256.);
-					buffer_green = green; // * (alpha / 256.) + buffer_green * (1 - alpha / 256.);
-					buffer_blue  = blue ; // * (alpha / 256.) + buffer_blue  * (1 - alpha / 256.);
+					buffer_red   = red   * (alpha / 256.) + buffer_red   * (1 - alpha / 256.);
+					buffer_green = green * (alpha / 256.) + buffer_green * (1 - alpha / 256.);
+					buffer_blue  = blue  * (alpha / 256.) + buffer_blue  * (1 - alpha / 256.);
 				}
 			}
 		

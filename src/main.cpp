@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
 	launchApp(launchArgs7);
 	launchApp(launchArgs8);
 	
-	while(1)
+	while(Awning::Backend::GetDisplays().size() > 0)
 	{
 		Awning::Backend::Poll();
 		Awning::Backend::Hand();

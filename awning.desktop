@@ -1,0 +1,5 @@
+[Desktop Entry]
+Name=Awning
+Comment=A Wayland compositor
+Exec=Awning
+Type=Application

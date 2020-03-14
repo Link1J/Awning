@@ -301,13 +301,4 @@ namespace Awning
 	{
 		Lowered = lowered;
 	}
-
-	bool Window::Valid(Window*& window)
-	{
-		if (!window)
-			return false;
-		if ((int)window->layer >= (int)Window::Manager::Layer::END)
-			return false;
-		return true;
-	}
 }
