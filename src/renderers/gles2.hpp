@@ -2,11 +2,6 @@
 
 #include <wayland-server.h>
 
-#include <X11/X.h>
-#include <X11/Xlib.h>
-#include <X11/extensions/Xcomposite.h>
-#include <X11/extensions/Xrender.h>
-
 #include "wm/texture.hpp"
 #include "egl.hpp"
 
