@@ -38,6 +38,6 @@ namespace Awning::Server
 			"EVENT  "
 		};
 	
-		//spdlog::debug("[{}] {}: {}", direction_strings[direction], message->resource->object.interface->name, message->message->name);
+		spdlog::debug("[{}] {}: {}", direction_strings[direction], message->resource->object.interface->name, message->message->name);
 	}
 };

@@ -1,5 +1,5 @@
 #pragma once
-#include <wayland-server-core.h>
+#include <wayland-server.h>
 #include <string>
 
 namespace Awning::Server

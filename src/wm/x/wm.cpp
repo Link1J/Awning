@@ -152,7 +152,7 @@ namespace Awning::X
 	xcb_screen_t* screen;
 	xcb_window_t window;
 	wl_event_source* event_source;
-	::Window activeWindow = XCB_WINDOW_NONE;
+	xcb_window_t activeWindow = XCB_WINDOW_NONE;
 
 	void Init()
 	{
@@ -212,7 +212,6 @@ namespace Awning::X
 			atoms[_NET_WM_STATE_MAXIMIZED_VERT],
 			atoms[_NET_WM_STATE_MAXIMIZED_HORZ],
 			atoms[_NET_CLIENT_LIST],
-			atoms[_MOTIF_WM_HINTS],
 		};
 		xcb_change_property_checked(xcb_conn, XCB_PROP_MODE_REPLACE, screen->root, atoms[NET_SUPPORTED], XCB_ATOM_ATOM, 32, sizeof(supported)/sizeof(*supported), supported);
 		xcb_flush(xcb_conn);
@@ -234,7 +233,15 @@ namespace Awning::X
 		xcb_flush(xcb_conn);
 	}
 
-	void Focus(::Window w)
+	template<typename T, int Type>
+	T* GetProperty(xcb_window_t window, xcb_atom_t atom)
+	{
+		xcb_get_property_cookie_t cookie =     xcb_get_property_unchecked(xcb_conn, 0, window, atom, atoms[Type], 0, sizeof(T));
+		xcb_get_property_reply_t* reply  =     xcb_get_property_reply    (xcb_conn, cookie, NULL                              );
+		return                             (T*)xcb_get_property_value    (reply                                               );
+	}
+
+	void Focus(xcb_window_t w)
 	{
 		if (!w) 
 		{
@@ -265,7 +272,7 @@ namespace Awning::X
 
 	void Resized(void* data, int width, int height)
 	{
-		auto w = (::Window)data;
+		auto w = (xcb_window_t)((uintptr_t)data);
 		if (!windows.contains(w))
 			return;
 
@@ -283,7 +290,7 @@ namespace Awning::X
 
 	void Moved(void* data, int x, int y)
 	{
-		auto w = (::Window)data;
+		auto w = (xcb_window_t)((uintptr_t)data);
 		if (!windows.contains(w))
 			return;
 
@@ -301,7 +308,7 @@ namespace Awning::X
 
 	void Raised(void* data)
 	{
-		auto w = (::Window)data;
+		auto w = (xcb_window_t)((uintptr_t)data);
 		if (!windows.contains(w))
 			return;
 		if (windows[w]->XSize() == 0 || windows[w]->YSize() == 0)
@@ -334,6 +341,10 @@ namespace Awning::X
 					windows[e->window]->Data((void*) e->window          );
 					Window::Manager::Manage (windows[e->window]         );
 					Client::Bind   ::Surface(windows[e->window], surface);
+
+					const uint32_t value_list = XCB_EVENT_MASK_FOCUS_CHANGE | XCB_EVENT_MASK_PROPERTY_CHANGE;
+					xcb_change_window_attributes_checked(xcb_conn, e->window, XCB_CW_EVENT_MASK, &value_list);
+					xcb_flush                           (xcb_conn);
 				}
 				break;
 			case XCB_DESTROY_NOTIFY:
@@ -388,11 +399,8 @@ namespace Awning::X
 				{
 					auto e = (xcb_map_request_event_t*)event;
 					
-					const uint32_t value_list = XCB_EVENT_MASK_FOCUS_CHANGE | XCB_EVENT_MASK_PROPERTY_CHANGE;
-					
-					xcb_change_window_attributes_checked(xcb_conn, e->window, XCB_CW_EVENT_MASK, &value_list);
-					xcb_map_window_checked              (xcb_conn, e->window);
-					xcb_flush                           (xcb_conn);
+					xcb_map_window_checked(xcb_conn, e->window);
+					xcb_flush             (xcb_conn);
 
 					windows[e->window]->Frame (true);
         			windows[e->window]->Mapped(true);
@@ -411,16 +419,23 @@ namespace Awning::X
 				{
 					auto e = (xcb_property_notify_event_t*)event;
 
-					//for (int i = 0; i < ATOM_LAST; i++) 
-					//{
-					//	if (e->atom == atoms[i])
-					//	{
-					//		spdlog::debug("X Window {} has property {}", e->window, atom_map[i]);
-					//	}
-					//}
+					for (int i = 0; i < ATOM_LAST; i++) 
+					{
+						if (e->atom == atoms[i])
+						{
+							spdlog::debug("X Window {} has property {}", e->window, atom_map[i]);
+						}
+					}
 
-					//xcb_get_property_cookie_t cookie = xcb_get_property(xcb_conn, 0, xsurface->window_id, property, XCB_ATOM_ANY, 0, 2048);
-					//xcb_get_property_reply_t *reply = xcb_get_property_reply(xcb_conn, cookie, NULL);
+					if (e->atom == atoms[_MOTIF_WM_HINTS])
+					{
+						auto hints = GetProperty<MwmHints, _MOTIF_WM_HINTS>(e->window, e->atom);
+
+						if ((hints->flags & MWM_HINTS_DECORATIONS) != 0)
+						{
+							windows[e->window]->Frame(hints->decorations == 0);
+						}
+					}
 				}
 				break;
 			case XCB_CLIENT_MESSAGE:

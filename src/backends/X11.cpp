@@ -257,7 +257,7 @@ void Awning::Backend::X11::Start()
 		Output::Set::Description (data.id, "X.Org Foundation 11.0");
 		
 		Output::Set::Mode::Resolution (data.id, 0, data.framebuffer.width, data.framebuffer.height);
-		Output::Set::Mode::RefreshRate(data.id, 0, 0                                              );
+		Output::Set::Mode::RefreshRate(data.id, 0, 1                                              );
 		Output::Set::Mode::Prefered   (data.id, 0, true                                           );
 		Output::Set::Mode::Current    (data.id, 0, true                                           );
 

@@ -250,10 +250,14 @@ namespace Awning::Input
 						{
 							action = Action::Application;
 							found = true;
+
+							break;
 						}
 
 						if ((*curr)->Frame() && !found)
 						{
+							side = WindowSide::NONE;
+
 							if (pointer.xPos >= windowLeft   - ::Frame::Move::left  
 							&&  pointer.yPos >= windowTop    - ::Frame::Move::top   
 							&&  pointer.xPos <  windowRight  + ::Frame::Move::right 
@@ -262,6 +266,8 @@ namespace Awning::Input
 							{
 								action = Action::Move;
 								found = true;
+
+								break;
 							}
 
 							if (pointer.xPos >= windowLeft   - ::Frame::Size::left  
@@ -272,23 +278,22 @@ namespace Awning::Input
 							{
 								action = Action::Resize;
 								found = true;
-							}
 
-							side = WindowSide::NONE;
-
-							if (action == Action::Resize && found)
-							{
 								if (pointer.xPos <  windowLeft  ) side = (WindowSide)((int)side | (int)WindowSide::LEFT  );
 								if (pointer.yPos <  windowTop   ) side = (WindowSide)((int)side | (int)WindowSide::TOP   );
 								if (pointer.xPos >= windowRight ) side = (WindowSide)((int)side | (int)WindowSide::RIGHT );
 								if (pointer.yPos >= windowButtom) side = (WindowSide)((int)side | (int)WindowSide::BOTTOM);
+
+								break;
 							}
 						}
 
-						if (!found)
-							curr++;
+						curr++;
 					}
 				}
+
+				if (!found)
+					curr = Window::Manager::layers[(int)Window::Manager::Layer::Background].end();
 				
 				if (action == Action::Application || hovered != *curr)
 				{
