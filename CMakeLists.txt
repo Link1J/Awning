@@ -100,7 +100,7 @@ find_package(UDev REQUIRED)
 find_package(Libinput REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(EGL REQUIRED)
-find_package(XCB COMPONENTS XCB ATOM COMPOSITE DRI2 DRI3 EWMH ICCCM XFIXES XKB RENDER SHAPE REQUIRED)
+find_package(XCB COMPONENTS XCB XKB COMPOSITE XFIXES RENDER SHAPE REQUIRED)
 
 find_package(WaylandScanner REQUIRED)
 find_program(PKG_CONFIG pkg-config)
@@ -181,10 +181,6 @@ target_link_directories(Awning PRIVATE ${DBUS_LIBRARY_DIRS})
 target_link_libraries(Awning PRIVATE
     Wayland::Server
     X11::X11
-    X11::Xext
-    X11::Xfixes
-    X11::Xcomposite
-    X11::Xrender
     OpenGL::GL
     Libinput::Libinput
     UDev::UDev
@@ -192,16 +188,8 @@ target_link_libraries(Awning PRIVATE
     EGL::EGL
     Wayland::Client
     XCB::XCB
-    XCB::ATOM
     XCB::COMPOSITE
-    XCB::DRI2
-    XCB::DRI3
-    XCB::EWMH
-    XCB::ICCCM
-    XCB::XFIXES
     XCB::XKB
-    XCB::RENDER
-    XCB::SHAPE
     spdlog::spdlog
 
     gbm

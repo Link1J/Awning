@@ -2,7 +2,6 @@
 #include <wayland-server.h>
 #include <EGL/egl.h>
 #include <xcb/xcb.h>
-#include <xcb/xcb_icccm.h>
 
 namespace Awning::X
 {

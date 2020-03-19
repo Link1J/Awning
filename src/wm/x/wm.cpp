@@ -23,7 +23,6 @@
 #include <unistd.h>
 
 #include <xcb/composite.h>
-#include <xcb/xfixes.h>
 
 #define _NET_WM_MOVERESIZE_SIZE_TOPLEFT      0
 #define _NET_WM_MOVERESIZE_SIZE_TOP          1
