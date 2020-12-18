@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <string>
+#include <ljh/function_pointer.hpp>
 #include "wm/texture.hpp"
 #include "wm/output.hpp"
 
@@ -15,16 +16,17 @@ namespace Awning::Backend
 	{
 		Output::ID output ;
 		Texture    texture;
-		int            mode   ;
+		int        mode   ;
 	};
 	typedef std::vector<Display> Displays;
 
 	namespace Functions
 	{
-		typedef void    (*Poll       )();
-		typedef void    (*Draw       )();
-		typedef void    (*Hand       )();
-		typedef Displays(*GetDisplays)();
+		using Poll        = ljh::function_pointer<void    ()>;
+		using Draw        = ljh::function_pointer<void    ()>;
+		using Hand        = ljh::function_pointer<void    ()>;
+		using GetDisplays = ljh::function_pointer<Displays()>;
+		using Cleanup     = ljh::function_pointer<void    ()>;
 	};
 
 	void                 Init(API output, API input);
@@ -34,4 +36,5 @@ namespace Awning::Backend
 	extern Functions::Draw        Draw       ;
 	extern Functions::Hand        Hand       ;
 	extern Functions::GetDisplays GetDisplays;
+	extern Functions::Cleanup     Cleanup    ;
 }

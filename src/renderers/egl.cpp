@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <fcntl.h>
 
+#include "utils/session.hpp"
+
 PFNEGLGETPLATFORMDISPLAYEXTPROC          eglGetPlatformDisplayEXT         ;
 PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC eglCreatePlatformWindowSurfaceEXT;
 PFNEGLCREATEIMAGEKHRPROC                 eglCreateImageKHR                ;
@@ -111,7 +113,7 @@ namespace Awning::Renderers::EGL
 
 		eglDebugMessageControlKHR(eglLog, debug_attribs);
 
-		int32_t fd = open("/dev/dri/renderD128", O_RDWR);
+		auto fd = open("/dev/dri/renderD128", O_RDWR | O_CLOEXEC);
 		struct gbm_device* gbm = gbm_create_device(fd);
 
 		display = eglGetPlatformDisplayEXT(EGL_PLATFORM_GBM_MESA, gbm, NULL);
@@ -126,7 +128,7 @@ namespace Awning::Renderers::EGL
 		EGLint num_configs_returned;
 		eglChooseConfig(display, attribs, &config, 1, &num_configs_returned);
 
-		//eglBindAPI(EGL_OPENGL_ES_API);
+		eglBindAPI(EGL_OPENGL_ES_API);
 
 		EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE, EGL_NONE };
 

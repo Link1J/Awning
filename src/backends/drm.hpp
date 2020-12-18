@@ -8,5 +8,7 @@ namespace Awning::Backend::DRM
 	void Poll();
 	void Draw();
 	
+	void Cleanup();
+	
 	Displays GetDisplays();
 }

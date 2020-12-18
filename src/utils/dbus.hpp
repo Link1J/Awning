@@ -1,6 +1,8 @@
 #pragma once
 
 #include <dbus/dbus.h>
+#include <string>
+#include <iostream>
 
 namespace DBus
 {

@@ -51,6 +51,8 @@
 
 #include "renderers/manager.hpp"
 
+#include "utils/session.hpp"
+
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <EGL/eglmesaext.h>
@@ -59,7 +61,10 @@
 #include <unordered_map>
 
 void on_term_signal(int signal_number);
+void on_abort_signal(int signal_number);
 void launchApp(const char** argv);
+
+ljh::function_pointer<void(int)> orignal_sigabrt;
 
 uint32_t lastSerialNum = 1;
 
@@ -71,7 +76,15 @@ uint32_t NextSerialNum()
 
 int main(int argc, char* argv[])
 {
+	//volatile int wait_for_debugger = 1;
+	//while (wait_for_debugger);
+
 	spdlog::set_level(spdlog::level::debug);
+
+	//signal(SIGINT, on_term_signal);
+	orignal_sigabrt = signal(SIGABRT, on_abort_signal);
+
+	Awning::Session::Init();
 
 	bool                   startXWayland = true                             ;
 	Awning::Backend  ::API api_output    = Awning::Backend  ::API::DRM      ;
@@ -80,7 +93,7 @@ int main(int argc, char* argv[])
 
 	for(int a = 0; a < argc; a++)
 	{
-		auto arg = std::string(argv[a]);
+		auto arg = std::string_view(argv[a]);
 		if (arg == "-noX")
 		{
 			startXWayland = false;
@@ -147,8 +160,6 @@ int main(int argc, char* argv[])
 	setenv("WAYLAND_DISPLAY", Awning::Server::socketname.c_str(), 1);
 	setenv("MOZ_ENABLE_WAYLAND", "1", 1);
 
-	//signal(SIGINT, on_term_signal);
-
 	//launchApp(launchArgs1);
 	//launchApp(launchArgs2);
 	//launchApp(launchArgs3);
@@ -180,6 +191,15 @@ int main(int argc, char* argv[])
 
 void on_term_signal(int signal_number)
 {
+}
+
+void on_abort_signal(int signal_number)
+{
+	if (Awning::Backend::Cleanup)
+		Awning::Backend::Cleanup();
+
+	if (orignal_sigabrt)
+		orignal_sigabrt(signal_number);
 }
 
 /*void GetSockAddress()

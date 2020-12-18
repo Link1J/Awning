@@ -27,6 +27,8 @@
 
 #include "wm/output.hpp"
 
+#include "utils/session.hpp"
+
 #include <algorithm> 
 #include <cctype>
 #include <locale>
@@ -84,9 +86,10 @@ struct Connector
 
 struct Card
 {
-	int                    id        ;
-	int                    dri_fd    ;
-	std::vector<Connector> connectors;
+	int                              id        ;
+	Awning::Session::FileDescriptor  dri_fd    ;
+	drm_mode_crtc                  * saved_crtc;
+	std::vector<Connector>           connectors;
 };
 
 std::vector<Card> cards;
@@ -111,8 +114,8 @@ void Awning::Backend::DRM::Start()
 	cards.resize(files.size());
 	for (int a = 0; a < files.size(); a++)
 	{
-		cards[a].id     = a                                         ;
-		cards[a].dri_fd = open(files[a].c_str(), O_RDWR | O_CLOEXEC);
+		cards[a].id     = a;
+		cards[a].dri_fd = Session::GetDevice(files[a]);
 	}
 
 	CheckData();
@@ -124,6 +127,15 @@ void Awning::Backend::DRM::Poll()
 
 void Awning::Backend::DRM::Draw()
 {
+}
+
+void Awning::Backend::DRM::Cleanup()
+{
+	for (auto& card : cards)
+	{
+		//ioctl(card.dri_fd, DRM_IOCTL_MODE_DESTROY_DUMB, );
+		Session::ReleaseDevice(cards[a].dri_fd);
+	}
 }
 
 Awning::Backend::Displays Awning::Backend::DRM::GetDisplays()
@@ -236,7 +248,7 @@ void CheckData()
 					Output::Set::NumberOfModes(output, conn.count_modes);
 
 				auto name = fmt::format("{}-{}", connectorTypes[conn.connector_type], ++connectorCount[conn.connector_type]);
-				std::string model, manufacturer;
+				std::string model = "", manufacturer = "";
 
 				for (uint32_t a = 0; a < conn.count_props; a++)
 				{
@@ -394,10 +406,10 @@ void SetMode(int cardID, int connectorID, int modeID)
 	cmd_dumb.pitch   = create_dumb.pitch ;
 	cmd_dumb.depth   = 24                ;
 	cmd_dumb.handle  = create_dumb.handle;
-	ioctl(card.dri_fd,DRM_IOCTL_MODE_ADDFB,&cmd_dumb);
+	ioctl(card.dri_fd, DRM_IOCTL_MODE_ADDFB, &cmd_dumb);
 
 	map_dumb.handle = create_dumb.handle;
-	ioctl(card.dri_fd,DRM_IOCTL_MODE_MAP_DUMB,&map_dumb);
+	ioctl(card.dri_fd, DRM_IOCTL_MODE_MAP_DUMB, &map_dumb);
 
 	connector.texture.buffer.pointer = (uint8_t*)mmap(0, create_dumb.size, PROT_READ | PROT_WRITE, MAP_SHARED, card.dri_fd, map_dumb.offset);
 

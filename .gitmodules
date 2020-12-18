@@ -7,3 +7,9 @@
 [submodule "external/fmt"]
 	path = external/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "external/sdbus-c++"]
+	path = external/sdbus-c++
+	url = https://github.com/Kistler-Group/sdbus-cpp.git
+[submodule "external/ljh"]
+	path = external/ljh
+	url = https://github.com/Link1J/ljh.git

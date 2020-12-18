@@ -11,6 +11,7 @@ namespace Awning::Backend
 	Functions::Draw        Draw       ;
 	Functions::Hand        Hand       ;
 	Functions::GetDisplays GetDisplays;
+	Functions::Cleanup     Cleanup    ;
 
 	void Init(API output, API input)
 	{
@@ -27,6 +28,7 @@ namespace Awning::Backend
 			Poll        = DRM  ::Poll       ;
 			Draw        = DRM  ::Draw       ;
 			GetDisplays = DRM  ::GetDisplays;
+			Cleanup     = DRM  ::Cleanup    ;
 			break;
 		
 		default:

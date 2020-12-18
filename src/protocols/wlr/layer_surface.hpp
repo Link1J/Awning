@@ -3,6 +3,7 @@
 #include "wm/window.hpp"
 
 #include <unordered_map>
+#include <string>
 #include <stdint.h>
 
 namespace Awning::Protocols::WLR::Layer_Surface

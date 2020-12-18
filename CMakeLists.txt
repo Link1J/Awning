@@ -87,6 +87,8 @@ set(SOURCE_WAYLAND
 add_subdirectory(external/fmt)
 add_subdirectory(external/spdlog)
 add_subdirectory(external/Lyra)
+add_subdirectory(external/sdbus-c++)
+add_subdirectory(external/ljh)
 
 #------------------------------------------------------------------------------
 
@@ -108,6 +110,7 @@ find_program(PKG_CONFIG pkg-config)
 #------------------------------------------------------------------------------
 
 pkg_check_modules(DBUS dbus-1)
+pkg_check_modules(systemd libsystemd)
 
 #------------------------------------------------------------------------------
 
@@ -169,12 +172,18 @@ set_target_properties(Awning PROPERTIES
 
 #------------------------------------------------------------------------------
 
-target_include_directories(Awning PRIVATE "src")
-target_include_directories(Awning PRIVATE ${DBUS_INCLUDE_DIRS})
+target_include_directories(Awning PRIVATE 
+    "src"
+    ${DBUS_INCLUDE_DIRS}
+    ${systemd_INCLUDE_DIRS}
+)
 
 #------------------------------------------------------------------------------
 
-target_link_directories(Awning PRIVATE ${DBUS_LIBRARY_DIRS})
+target_link_directories(Awning PRIVATE 
+    ${DBUS_LIBRARY_DIRS}
+    ${systemd_LIBRARY_DIRS}
+)
 
 #------------------------------------------------------------------------------
 
@@ -191,6 +200,8 @@ target_link_libraries(Awning PRIVATE
     XCB::COMPOSITE
     XCB::XKB
     spdlog::spdlog
+    sdbus-c++
+    ljh
 
     gbm
     GLESv2
@@ -198,6 +209,7 @@ target_link_libraries(Awning PRIVATE
     rt
 
     ${DBUS_LIBRARIES}
+    ${systemd_LIBRARIES}
 )
 
 #------------------------------------------------------------------------------
