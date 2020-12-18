@@ -362,7 +362,13 @@ namespace Awning::X
 						XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT |
 						XCB_CONFIG_WINDOW_BORDER_WIDTH;
 
-					uint32_t values[] = {e->x, e->y, e->width, e->height, 0};
+					uint32_t values[] = {
+						static_cast<uint32_t>(e->x     ), 
+						static_cast<uint32_t>(e->y     ), 
+						static_cast<uint32_t>(e->width ), 
+						static_cast<uint32_t>(e->height),
+						0
+					};
 					xcb_configure_window(xcb_conn, e->window, mask, values);
 					
 					windows[e->window]->SetResized(nullptr);

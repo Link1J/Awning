@@ -118,6 +118,7 @@ namespace Awning::X::Server
 
 	int XWM_Start(int signal_number, void* data)
 	{
+		spdlog::info("Launching XWM");
 		Awning::X::Init();
 		return 0;
 	}
@@ -143,8 +144,7 @@ namespace Awning::X::Server
 		Utils::Sockets::SetCloexec(wm_fd[1], true);
 
 		xWaylandClient = wl_client_create(Awning::Server::display, wl_fd[0]);
-		
-		sigusr1 = wl_event_loop_add_signal(Awning::Server::event_loop, SIGUSR1, XWM_Start, nullptr);
+		signal(SIGUSR1, SIG_IGN);
 
 		int pidT = fork();
 		if (pidT == 0) 
@@ -152,6 +152,7 @@ namespace Awning::X::Server
 			signal(SIGUSR1, SIG_IGN);
 			LaunchXwayland(0);
 		}
+		sigusr1 = wl_event_loop_add_signal(Awning::Server::event_loop, SIGUSR1, XWM_Start, nullptr);
 
 		close(wl_fd[1]);
 		close(wm_fd[1]);
@@ -188,11 +189,14 @@ namespace Awning::X::Server
 		wl_fd[1], display, x_fd[0], x_fd[1], wm_fd[1]);
 
 		int fd = open("/dev/null", O_RDWR);
-		dup2(fd, STDOUT_FILENO);
-		dup2(fd, STDERR_FILENO);
+		int pre_stdout = dup(STDOUT_FILENO); dup2(fd, STDOUT_FILENO);
+		int pre_stderr = dup(STDERR_FILENO); dup2(fd, STDERR_FILENO);
 
 		int ret = execvp("Xwayland", XWaylandArgs);
-		printf("Xwayland did not launch! %d %s\n", ret, strerror(errno));
+
+		dup2(pre_stdout, STDOUT_FILENO);
+		dup2(pre_stderr, STDERR_FILENO);
+		spdlog::critical("Xwayland did not launch! {} {}", ret, strerror(errno));
 		exit(ret);
 	}
 }
